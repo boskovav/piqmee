@@ -1,0 +1,295 @@
+package beast.evolution.speciation;
+
+
+
+import beast.core.Citation;
+import beast.core.Description;
+import beast.core.Input;
+import beast.core.parameter.BooleanParameter;
+import beast.core.parameter.IntegerParameter;
+import beast.core.parameter.RealParameter;
+import beast.core.parameter.RealParameterList;
+import beast.evolution.alignment.Taxon;
+import beast.evolution.alignment.TaxonSet;
+import beast.evolution.tree.QStree;
+import beast.evolution.tree.TraitSet;
+import beast.evolution.tree.Tree;
+import beast.evolution.tree.TreeInterface;
+import beast.evolution.tree.coalescent.TreeIntervals;
+import beast.util.TreeParser;
+
+import java.util.List;
+
+/**
+ * Created by boskovav on 09/04/15.
+ * finished on ??
+ */
+/**
+ * @author Veronika Boskova
+ *
+ *         maths: Tanja Stadler and Veronika Boskova
+ *
+ */
+
+/*
+    * TODO: need to implement check for whether the proposed branching times for each duplicate of a haplotype are
+       in accordance with "appear-only-once-in-tree-history" assumption --- where to do it?  -- in operator? to be efficient
+       -- randomly choose a haplotype, propose its attachment times from root to tip, if another haplotype attaches to the path (or below),
+       where the QS of the first haplotype chose to attach, then allow these to only propose within attachmet node to first haplotype
+       to the tip of the second haplotype, or to the tip of the haplotypes below.
+
+
+    *
+
+    *
+ */
+
+@Description("Model for calculating birth-death likelihood for quasispecies (ultrametric) trees ")
+
+@Citation("Boskova, V., Stadler, T., Quasispecies algorithm")
+
+
+public class QuasiSpeciesTreeDistribution extends SpeciesTreeDistribution {
+
+    /******************************************************************************************************************/
+    /* Input parameters for the BD model */
+    /* same as the bdsky */
+    /*
+    public Input<Boolean> contemp =
+            new Input<Boolean>("contemp", "Only contemporaneous sampling (i.e. all tips are from same sampling time, default false)", false);
+    // do we want to implement something with serial sampling?
+    */
+
+    public Input<RealParameter> rhoParameterInput =
+            new Input<RealParameter>("rho", "Proportion of tips sampled at present time (default = 0)"); // rho
+    /*
+    public Input<RealParameter> rhoParameterInput =
+            new Input<RealParameter>("rho", "The proportion of lineages sampled at rho-sampling times (default 0.)");
+    // for now not used, needs to be implemented otherwise (bdsky with several sampling rho)
+    */
+
+    // Set 1  (lambda, mu, psi)
+    public Input<RealParameter> birthRateParameterInput =
+            new Input<RealParameter>("birthRate", "Birth/Infection rate parameter");
+    public Input<RealParameter> deathRateParameterInput =
+            new Input<RealParameter>("deathRate", "Death rate parameter");
+    /*
+    public Input<RealParameter> samplingRateParameterInput =
+            new Input<RealParameter>("samplingRate", "Sampling rate per individual");
+    // for now not used, needs to be implemented otherwise (bdsky with several sampling rho)
+    */
+
+    // Set 2 (R0, delta, p)
+    public Input<RealParameter> R0ParameterInput =
+            new Input<RealParameter>("R0", "The basic reproductive number", Input.Validate.XOR, birthRateParameterInput);
+    public Input<RealParameter> becomeUninfectiousRateParameterInput =
+            new Input<RealParameter>("becomeUninfectiousRate", "Rate at which individuals become uninfectious, delta (through recovery or sampling)", Input.Validate.XOR, deathRateParameterInput);
+    /*
+    public Input<RealParameter> samplingProportionParameterInput =
+            new Input<RealParameter>("samplingProportion", "The samplingProportion = samplingRate / becomeUninfectiousRate", Input.Validate.XOR, samplingRateParameterInput);
+    // for now not used, needs to be implemented otherwise (bdsky with several sampling rho)
+    */
+    /******************************************************************************************************************/
+    /* Input parameters for phylogeny */
+    /* TreeInput XOR TreeIntervalsInput inherited from ancestor */
+    public Input<RealParameter> originParameterInput =
+            new Input<RealParameter>("origin", "The time from origin to last sample (must be larger than tree height)", Input.Validate.REQUIRED);
+    /*
+    // not sure whether this is necessary
+    public Input<Boolean> originIsRootEdge =
+            new Input<>("originIsRootEdge", "The origin is only the length of the root edge", false);
+    */
+
+    // TODO: the QS count can be input as Integer counts or as percentage (in case of percentage check it sums to 100) -- should be in Tree object not here in distribution
+    //public Input<TraitSet> QuasiSpeciesAttachmentTimesInput =
+    //        new Input<TraitSet>("QSAttachmentTimes","QS attachment times for each haplotype (excluding the one representative of each haplotype in the tree input)");
+    //        // not necessary, when not input -- only at init, then we set all values to the median of the tree length
+    //public Input<TraitSet> QuasiSpeciesCountsInput =
+    //        new Input<TraitSet>("QSCount","QS counts for each haplotype (excluding the one representative of each haplotype in the tree input)", Input.Validate.REQUIRED);
+    //        // necessary - we need to know which tips map to which haplotype
+    /******************************************************************************************************************/
+    /* Random input parameters */
+    public Input<Boolean> conditionOnSurvival =
+            new Input<Boolean>("conditionOnSurvival", "if is true then condition on sampling at least one individual (psi-sampling).", true);
+    public Input<Boolean> conditionOnRhoSampling =
+            new Input<Boolean> ("conditionOnRhoSampling","if is true then condition on sampling at least one individual at present.", false);
+    /******************************************************************************************************************/
+    /* Shadow parameters */
+    RealParameter    rhoParameter, birthRateParameter, deathRateParameter,
+            R0Parameter, becomeUninfectiousRateParameter,
+            originParameter;
+    TraitSet QuasiSpeciesAttachmentTimes, QuasiSpeciesCounts;
+    /* samplingRateParameter,samplingProportionParameter, */
+
+
+    /* Model parameters */
+    protected TreeInterface tree    = null;
+    protected double [] lambda      = null,   // Infection rates
+                        mu          = null,   // Death rates
+                        psi         = null,   // Sampling rates through time
+                        QStimes     = null;   // Attachment times of the QS
+    protected double    rho         = 0,      // Proportion of tips sampled at present
+                        origin      = 0;      // Origin of the epidemic
+    protected boolean   survival    = true;  // Calculate survival probability
+    //protected int       verbose     = 0;      // Not an input parameter, just for debugging (different levels)
+
+
+    /******************************************************************************************************************/
+
+    public void initAndValidate() throws Exception {
+
+        super.initAndValidate();
+
+        // Assign shadow parameters
+        rhoParameter                    = rhoParameterInput.get();
+        birthRateParameter              = birthRateParameterInput.get();
+        deathRateParameter              = deathRateParameterInput.get();
+        R0Parameter                     = R0ParameterInput.get();
+        becomeUninfectiousRateParameter = becomeUninfectiousRateParameterInput.get();
+        originParameter                 = originParameterInput.get();
+        //How does Denise imputs the TraitSet into the BDSKY --- through Tree input
+//        QuasiSpeciesAttachmentTimes     = QuasiSpeciesAttachmentTimesInput.get();
+//        QuasiSpeciesCounts              = QuasiSpeciesCountsInput.get();
+
+
+        // Get the tree or if eventTimes are specified ignore the tree
+/*
+        if (eventTimesParameter == null) {
+            tree = treeInput.get();
+            if (tree == null) {
+                throw new RuntimeException("Need to specify the tree or the eventTimes and eventTypes!");
+            }
+            totalEvents = tree.getLeafNodeCount()+tree.getInternalNodeCount();
+        } else {
+            totalEvents = eventTimesParameter.getDimension();
+
+            if (eventTypesParameter == null) {
+                throw new RuntimeException("If eventTimes are specified then eventTypes also need to be specified!");
+            }
+
+            System.err.println("Using eventTimes and eventTypes inputs - Tree input will be ignored! (not recommended)");
+        }
+
+        // Check if parameters need to be transformed or not
+        if (infectionRateParameter != null &&
+                deathRateParameter     != null &&
+                samplingRateParameter  != null) {
+
+            transform = false;
+        } else
+        if (R0Parameter                     != null &&
+                becomeUninfectiousRateParameter != null &&
+                samplingProportionParameter     != null) {
+
+            transform = true;
+        } else {
+            throw new RuntimeException("Either specify infectionRate, deathRate and samplingRate OR specify R0, becomeUninfectiousRate and samplingProportion!");
+        }
+
+        // Check dimensions
+        totalIntervals = popSizeParameter.getDimension();
+        totalEvents   += totalIntervals;
+        if ((!transform && (infectionRateParameter.getDimension()          != totalIntervals ||
+                deathRateParameter.getDimension()              != totalIntervals ||
+                samplingRateParameter.getDimension()           != totalIntervals))  ||
+                (transform && (R0Parameter.getDimension()                     != totalIntervals ||
+                        becomeUninfectiousRateParameter.getDimension() != totalIntervals ||
+                        samplingProportionParameter.getDimension()     != totalIntervals))) {
+            throw new Exception("SIS model parameter dimensions not consistent");
+        }
+
+        if (eventTypesParameter != null && eventTypesParameter.getDimension() != totalEvents) {
+            throw new Exception("Wrong number of node types (expected "+totalEvents+")");
+        }
+
+
+        // Read constant parameter values (only need to be assigned once)
+        if (survivalProbParameter.get() != null) {
+            survival = survivalProbParameter.get().getValue();
+        }
+
+        if (rescaleParameter.get() != null) {
+            rescaling = rescaleParameter.get().getValue();
+        }
+
+        if (extantAtRootParameter != null) {
+            extantAtRoot = extantAtRootParameter.getValue();
+        }
+
+        // Assign memory (only necessary to do this once unless nr of intervals/events change)
+        K           = new double[totalIntervals];
+        beta        = new double[totalIntervals];
+        mu          = new double[totalIntervals];
+        psi         = new double[totalIntervals];
+
+        eventTimes     = new double[totalEvents];
+        eventTypes     = new int[totalEvents];
+        eventTimesTemp = new double[totalEvents];
+        eventTypesTemp = new int[totalEvents];
+        if (survival) survTypes = new int[totalEvents];
+
+        // Check that initial values are within absolute limits
+        checkAbsoluteBounds();
+*/    }
+
+
+    @Override
+//    public double calculateTreeLogLikelihood(TreeInterface tree, TraitSet QuasiSpeciesAttachmentTimes) {
+    public double calculateTreeLogLikelihood(TreeInterface tree) {
+        System.out.println("likelihood being calculated ... ");
+//        System.out.println(tree);
+        return 0;
+    }
+
+
+    public static void main(String[] args) throws Exception {
+
+        System.out.println("I can do some testing here.");
+
+        QuasiSpeciesTreeDistribution q = new QuasiSpeciesTreeDistribution();
+//
+//        Tree tree = new TreeParser("((t3 : 1.5, t4 : 0.5) : 1 , (t1 : 2, t2 : 1) : 3);",false);
+////        TreeIntervals intervals = new TreeIntervals();
+////        intervals.init(tree);
+//        q.setInputValue("tree", tree);
+//        q.setInputValue("origin", new RealParameter("6."));
+//        q.setInputValue("conditionOnSurvival", true);
+//
+//        // test with rate change outside tree range
+//        //bdssm.setInputValue("intervalNumber", 1);
+//        q.setInputValue("birthRate", new RealParameter("2."));
+//        q.setInputValue("deathRate", new RealParameter("1."));
+//        q.setInputValue("rho", new RealParameter("0.5"));
+//        //bdssm.setInputValue("intervalTimes", new RealParameter("0."));
+//        //q.setInputValue("forceRateChange", false);
+//
+//        //q.initAndValidate();
+//        //q.printTempResults = true;
+//
+//        //assertEquals(-19.0198, bdssm.calculateTreeLogLikelihood(tree), 1e-5);
+///*
+//        q.setInputValue("traitname", new String("attachmenttimes"));
+//        q.setInputValue("taxon", new List(Taxon("t1","t2","t3","t4")));
+//        q.setInputValue("taxa", new TaxonSet("t1","t2","t3","t4"));
+//        q.setInputValue("value", new String("t1"=3,t2=2,t3=1,t4=0));
+//
+//       q.setInputValue("QSCount", new TraitSet(
+//               t1=3,
+//               t2=2,
+//               t3=1,
+//               t4=0));
+//       q.setInputValue("QSAttachmentTimes", new TraitSet());
+//*/
+
+        Tree tree = new QStree();
+
+        System.out.println(q.calculateTreeLogLikelihood(tree));
+
+
+    }
+
+}
+
+
+
+
