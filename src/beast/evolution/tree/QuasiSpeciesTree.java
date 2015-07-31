@@ -490,6 +490,8 @@ public class QuasiSpeciesTree extends Tree {
     public void assignFrom(StateNode other) {
         QuasiSpeciesTree qsTree = (QuasiSpeciesTree) other;
 
+        attachmentTimesList = qsTree.attachmentTimesList;
+
         QuasiSpeciesNode[] qsNodes = new QuasiSpeciesNode[qsTree.getNodeCount()];
         for (int i=0; i<qsTree.getNodeCount(); i++)
             qsNodes[i] = new QuasiSpeciesNode();
@@ -513,6 +515,9 @@ public class QuasiSpeciesTree extends Tree {
     @Override
     public void assignFromFragile(StateNode other) {
         QuasiSpeciesTree qsTree = (QuasiSpeciesTree) other;
+
+//        attachmentTimesList = qsTree.attachmentTimesList;
+
         if (m_nodes == null) {
             initArrays();
         }

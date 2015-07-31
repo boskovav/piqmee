@@ -59,14 +59,12 @@ public class QuasiSpeciesSequenceAttachmentUniform extends QuasiSpeciesTreeOpera
 
         // reposition the event (i.e. haplotype sequence changeIdx attachment time)
         double tmin, tmax;
-        Double[] tempqstimes=qsTree.getAttachmentTimesList(node);
+        Double[] tempqstimes=qsTree.getAttachmentTimesList(node).clone();
 
-        if (changeIdx-1<=qsTree.getHaplotypeCounts((QuasiSpeciesNode) node))
-            tmax = tempqstimes[changeIdx-1];
-        else
-            tmax = tempqstimes[0];
+        // as we choose index changeIdx between 1 - #haplo then changeIdx-1=0 at minimum
+        tmax = tempqstimes[changeIdx-1];
 
-        if (changeIdx+1<1)
+        if (changeIdx+1>qsTree.getHaplotypeCounts((QuasiSpeciesNode) node))
             tmin = node.getHeight();
         else
             tmin = tempqstimes[changeIdx+1];
@@ -78,7 +76,7 @@ public class QuasiSpeciesSequenceAttachmentUniform extends QuasiSpeciesTreeOpera
                                             // indeed tmin-u*tmin+u*tmin-u*tmax+u*tmin-tmin=0
 
         tempqstimes[changeIdx]=tnew;
-//        qsTree.setAttachmentTimesList(node, tempqstimes);
+        qsTree.setAttachmentTimesList(node, tempqstimes);
 
         return 0.0;
 
