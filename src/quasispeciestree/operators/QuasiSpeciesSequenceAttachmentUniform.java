@@ -1,9 +1,9 @@
 package quasispeciestree.operators;
 
 import beast.core.Description;
-import beast.core.Input;
 import beast.evolution.tree.Node;
 import beast.evolution.tree.QuasiSpeciesNode;
+import beast.evolution.tree.QuasiSpeciesTree;
 import beast.util.Randomizer;
 
 /**
@@ -28,6 +28,7 @@ public class QuasiSpeciesSequenceAttachmentUniform extends QuasiSpeciesTreeOpera
      */
     @Override
     public double proposal() {
+        final QuasiSpeciesTree qsTree = quasiSpeciesTreeInput.get(this);
         // Randomly select event on tree:
         // weighted by the number of events (i.e. count of each haplotype)
         int event = Randomizer.nextInt(qsTree.getTotalAttachmentCounts());
@@ -62,10 +63,16 @@ public class QuasiSpeciesSequenceAttachmentUniform extends QuasiSpeciesTreeOpera
         Double[] tempqstimes=qsTree.getAttachmentTimesList(node).clone();
 
         // as we choose index changeIdx between 1 - #haplo then changeIdx-1=0 at minimum
-        tmax = tempqstimes[changeIdx-1];
-
+        // TODO change to only tmax = tempqstimes[changeIdx-1]; when testing is done
+//        if (changeIdx-1==0){
+//            tmax = 16.83;
+//        } else {
+            tmax = tempqstimes[changeIdx-1];
+//        }
         if (changeIdx+1>qsTree.getHaplotypeCounts((QuasiSpeciesNode) node))
             tmin = node.getHeight();
+//        else if (changeIdx-1==0)
+//            tmin=16.83;
         else
             tmin = tempqstimes[changeIdx+1];
 

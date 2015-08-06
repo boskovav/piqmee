@@ -1124,7 +1124,7 @@ public class BirthDeathSkylineQuasiSpeciesModel extends QuasiSpeciesTreeDistribu
                 // temp = Math.log(2 * gammaj * birth[index] * g(index, times[index], x));
                 temp = Math.log(birth[index] * g(index, times[index], x));
 // testing
-                System.out.println(tree.getAttachmentTimesList((QuasiSpeciesNode) node)[j]);
+//                System.out.println(tree.getAttachmentTimesList((QuasiSpeciesNode) node)[j]);
 //                System.out.println("1st pwd" +
 //                        " = " + temp + "; QSinterval & QS attachment branches = " + node.getID() + " " +j);
                 logP += temp;

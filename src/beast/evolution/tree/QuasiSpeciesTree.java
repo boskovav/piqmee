@@ -139,6 +139,7 @@ public class QuasiSpeciesTree extends Tree {
     public void initAttachmentTimes(){
         // reserves space for array list of size LeafNodeCount
         attachmentTimesList = new ArrayList<Double[]>(this.getLeafNodeCount());
+        storedAttachmentTimesList = new ArrayList<Double[]>(this.getLeafNodeCount());
         for (Node node : this.getExternalNodes()){
             // check if getNr() always returns the same >>> Node number is guaranteed not to change during an MCMC run.
             //      written in the Node class)
@@ -147,9 +148,10 @@ public class QuasiSpeciesTree extends Tree {
             // start with the star tree, and define start of haplotype at the multi-furcating node time
             for (int i=0; i<=getHaplotypeCounts((QuasiSpeciesNode)node); i++) {
                 if (this.getLeafNodeCount()>1){
-                    tempqstimes[i]=node.getParent().getHeight()*0.9999999
+                    tempqstimes[i]=node.getParent().getHeight()//*0.9999999
                     //if spread the haplotype at start a bit
-                    -node.getParent().getHeight()*i*(1-0.9999999);
+//                    -node.getParent().getHeight()*i*(1-0.9999999);
+                    -i*(node.getParent().getHeight()/(1+getHaplotypeCounts((QuasiSpeciesNode)node)));
 // testing
 //                  if (node.getID()==this.getExternalNodes().get(2).getID()){
 //                      tempqstimes[i]=node.getParent().getParent().getHeight()*0.9999999
@@ -165,11 +167,12 @@ public class QuasiSpeciesTree extends Tree {
 //                      tempqstimes[i]=node.getParent().getParent().getHeight()-0.1
 //                                -i*0.3;
 //                  }
+                    // TODO this is just for orig=MRCA  = 17 example
                 } else {
-                    tempqstimes[i]=5//*0.9999999
-                            -i*(5/(1+getHaplotypeCounts((QuasiSpeciesNode)node)));
-                    //System.out.println("The tree has only one haplotype. This is not accepted by the current method implementation.");
-                    //System.exit(0);
+//                    tempqstimes[i]=17//*0.9999999
+//                            -i*(17/(1+getHaplotypeCounts((QuasiSpeciesNode)node)));
+                    System.out.println("The tree has only one haplotype. This is not accepted by the current method implementation.");
+                    System.exit(0);
                 }
 
             }
@@ -183,6 +186,7 @@ public class QuasiSpeciesTree extends Tree {
 //            }
             // attachment time list defined as "node" height, going from present (0) to past (positive height)
             attachmentTimesList.add(node.getNr(), tempqstimes);
+            storedAttachmentTimesList.add(node.getNr(), tempqstimes);
 // testing
 //          System.out.println((int)haplotypeCounts.getValue(node.getID()));
 //          for (int i=0; i<attachmentTimesList.get(node.getNr()).length; i++)
@@ -705,29 +709,46 @@ public class QuasiSpeciesTree extends Tree {
     @Override
     protected void store() {
 
-        storedAttachmentTimesList = attachmentTimesList;
+        Collections.copy(storedAttachmentTimesList,attachmentTimesList);
 
+//        storedRoot = m_storedNodes[root.getNr()];
+//        int iRoot = root.getNr();
+//
+//        storeNodes(0, iRoot);
+//
+//        storedRoot.height = m_nodes[iRoot].height;
+//        storedRoot.parent = null;
+//
+//        if (root.getLeft()!=null)
+//            storedRoot.setLeft(m_storedNodes[root.getLeft().getNr()]);
+//        else
+//            storedRoot.setLeft(null);
+//        if (root.getRight()!=null)
+//            storedRoot.setRight(m_storedNodes[root.getRight().getNr()]);
+//        else
+//            storedRoot.setRight(null);
+//
+//        QuasiSpeciesNode qsStoredRoot = (QuasiSpeciesNode)storedRoot;
+//        qsStoredRoot.haploName = ((QuasiSpeciesNode)m_nodes[iRoot]).haploName;
+//
+//        storeNodes(iRoot+1, nodeCount);
+
+
+//        super.store();
+        // this condition can only be true for sampled ancestor trees
+        if (m_storedNodes.length != nodeCount) {
+            final Node[] tmp = new Node[nodeCount];
+            System.arraycopy(m_storedNodes, 0, tmp, 0, m_storedNodes.length - 1);
+            if (nodeCount > m_storedNodes.length) {
+                tmp[m_storedNodes.length - 1] = m_storedNodes[m_storedNodes.length - 1];
+                tmp[nodeCount - 1] = newNode();
+                tmp[nodeCount - 1].setNr(nodeCount - 1);
+            }
+            m_storedNodes = tmp;
+        }
+
+        storeNodes(0, nodeCount);
         storedRoot = m_storedNodes[root.getNr()];
-        int iRoot = root.getNr();
-
-        storeNodes(0, iRoot);
-
-        storedRoot.height = m_nodes[iRoot].height;
-        storedRoot.parent = null;
-
-        if (root.getLeft()!=null)
-            storedRoot.setLeft(m_storedNodes[root.getLeft().getNr()]);
-        else
-            storedRoot.setLeft(null);
-        if (root.getRight()!=null)
-            storedRoot.setRight(m_storedNodes[root.getRight().getNr()]);
-        else
-            storedRoot.setRight(null);
-
-        QuasiSpeciesNode qsStoredRoot = (QuasiSpeciesNode)storedRoot;
-        qsStoredRoot.haploName = ((QuasiSpeciesNode)m_nodes[iRoot]).haploName;
-
-        storeNodes(iRoot+1, nodeCount);
     }
 
 
@@ -736,21 +757,62 @@ public class QuasiSpeciesTree extends Tree {
      */
 
     private void storeNodes(int iStart, int iEnd) {
-        for (int i = iStart; i<iEnd; i++) {
-            QuasiSpeciesNode sink = (QuasiSpeciesNode)m_storedNodes[i];
-            QuasiSpeciesNode src = (QuasiSpeciesNode)m_nodes[i];
+//        for (int i = iStart; i<iEnd; i++) {
+//            QuasiSpeciesNode sink = (QuasiSpeciesNode)m_storedNodes[i];
+//            QuasiSpeciesNode src = (QuasiSpeciesNode)m_nodes[i];
+//            sink.height = src.height;
+//            sink.parent = m_storedNodes[src.parent.getNr()];
+//            if (src.getLeft()!=null) {
+//                sink.setLeft(m_storedNodes[src.getLeft().getNr()]);
+//                if (src.getRight()!=null)
+//                    sink.setRight(m_storedNodes[src.getRight().getNr()]);
+//                else
+//                    sink.setRight(null);
+//            }
+//
+//            sink.haploName = src.haploName;
+//        }
+        // Use direct members for speed (we are talking 5-7% or more from total time for large trees :)
+        for (int i = iStart; i < iEnd; i++) {
+            final QuasiSpeciesNode sink = (QuasiSpeciesNode)m_storedNodes[i];
+            final QuasiSpeciesNode src = (QuasiSpeciesNode)m_nodes[i];
             sink.height = src.height;
-            sink.parent = m_storedNodes[src.parent.getNr()];
-            if (src.getLeft()!=null) {
-                sink.setLeft(m_storedNodes[src.getLeft().getNr()]);
-                if (src.getRight()!=null)
-                    sink.setRight(m_storedNodes[src.getRight().getNr()]);
-                else
-                    sink.setRight(null);
+
+            if ( src.parent != null ) {
+                sink.parent = m_storedNodes[src.parent.getNr()];
+            } else {
+                // currently only called in the case of sampled ancestor trees
+                // where root node is not always last in the list
+                sink.parent = null;
+            }
+
+            final List<Node> children = sink.children;
+            final List<Node> srcChildren = src.children;
+
+            if( children.size() == srcChildren.size() ) {
+                // shave some more time by avoiding list clear and add
+                for (int k = 0; k < children.size(); ++k) {
+                    final Node srcChild = srcChildren.get(k);
+                    // don't call addChild, which calls  setParent(..., true);
+                    final Node c = m_storedNodes[srcChild.getNr()];
+                    c.parent = sink;
+                    children.set(k, c);
+                }
+            } else {
+                children.clear();
+                //sink.removeAllChildren(false);
+                for (final Node srcChild : srcChildren) {
+                    // don't call addChild, which calls  setParent(..., true);
+                    final Node c = m_storedNodes[srcChild.getNr()];
+                    c.parent = sink;
+                    children.add(c);
+                    //sink.addChild(c);
+                }
             }
 
             sink.haploName = src.haploName;
         }
+
     }
 
 

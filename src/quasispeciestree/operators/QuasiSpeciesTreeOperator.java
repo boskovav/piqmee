@@ -20,11 +20,11 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
             "quasiSpeciesTree", "Quasi-species tree on which to operate.",
             Input.Validate.REQUIRED);
 
-    protected QuasiSpeciesTree qsTree;
+    protected QuasiSpeciesTree m_qsTree;
 
     @Override
     public void initAndValidate() throws Exception {
-        qsTree = quasiSpeciesTreeInput.get();
+        m_qsTree = quasiSpeciesTreeInput.get();
     }
 
     /* ***********************************************************************
@@ -56,8 +56,8 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
     public void replace(Node node, Node child, Node replacement) {
         node.removeChild(child);
         node.addChild(replacement);
-        node.makeDirty(Tree.IS_FILTHY);
-        replacement.makeDirty(Tree.IS_FILTHY);
+        node.makeDirty(QuasiSpeciesTree.IS_FILTHY);
+        replacement.makeDirty(QuasiSpeciesTree.IS_FILTHY);
     }
 
     /* **********************************************************************/
@@ -113,9 +113,9 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
         replace(parent.getParent(), parent, sister);
 
         // Ensure BEAST knows to update affected likelihoods:
-        parent.makeDirty(Tree.IS_FILTHY);
-        sister.makeDirty(Tree.IS_FILTHY);
-        node.makeDirty(Tree.IS_FILTHY);
+        parent.makeDirty(QuasiSpeciesTree.IS_FILTHY);
+        sister.makeDirty(QuasiSpeciesTree.IS_FILTHY);
+        node.makeDirty(QuasiSpeciesTree.IS_FILTHY);
     }
 
     /**
@@ -165,9 +165,9 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
         parent.getChildren().remove(sister);
 
         // Ensure BEAST knows to update affected likelihoods:
-        parent.makeDirty(Tree.IS_FILTHY);
-        sister.makeDirty(Tree.IS_FILTHY);
-        node.makeDirty(Tree.IS_FILTHY);
+        parent.makeDirty(QuasiSpeciesTree.IS_FILTHY);
+        sister.makeDirty(QuasiSpeciesTree.IS_FILTHY);
+        node.makeDirty(QuasiSpeciesTree.IS_FILTHY);
     }
 
     /**
@@ -191,7 +191,7 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
 
         // destTime must be higher than, if existant, the first haplotype arising below the node.getParent()
         for (Node childLeafNode : node.getAllLeafNodes()){
-            if (destTime < qsTree.getAttachmentTimesList((QuasiSpeciesNode)childLeafNode)[0]){
+            if (destTime < m_qsTree.getAttachmentTimesList((QuasiSpeciesNode)childLeafNode)[0]){
                 System.out.println("Cannot attach subtree to new destination. The haplotype arises above the " +
                         "destination attachment point...");
                 System.exit(0);
@@ -207,9 +207,9 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
             parent.setLeft(destBranchBase);
 
         // Ensure BEAST knows to update affected likelihoods:
-        node.makeDirty(Tree.IS_FILTHY);
-        parent.makeDirty(Tree.IS_FILTHY);
-        destBranchBase.makeDirty(Tree.IS_FILTHY);
+        node.makeDirty(QuasiSpeciesTree.IS_FILTHY);
+        parent.makeDirty(QuasiSpeciesTree.IS_FILTHY);
+        destBranchBase.makeDirty(QuasiSpeciesTree.IS_FILTHY);
     }
 
     /**
@@ -229,7 +229,7 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
 
         // destTime must be higher than, if existant, the first haplotype arising below the node.getParent()
         for (Node childLeafNode : node.getAllLeafNodes()){
-            if (destTime < qsTree.getAttachmentTimesList((QuasiSpeciesNode)childLeafNode)[0]){
+            if (destTime < m_qsTree.getAttachmentTimesList((QuasiSpeciesNode)childLeafNode)[0]){
                 System.out.println("Cannot set root of new tree to the destination time. The haplotype arises above the " +
                         "destination attachment point...");
                 System.exit(0);
@@ -250,8 +250,8 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
         oldRoot.setParent(newRoot);
 
         // Ensure BEAST knows to recalculate affected likelihood:
-        newRoot.makeDirty(Tree.IS_FILTHY);
-        oldRoot.makeDirty(Tree.IS_FILTHY);
-        node.makeDirty(Tree.IS_FILTHY);
+        newRoot.makeDirty(QuasiSpeciesTree.IS_FILTHY);
+        oldRoot.makeDirty(QuasiSpeciesTree.IS_FILTHY);
+        node.makeDirty(QuasiSpeciesTree.IS_FILTHY);
     }
 }
