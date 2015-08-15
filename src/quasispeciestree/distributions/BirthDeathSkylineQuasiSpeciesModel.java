@@ -516,9 +516,10 @@ public class BirthDeathSkylineQuasiSpeciesModel extends QuasiSpeciesTreeDistribu
         N = new int[totalIntervals];
 
         int nQS = 0;
-        for (int i=0;i<tree.getExternalNodes().size();i++){
-            nQS += tree.getHaplotypeCounts((QuasiSpeciesNode)tree.getExternalNodes().get(i));
-        }
+//        for (int i=0;i<tree.getExternalNodes().size();i++){
+//            nQS += tree.getHaplotypeCounts((QuasiSpeciesNode)tree.getExternalNodes().get(i));
+//        }
+        nQS = tree.getTotalAttachmentCounts();
         int tipCount = tree.getLeafNodeCount();
 
         double[] dates = new double[tipCount + nQS];
@@ -1073,7 +1074,8 @@ public class BirthDeathSkylineQuasiSpeciesModel extends QuasiSpeciesTreeDistribu
 
         // first product term in f[T] over all non-QS transmission times (for the tips sampled through time and at times of parameter change)
         // to start with, get array containing possible number branches the haplotype can start from
-        int[] startBranchCountArray= tree.countPossibleStartBranches();
+//        int[] startBranchCountArray= tree.countPossibleStartBranches();
+        int[] startBranchCountArray = tree.getStartBranchCounts();
         for (int i = 0; i < tree.getInternalNodeCount(); i++) {
 
             double x = times[totalIntervals - 1] - tree.getNode(nTips + i).getHeight();
@@ -1114,7 +1116,8 @@ public class BirthDeathSkylineQuasiSpeciesModel extends QuasiSpeciesTreeDistribu
 //                return logP;
             int nQSTemp = (int) tree.getHaplotypeCounts((QuasiSpeciesNode) node);
             for (int j = 1; j <= nQSTemp; j++ ){
-                double x = times[totalIntervals - 1] - tree.getAttachmentTimesList((QuasiSpeciesNode) node)[j];
+                Double[] QSTimesTemp = tree.getAttachmentTimesList((QuasiSpeciesNode) node);
+                double x = times[totalIntervals - 1] - QSTimesTemp[j];
                 index = index(x);
                 // term for the Quasi-Species tree likelihood calculation counting possible attachment branches
                 // THIS IS A CONSTANT FOR ANY TREE TOPOLOGY, SO OMIT THIS TERM FOR NUMERICAL STABILITY AND CALCULATION SPEED

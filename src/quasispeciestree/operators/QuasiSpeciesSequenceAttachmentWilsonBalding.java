@@ -6,20 +6,18 @@ import beast.evolution.tree.QuasiSpeciesNode;
 import beast.evolution.tree.QuasiSpeciesTree;
 import beast.util.Randomizer;
 
+import java.lang.reflect.Array;
+import java.util.Collections;
+import java.util.stream.Collectors;
+
 /**
- *  @author Veronika Boskova created on 27/07/2015
+ *  @author Veronika Boskova created on 07/08/2015
  */
+
 @Description("Within given haplotype, randomly selects one sequence "
-        + "attachment time and moves it uniformly in interval "
-        + "restricted by the closest previous and next attachment times "
-        + "of another sequence from the same haplotype.")
-public class QuasiSpeciesSequenceAttachmentUniform extends QuasiSpeciesTreeOperator{
-
-//    public Input<Boolean> includeRootInput = new Input<>("includeRoot",
-//            "Allow modification of root node.", false);
-
-//    public Input<Double> rootScaleFactorInput = new Input<>("rootScaleFactor",
-//            "Root scale factor.", 0.9);
+        + "attachment time, selects a new interval, where this attachment "
+        + "time will be added to and attaches it uniformly in that interval.")
+public class QuasiSpeciesSequenceAttachmentWilsonBalding extends QuasiSpeciesTreeOperator{
 
     /**
      * Change the attachment time and return the hastings ratio.
@@ -61,33 +59,52 @@ public class QuasiSpeciesSequenceAttachmentUniform extends QuasiSpeciesTreeOpera
 
         // reposition the event (i.e. haplotype sequence changeIdx attachment time)
         double tmin, tmax;
+        int tminIdx, tmaxIdx;
         Double[] tempqstimes=qsTree.getAttachmentTimesList(node).clone();
 
-        // as we choose index changeIdx between 1 - #sequences of this haplotype then changeIdx-1=0 at minimum
-        // TODO change to only tmax = tempqstimes[changeIdx-1]; when testing is done
-//        if (changeIdx-1==0){
-//            tmax = 16.83;
-//        } else {
-            tmax = tempqstimes[changeIdx-1];
-//        }
-//        if (changeIdx+1>qsTree.getHaplotypeCounts((QuasiSpeciesNode) node))
-        if (changeIdx+1>(tempqstimes.length-1))
+        // choose new max index between 0 - #sequences of this haplotype
+        tmaxIdx = Randomizer.nextInt(tempqstimes.length);
+        tmax = tempqstimes[tmaxIdx];
+        tminIdx = tmaxIdx + 1;
+        if (tmaxIdx == changeIdx-1 || tmaxIdx == changeIdx){
+            return Double.NEGATIVE_INFINITY;
+        }
+
+        if (tminIdx == tempqstimes.length)
             tmin = node.getHeight();
-//        else if (changeIdx-1==0)
-//            tmin=16.83;
         else
-            tmin = tempqstimes[changeIdx+1];
+            tmin = tempqstimes[tminIdx];
+
+        double newRange = tmax - tmin;
+        double oldRange;
+        if (changeIdx+1 == tempqstimes.length)
+            oldRange = tempqstimes[changeIdx-1] - node.getHeight();
+        else
+            oldRange = tempqstimes[changeIdx-1] - tempqstimes[changeIdx+1];
 
         double u = Randomizer.nextDouble();
         double tnew = u*tmin + (1-u)*tmax; // = u*(tmin-tmax)+tmax =u*(tmin-(tmin+tmax-tmin))+tmin+tmax-tmin
-                                            // invert u and 1-u and have the same as u(tmax-tmin)+tmin
-                                            // (1-u)*tmin + u*tmax-u*(tmax-tmin)-tmin=0 ???
-                                            // indeed tmin-u*tmin+u*tmin-u*tmax+u*tmin-tmin=0
+        // invert u and 1-u and have the same as u(tmax-tmin)+tmin
+        // (1-u)*tmin + u*tmax-u*(tmax-tmin)-tmin=0 ???
+        // indeed tmin-u*tmin+u*tmin-u*tmax+u*tmin-tmin=0
 
         tempqstimes[changeIdx]=tnew;
+        if (changeIdx > tmaxIdx){
+            for (int i=changeIdx; i>tmaxIdx+1; i--){
+                double swaptime = tempqstimes[i];
+                tempqstimes[i] = tempqstimes[i-1];
+                tempqstimes[i-1] = swaptime;
+            }
+        } else {
+            for (int i=changeIdx; i<tmaxIdx; i++){
+                double swaptime = tempqstimes[i];
+                tempqstimes[i] = tempqstimes[i+1];
+                tempqstimes[i+1] = swaptime;
+            }
+        }
         qsTree.setAttachmentTimesList(node, tempqstimes);
 
-        return 0.0;
+        return Math.log(newRange/oldRange);
 
     }
 

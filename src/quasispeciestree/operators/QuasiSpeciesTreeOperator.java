@@ -6,9 +6,9 @@ import beast.core.Operator;
 import beast.evolution.tree.Node;
 import beast.evolution.tree.QuasiSpeciesTree;
 import beast.evolution.tree.QuasiSpeciesNode;
-import beast.evolution.tree.Tree;
+import beast.core.parameter.RealParameter;
 
-import beast.core.Input.Validate;
+
 
 /**
  *  @author Veronika Boskova created on 23/07/2015
@@ -20,11 +20,17 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
             "quasiSpeciesTree", "Quasi-species tree on which to operate.",
             Input.Validate.REQUIRED);
 
-    protected QuasiSpeciesTree m_qsTree;
+    public Input<RealParameter> originInput = new Input<>(
+            "origin", "The time from origin to last sample (must be larger than tree height)",
+            Input.Validate.REQUIRED);
+
+    protected QuasiSpeciesTree qsTree;
+    protected RealParameter origin;
 
     @Override
     public void initAndValidate() throws Exception {
-        m_qsTree = quasiSpeciesTreeInput.get();
+        qsTree = quasiSpeciesTreeInput.get();
+        origin = originInput.get();
     }
 
     /* ***********************************************************************
@@ -191,7 +197,7 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
 
         // destTime must be higher than, if existant, the first haplotype arising below the node.getParent()
         for (Node childLeafNode : node.getAllLeafNodes()){
-            if (destTime < m_qsTree.getAttachmentTimesList((QuasiSpeciesNode)childLeafNode)[0]){
+            if (destTime < qsTree.getAttachmentTimesList((QuasiSpeciesNode)childLeafNode)[0]){
                 System.out.println("Cannot attach subtree to new destination. The haplotype arises above the " +
                         "destination attachment point...");
                 System.exit(0);
@@ -229,7 +235,7 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
 
         // destTime must be higher than, if existant, the first haplotype arising below the node.getParent()
         for (Node childLeafNode : node.getAllLeafNodes()){
-            if (destTime < m_qsTree.getAttachmentTimesList((QuasiSpeciesNode)childLeafNode)[0]){
+            if (destTime < qsTree.getAttachmentTimesList((QuasiSpeciesNode)childLeafNode)[0]){
                 System.out.println("Cannot set root of new tree to the destination time. The haplotype arises above the " +
                         "destination attachment point...");
                 System.exit(0);

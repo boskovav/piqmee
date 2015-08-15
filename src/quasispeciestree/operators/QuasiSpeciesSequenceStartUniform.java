@@ -7,22 +7,17 @@ import beast.evolution.tree.QuasiSpeciesTree;
 import beast.util.Randomizer;
 
 /**
- *  @author Veronika Boskova created on 27/07/2015
+ *  @author Veronika Boskova created on 06/08/2015
  */
-@Description("Within given haplotype, randomly selects one sequence "
-        + "attachment time and moves it uniformly in interval "
-        + "restricted by the closest previous and next attachment times "
+@Description("Choose a halotype at random and moves"
+        + "its start time uniformly in interval "
+        + "restricted by the closest previous haplotype"
+        +" and next attachment times "
         + "of another sequence from the same haplotype.")
-public class QuasiSpeciesSequenceAttachmentUniform extends QuasiSpeciesTreeOperator{
-
-//    public Input<Boolean> includeRootInput = new Input<>("includeRoot",
-//            "Allow modification of root node.", false);
-
-//    public Input<Double> rootScaleFactorInput = new Input<>("rootScaleFactor",
-//            "Root scale factor.", 0.9);
+public class QuasiSpeciesSequenceStartUniform extends QuasiSpeciesTreeOperator{
 
     /**
-     * Change the attachment time and return the hastings ratio.
+     * Change the start time and return the hastings ratio.
      *
      * @return log of Hastings Ratio
      */
@@ -31,6 +26,8 @@ public class QuasiSpeciesSequenceAttachmentUniform extends QuasiSpeciesTreeOpera
         final QuasiSpeciesTree qsTree = quasiSpeciesTreeInput.get(this);
         // Randomly select event on tree:
         // weighted by the number of events (i.e. count of each haplotype)
+// ...  change from here
+
         int event = Randomizer.nextInt(qsTree.getTotalAttachmentCounts());
 
 
@@ -63,26 +60,20 @@ public class QuasiSpeciesSequenceAttachmentUniform extends QuasiSpeciesTreeOpera
         double tmin, tmax;
         Double[] tempqstimes=qsTree.getAttachmentTimesList(node).clone();
 
-        // as we choose index changeIdx between 1 - #sequences of this haplotype then changeIdx-1=0 at minimum
-        // TODO change to only tmax = tempqstimes[changeIdx-1]; when testing is done
-//        if (changeIdx-1==0){
-//            tmax = 16.83;
-//        } else {
-            tmax = tempqstimes[changeIdx-1];
-//        }
-//        if (changeIdx+1>qsTree.getHaplotypeCounts((QuasiSpeciesNode) node))
+        // as we choose index changeIdx between 1 - #haplo then changeIdx-1=0 at minimum
+
+        tmax = tempqstimes[changeIdx-1];
+
         if (changeIdx+1>(tempqstimes.length-1))
             tmin = node.getHeight();
-//        else if (changeIdx-1==0)
-//            tmin=16.83;
         else
             tmin = tempqstimes[changeIdx+1];
 
         double u = Randomizer.nextDouble();
         double tnew = u*tmin + (1-u)*tmax; // = u*(tmin-tmax)+tmax =u*(tmin-(tmin+tmax-tmin))+tmin+tmax-tmin
-                                            // invert u and 1-u and have the same as u(tmax-tmin)+tmin
-                                            // (1-u)*tmin + u*tmax-u*(tmax-tmin)-tmin=0 ???
-                                            // indeed tmin-u*tmin+u*tmin-u*tmax+u*tmin-tmin=0
+        // invert u and 1-u and have the same as u(tmax-tmin)+tmin
+        // (1-u)*tmin + u*tmax-u*(tmax-tmin)-tmin=0 ???
+        // indeed tmin-u*tmin+u*tmin-u*tmax+u*tmin-tmin=0
 
         tempqstimes[changeIdx]=tnew;
         qsTree.setAttachmentTimesList(node, tempqstimes);
@@ -90,5 +81,10 @@ public class QuasiSpeciesSequenceAttachmentUniform extends QuasiSpeciesTreeOpera
         return 0.0;
 
     }
+
+
+
+
+
 
 }

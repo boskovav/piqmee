@@ -4,6 +4,7 @@ import beast.app.beauti.BeautiDoc;
 import beast.core.Input;
 import beast.core.StateNode;
 import beast.core.StateNodeInitialiser;
+import beast.core.parameter.RealParameter;
 import beast.util.TreeParser;
 
 import java.io.PrintStream;
@@ -24,13 +25,20 @@ public class QuasiSpeciesTree extends Tree {
     public Input<TraitSet> haplotypeCountsInput =
             new Input<TraitSet>("haplotypeCounts","Count of sequences for each haplotype (excluding the one representative of each haplotype in the tree input)", Input.Validate.REQUIRED);
     // necessary - we need to know which tips map to which haplotype
+    public Input<RealParameter> originInput = new Input<>(
+            "origin", "The time from origin to last sample (must be larger than tree height)",
+            Input.Validate.REQUIRED);
 
     protected ArrayList<Double[]> attachmentTimesList;
     protected ArrayList<Double[]> storedAttachmentTimesList;
     protected TraitSet haplotypeCounts;
     protected String qsLabel;
+    protected int[] startBranchCounts;
+    protected int[] storedStartBranchCounts;
 
     public QuasiSpeciesTree() { };
+
+    protected RealParameter origin;
 
 
     public QuasiSpeciesTree(Node rootNode) {
@@ -117,11 +125,13 @@ public class QuasiSpeciesTree extends Tree {
 
 
 
-
+        origin = originInput.get();
         haplotypeCounts = haplotypeCountsInput.get();
         qsLabel = haplotypeCounts.getTraitName();
 
         initAttachmentTimes();
+
+        startBranchCounts = countPossibleStartBranches();
 
     }
 
@@ -148,6 +158,9 @@ public class QuasiSpeciesTree extends Tree {
             // start with the star tree, and define start of haplotype at the multi-furcating node time
             for (int i=0; i<=getHaplotypeCounts((QuasiSpeciesNode)node); i++) {
                 if (this.getLeafNodeCount()>1){
+                    // TODO write a function that proposes RANDOM attachment times within given interval
+                    // TODO also to be used by the operators
+                    
                     tempqstimes[i]=node.getParent().getHeight()//*0.9999999
                     //if spread the haplotype at start a bit
 //                    -node.getParent().getHeight()*i*(1-0.9999999);
@@ -169,10 +182,10 @@ public class QuasiSpeciesTree extends Tree {
 //                  }
                     // TODO this is just for orig=MRCA  = 17 example
                 } else {
-//                    tempqstimes[i]=17//*0.9999999
-//                            -i*(17/(1+getHaplotypeCounts((QuasiSpeciesNode)node)));
-                    System.out.println("The tree has only one haplotype. This is not accepted by the current method implementation.");
-                    System.exit(0);
+                    tempqstimes[i]=17//*0.9999999
+                            -i*(17/(1+getHaplotypeCounts((QuasiSpeciesNode)node)));
+//                    System.out.println("The tree has only one haplotype. This is not accepted by the current method implementation.");
+//                    System.exit(0);
                 }
 
             }
@@ -213,6 +226,10 @@ public class QuasiSpeciesTree extends Tree {
             totalCount += ( haplotypeCounts.getValue(node.getID())) ;
         }
         return totalCount;
+    }
+
+    public int[] getStartBranchCounts(){
+        return startBranchCounts;
     }
 
 
@@ -709,8 +726,8 @@ public class QuasiSpeciesTree extends Tree {
     @Override
     protected void store() {
 
-        Collections.copy(storedAttachmentTimesList,attachmentTimesList);
-
+        Collections.copy(storedAttachmentTimesList, attachmentTimesList);
+        System.arraycopy(startBranchCounts, 0 , storedStartBranchCounts, 0, startBranchCounts.length);
 //        storedRoot = m_storedNodes[root.getNr()];
 //        int iRoot = root.getNr();
 //
@@ -822,7 +839,9 @@ public class QuasiSpeciesTree extends Tree {
         final ArrayList<Double[]> tmp = storedAttachmentTimesList;
         storedAttachmentTimesList = attachmentTimesList;
         attachmentTimesList = tmp;
-
+        final int[] tmpstart = storedStartBranchCounts;
+        storedStartBranchCounts = startBranchCounts;
+        startBranchCounts = tmpstart;
     }
     /////////////////////////////////////////////////
     // Methods implementing the Loggable interface //
