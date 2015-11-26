@@ -1,6 +1,7 @@
-package beast.evolution.tree;
+package quasispeciestree.tree;
 
 import beast.core.Description;
+import beast.evolution.tree.Node;
 
 /**
  * @author Veronika Boskova created on 01/07/2015.
@@ -38,6 +39,7 @@ public class QuasiSpeciesNode extends Node {
         node.height = height;
         node.parent = parent;
         node.children.addAll(children);
+
 
         node.haploName = haploName;
 

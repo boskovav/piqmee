@@ -1,10 +1,12 @@
-package beast.evolution.tree;
+package quasispeciestree.tree;
 
-import beast.app.beauti.BeautiDoc;
 import beast.core.Input;
 import beast.core.StateNode;
 import beast.core.StateNodeInitialiser;
 import beast.core.parameter.RealParameter;
+import beast.evolution.tree.Node;
+import beast.evolution.tree.TraitSet;
+import beast.evolution.tree.Tree;
 import beast.util.TreeParser;
 
 import java.io.PrintStream;
@@ -63,7 +65,7 @@ public class QuasiSpeciesTree extends Tree {
 
             if (!(m_initial.get() instanceof QuasiSpeciesTree)) {
                 throw new IllegalArgumentException("Attempted to initialise "
-                        + "multi-type tree with regular tree object.");
+                        + "quasi-species tree with regular tree object.");
             }
 
             QuasiSpeciesTree other = (QuasiSpeciesTree)m_initial.get();
