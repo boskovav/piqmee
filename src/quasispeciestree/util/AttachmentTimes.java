@@ -2,8 +2,8 @@ package quasispeciestree.util;
 
 import beast.core.*;
 import beast.evolution.tree.Node;
-import beast.evolution.tree.QuasiSpeciesTree;
-import beast.evolution.tree.QuasiSpeciesNode;
+import quasispeciestree.tree.QuasiSpeciesTree;
+import quasispeciestree.tree.QuasiSpeciesNode;
 
 import java.io.PrintStream;
 

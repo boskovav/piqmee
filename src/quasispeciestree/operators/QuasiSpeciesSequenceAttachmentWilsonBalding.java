@@ -2,13 +2,9 @@ package quasispeciestree.operators;
 
 import beast.core.Description;
 import beast.evolution.tree.Node;
-import beast.evolution.tree.QuasiSpeciesNode;
-import beast.evolution.tree.QuasiSpeciesTree;
+import quasispeciestree.tree.QuasiSpeciesNode;
+import quasispeciestree.tree.QuasiSpeciesTree;
 import beast.util.Randomizer;
-
-import java.lang.reflect.Array;
-import java.util.Collections;
-import java.util.stream.Collectors;
 
 /**
  *  @author Veronika Boskova created on 07/08/2015
@@ -103,6 +99,8 @@ public class QuasiSpeciesSequenceAttachmentWilsonBalding extends QuasiSpeciesTre
             }
         }
         qsTree.setAttachmentTimesList(node, tempqstimes);
+
+        node.makeDirty(QuasiSpeciesTree.IS_FILTHY);
 
         return Math.log(newRange/oldRange);
 

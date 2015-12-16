@@ -4,8 +4,8 @@ import beast.core.Description;
 import beast.core.Input;
 import beast.core.Operator;
 import beast.evolution.tree.Node;
-import beast.evolution.tree.QuasiSpeciesTree;
-import beast.evolution.tree.QuasiSpeciesNode;
+import quasispeciestree.tree.QuasiSpeciesTree;
+import quasispeciestree.tree.QuasiSpeciesNode;
 import beast.core.parameter.RealParameter;
 
 

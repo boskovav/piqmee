@@ -2,8 +2,8 @@ package quasispeciestree.operators;
 
 import beast.core.Description;
 import beast.evolution.tree.Node;
-import beast.evolution.tree.QuasiSpeciesNode;
-import beast.evolution.tree.QuasiSpeciesTree;
+import quasispeciestree.tree.QuasiSpeciesNode;
+import quasispeciestree.tree.QuasiSpeciesTree;
 import beast.util.Randomizer;
 
 /**

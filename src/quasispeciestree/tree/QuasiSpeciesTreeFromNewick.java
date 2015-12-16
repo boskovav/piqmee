@@ -1,8 +1,10 @@
-package beast.evolution.tree;
+package quasispeciestree.tree;
 
 import beast.core.*;
 import beast.core.Input.Validate;
+import beast.evolution.tree.Tree;
 import beast.util.TreeParser;
+
 import java.util.List;
 
 /**

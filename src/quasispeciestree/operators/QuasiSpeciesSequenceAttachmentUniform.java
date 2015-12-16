@@ -2,8 +2,8 @@ package quasispeciestree.operators;
 
 import beast.core.Description;
 import beast.evolution.tree.Node;
-import beast.evolution.tree.QuasiSpeciesNode;
-import beast.evolution.tree.QuasiSpeciesTree;
+import quasispeciestree.tree.QuasiSpeciesNode;
+import quasispeciestree.tree.QuasiSpeciesTree;
 import beast.util.Randomizer;
 
 /**
@@ -86,6 +86,8 @@ public class QuasiSpeciesSequenceAttachmentUniform extends QuasiSpeciesTreeOpera
 
         tempqstimes[changeIdx]=tnew;
         qsTree.setAttachmentTimesList(node, tempqstimes);
+
+        node.makeDirty(QuasiSpeciesTree.IS_FILTHY);
 
         return 0.0;
 

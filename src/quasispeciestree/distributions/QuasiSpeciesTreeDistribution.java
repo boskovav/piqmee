@@ -1,7 +1,7 @@
 package quasispeciestree.distributions;
 
 import beast.core.*;
-import beast.evolution.tree.QuasiSpeciesTree;
+import quasispeciestree.tree.QuasiSpeciesTree;
 
 import java.util.List;
 import java.util.Random;

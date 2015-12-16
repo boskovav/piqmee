@@ -80,20 +80,20 @@ public class QuasiSpeciesTree extends Tree {
                 // make a caterpillar
                 List<String> sTaxa = m_taxonset.get().asStringList();
                 Node left = new QuasiSpeciesNode();
-                left.labelNr = 0;
-                left.height = 0;
+                left.setNr(0);
+                left.setHeight(0);
                 left.setID(sTaxa.get(0));
                 for (int i = 1; i < sTaxa.size(); i++) {
                     Node right = new QuasiSpeciesNode();
-                    right.labelNr = i;
-                    right.height = 0;
+                    right.setNr(i);
+                    right.setHeight(0);
                     right.setID(sTaxa.get(i));
                     Node parent = new QuasiSpeciesNode();
-                    parent.labelNr = sTaxa.size() + i - 1;
-                    parent.height = i;
-                    left.parent = parent;
+                    parent.setNr(sTaxa.size() + i - 1);
+                    parent.setHeight(i);
+                    left.setParent(parent);
                     parent.setLeft(left);
-                    right.parent = parent;
+                    right.setParent(parent);
                     parent.setRight(right);
                     left = parent;
                 }
@@ -104,10 +104,9 @@ public class QuasiSpeciesTree extends Tree {
 
             } else {
                 // make dummy tree with a single root node
-                root = new QuasiSpeciesNode();
-                root.labelNr = 0;
-                root.labelNr = 0;
-                root.m_tree = this;
+                root = new Node();
+                root.setNr(0);
+                ((QuasiSpeciesNode) root).setmTree(this);
                 nodeCount = 1;
                 internalNodeCount = 0;
                 leafNodeCount = 1;
@@ -134,7 +133,8 @@ public class QuasiSpeciesTree extends Tree {
         initAttachmentTimes();
 
         startBranchCounts = countPossibleStartBranches();
-
+        storedStartBranchCounts = new int[startBranchCounts.length];
+        System.arraycopy(startBranchCounts,0,storedStartBranchCounts,0,startBranchCounts.length);
     }
 
     /*
@@ -216,6 +216,15 @@ public class QuasiSpeciesTree extends Tree {
 
     public Double[] getAttachmentTimesList(QuasiSpeciesNode node){
         return attachmentTimesList.get(node.getNr());
+    }
+
+    public Double getTotalAttachmentTimes(QuasiSpeciesNode node){
+        Double totalTime=0.0;
+        Double [] timesList=attachmentTimesList.get(node.getNr());
+        for (int i=0; i<timesList.length; i++){
+            totalTime += timesList[i] ;
+        }
+        return totalTime;
     }
 
     public double getHaplotypeCounts(QuasiSpeciesNode node){
@@ -328,7 +337,7 @@ public class QuasiSpeciesTree extends Tree {
     public int[] countPossibleStartBranches(){
         // array to store the parent haplotype of each internal node, if the first haplotype, the parent haplotype is null
         ArrayList<QuasiSpeciesNode> parentHaplo = new ArrayList<>();
-        for (int i=0; i<this.getInternalNodeCount(); i++){
+        for (int i=0; i<=this.getInternalNodeCount(); i++){
             parentHaplo.add(i, null);
         }
         // starting at the root of the tree, see what is the order of the haplotype, always the haplotype below,
@@ -338,10 +347,10 @@ public class QuasiSpeciesTree extends Tree {
         // and by default we set each entry of parentHaplo array to null
         getParentHaplo((QuasiSpeciesNode) root, (QuasiSpeciesNode) root, parentHaplo);
         // array to store the count of possible start branches for each haplotype
-        int[] startBranchCountArray = new int[this.getInternalNodeCount()];
+        int[] startBranchCountArray = new int[this.getLeafNodeCount()];
         // get the counts of possible number of start branches for each haplotype (i.e. internal node attachment branches)
         int nTips=this.getLeafNodeCount();
-        for (int i=0; i<this.getInternalNodeCount(); i++){
+        for (int i=0; i<=this.getInternalNodeCount(); i++){
             // once determined the parent haplotype find out from how many branches
             // of the parent haplotype can it actually branch off
             if (parentHaplo.get(i)!=root && parentHaplo.get(i)!=null){
@@ -477,11 +486,11 @@ public class QuasiSpeciesTree extends Tree {
      */
     private void listNodes(QuasiSpeciesNode node, QuasiSpeciesNode[] nodes) {
         nodes[node.getNr()] = node;
-        node.m_tree = this;
+        node.setmTree(this);
         if (!node.isLeaf()) {
-            listNodes(node.getLeft(), nodes);
+            listNodes((QuasiSpeciesNode) node.getLeft(), nodes);
             if (node.getRight()!=null)
-                listNodes(node.getRight(), nodes);
+                listNodes((QuasiSpeciesNode) node.getRight(), nodes);
         }
     }
 
@@ -522,7 +531,7 @@ public class QuasiSpeciesTree extends Tree {
         ID = qsTree.ID;
         root = qsNodes[qsTree.root.getNr()];
         root.assignFrom(qsNodes, qsTree.root);
-        root.parent = null;
+        root.setParent(null);
 
         nodeCount = qsTree.nodeCount;
         internalNodeCount = qsTree.internalNodeCount;
@@ -548,8 +557,8 @@ public class QuasiSpeciesTree extends Tree {
         Node[] otherNodes = qsTree.m_nodes;
         int iRoot = root.getNr();
         assignFromFragileHelper(0, iRoot, otherNodes);
-        root.height = otherNodes[iRoot].height;
-        root.parent = null;
+        root.setHeight(otherNodes[iRoot].getHeight());
+        root.setParent(null);
 
         QuasiSpeciesNode qsRoot = (QuasiSpeciesNode)root;
         qsRoot.haploName = ((QuasiSpeciesNode)(otherNodes[iRoot])).haploName;
@@ -574,8 +583,8 @@ public class QuasiSpeciesTree extends Tree {
         for (int i = iStart; i < iEnd; i++) {
             QuasiSpeciesNode sink = (QuasiSpeciesNode)m_nodes[i];
             QuasiSpeciesNode src = (QuasiSpeciesNode)otherNodes[i];
-            sink.height = src.height;
-            sink.parent = m_nodes[src.parent.getNr()];
+            sink.setHeight(src.getHeight());
+            sink.setParent(m_nodes[src.getParent().getNr()]);
 
             sink.haploName = src.haploName;
 
@@ -729,7 +738,7 @@ public class QuasiSpeciesTree extends Tree {
     protected void store() {
 
         Collections.copy(storedAttachmentTimesList, attachmentTimesList);
-        System.arraycopy(startBranchCounts, 0 , storedStartBranchCounts, 0, startBranchCounts.length);
+        System.arraycopy(startBranchCounts, 0, storedStartBranchCounts, 0, startBranchCounts.length);
 //        storedRoot = m_storedNodes[root.getNr()];
 //        int iRoot = root.getNr();
 //
@@ -795,18 +804,18 @@ public class QuasiSpeciesTree extends Tree {
         for (int i = iStart; i < iEnd; i++) {
             final QuasiSpeciesNode sink = (QuasiSpeciesNode)m_storedNodes[i];
             final QuasiSpeciesNode src = (QuasiSpeciesNode)m_nodes[i];
-            sink.height = src.height;
+            sink.setHeight(src.getHeight());
 
-            if ( src.parent != null ) {
-                sink.parent = m_storedNodes[src.parent.getNr()];
+            if ( src.getParent() != null ) {
+                sink.setParent(m_storedNodes[src.getParent().getNr()]);
             } else {
                 // currently only called in the case of sampled ancestor trees
                 // where root node is not always last in the list
-                sink.parent = null;
+                sink.setParent(null);
             }
 
-            final List<Node> children = sink.children;
-            final List<Node> srcChildren = src.children;
+            final List<Node> children = sink.getChildren();
+            final List<Node> srcChildren = src.getChildren();
 
             if( children.size() == srcChildren.size() ) {
                 // shave some more time by avoiding list clear and add
@@ -814,7 +823,7 @@ public class QuasiSpeciesTree extends Tree {
                     final Node srcChild = srcChildren.get(k);
                     // don't call addChild, which calls  setParent(..., true);
                     final Node c = m_storedNodes[srcChild.getNr()];
-                    c.parent = sink;
+                    c.setParent(sink);
                     children.set(k, c);
                 }
             } else {
@@ -823,7 +832,7 @@ public class QuasiSpeciesTree extends Tree {
                 for (final Node srcChild : srcChildren) {
                     // don't call addChild, which calls  setParent(..., true);
                     final Node c = m_storedNodes[srcChild.getNr()];
-                    c.parent = sink;
+                    c.setParent(sink);
                     children.add(c);
                     //sink.addChild(c);
                 }

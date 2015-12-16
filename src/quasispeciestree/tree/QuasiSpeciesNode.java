@@ -10,6 +10,14 @@ import beast.evolution.tree.Node;
 @Description("A node in a quasi-species phylogenetic tree.")
 public class QuasiSpeciesNode extends Node {
 
+
+    @Override
+    public void initAndValidate() throws Exception {
+
+        super.initAndValidate();
+
+    }
+
     String haploName;
 
     /**
@@ -32,14 +40,28 @@ public class QuasiSpeciesNode extends Node {
     }
 
     /**
+     * Set quasi-specied tree for a copied node
+     */
+
+    public void setmTree(QuasiSpeciesTree tree) {
+        this.m_tree = tree;
+    }
+
+    /**
      * @return shallow copy of node
      */
     public QuasiSpeciesNode shallowCopy() {
         QuasiSpeciesNode node = new QuasiSpeciesNode();
         node.height = height;
-        node.parent = parent;
-        node.children.addAll(children);
-
+        node.setParent(this.getParent());
+        if (getLeft()!=null) {
+            node.setLeft(getLeft().copy());
+            node.getLeft().setParent(node);
+            if (getRight()!=null) {
+                node.setRight(getRight().copy());
+                node.getRight().setParent(node);
+            }
+        }
 
         node.haploName = haploName;
 
@@ -66,7 +88,7 @@ public class QuasiSpeciesNode extends Node {
         node.height = height;
         node.labelNr = labelNr;
         node.metaDataString = metaDataString;
-        node.parent = null;
+        node.setParent(null);
         node.ID = ID;
 
         node.haploName = haploName;
@@ -89,10 +111,10 @@ public class QuasiSpeciesNode extends Node {
      */
     @Override
     public void assignFrom(Node[] nodes, Node node) {
-        height = node.height;
-        labelNr = node.labelNr;
+        height = node.getHeight();
+        labelNr = node.getNr();
         metaDataString = node.metaDataString;
-        parent = null;
+        setParent(null);
         ID = node.getID();
 
         QuasiSpeciesNode qsNode = (QuasiSpeciesNode)node;
@@ -101,11 +123,11 @@ public class QuasiSpeciesNode extends Node {
         if (node.getLeft()!=null) {
             setLeft(nodes[node.getLeft().getNr()]);
             getLeft().assignFrom(nodes, node.getLeft());
-            getLeft().parent = this;
+            getLeft().setParent(this);
             if (node.getRight()!=null) {
                 setRight(nodes[node.getRight().getNr()]);
                 getRight().assignFrom(nodes, node.getRight());
-                getRight().parent = this;
+                getRight().setParent(this);
             }
         }
     }
