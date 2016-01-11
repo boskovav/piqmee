@@ -75,9 +75,9 @@ public class AttachmentTimes extends CalculationNode implements Function, Loggab
 
     @Override
     public void log(int nSample, PrintStream out) {
-
-        for (int time = 0; time < qsTree.getAttachmentTimesList(haploNode).length; time++) {
-            out.print(qsTree.getAttachmentTimesList(haploNode)[time] + "\t");
+        Double[] attachmentTimes=qsTree.getAttachmentTimesList(haploNode);
+        for (int time = 0; time < attachmentTimes.length; time++) {
+            out.print(attachmentTimes[time] + "\t");
         }
     }
 

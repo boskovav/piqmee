@@ -11,7 +11,8 @@ import beast.util.Randomizer;
  */
 
 @Description("Within given haplotype, randomly selects one sequence "
-        + "attachment time, selects a new interval, where this attachment "
+        + "attachment time, selects a new interval, restricted by the "
+        + "clone start and clone tip times, where this attachment "
         + "time will be added to and attaches it uniformly in that interval.")
 public class QuasiSpeciesSequenceAttachmentWilsonBalding extends QuasiSpeciesTreeOperator{
 
@@ -62,6 +63,7 @@ public class QuasiSpeciesSequenceAttachmentWilsonBalding extends QuasiSpeciesTre
         tmaxIdx = Randomizer.nextInt(tempqstimes.length);
         tmax = tempqstimes[tmaxIdx];
         tminIdx = tmaxIdx + 1;
+        // here we do not allow the event to be repositioned to the interval delimited by itself
         if (tmaxIdx == changeIdx-1 || tmaxIdx == changeIdx){
             return Double.NEGATIVE_INFINITY;
         }
@@ -82,7 +84,7 @@ public class QuasiSpeciesSequenceAttachmentWilsonBalding extends QuasiSpeciesTre
         double tnew = u*tmin + (1-u)*tmax; // = u*(tmin-tmax)+tmax =u*(tmin-(tmin+tmax-tmin))+tmin+tmax-tmin
         // invert u and 1-u and have the same as u(tmax-tmin)+tmin
         // (1-u)*tmin + u*tmax-u*(tmax-tmin)-tmin=0 ???
-        // indeed tmin-u*tmin+u*tmin-u*tmax+u*tmin-tmin=0
+        // indeed tmin-u*tmin+u*tmax-u*tmax+u*tmin-tmin=0
 
         tempqstimes[changeIdx]=tnew;
         if (changeIdx > tmaxIdx){

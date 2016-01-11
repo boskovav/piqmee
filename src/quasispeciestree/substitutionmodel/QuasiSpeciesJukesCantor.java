@@ -85,7 +85,11 @@ public class QuasiSpeciesJukesCantor extends QuasiSpeciesSubstitutionModel.Base 
      *                          So, nochangematrix must be of size n where n is number of states.
      */
     public void getQSTransitionProbabilities(QuasiSpeciesNode node, double fTime, double fRate, double[] nochangematrix) {
-        double fDelta = fTime; //4.0 / 3.0 * (fTime);
+        double fDelta = 4.0 / 3.0 * (fTime);
+//        We need the 4/3 to measure branch length in units of substitutions:
+//        When branch length, \nu , is measured in the expected number of changes per site then:
+//        P_{ij}(\nu )=\left\{{\begin{array}{cc}{1 \over 4}+{3 \over 4}e^{-4\nu /3}&{\mbox{ if }}i=j\\{1 \over 4}-{1 \over 4}e^{-4\nu /3}&{\mbox{ if }}i\neq j\end{array}}\right.
+//        It is worth noticing that \nu ={3 \over 4}t\mu =({\mu  \over 4}+{\mu  \over 4}+{\mu  \over 4})t
         double fPStay = Math.exp(-fDelta * fRate);
 
         // fill the nochangematrix with move probabilities
