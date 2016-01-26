@@ -14,7 +14,7 @@ import beast.util.Randomizer;
         + "attachment time, selects a new interval, restricted by the "
         + "clone start and clone tip times, where this attachment "
         + "time will be added to and attaches it uniformly in that interval.")
-public class QuasiSpeciesSequenceAttachmentWilsonBalding extends QuasiSpeciesTreeOperator{
+public class QuasiSpeciesSequenceAttachmentRandom extends QuasiSpeciesTreeOperator{
 
     /**
      * Change the attachment time and return the hastings ratio.
