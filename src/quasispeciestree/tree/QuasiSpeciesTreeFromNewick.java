@@ -23,7 +23,7 @@ public class QuasiSpeciesTreeFromNewick extends QuasiSpeciesTree implements Stat
 
     @Override
     public void initAndValidate() throws Exception {
-// TODO: gives NULL pointer warning here... what can I do?
+// gives NULL pointer warning here... what can I do --> nothing this is normal behavior!!!
 
         TreeParser inputTree = new TreeParser();
         inputTree.initByName(

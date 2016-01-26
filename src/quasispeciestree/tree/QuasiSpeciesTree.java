@@ -37,6 +37,13 @@ public class QuasiSpeciesTree extends Tree {
     protected String qsLabel;
     protected int[] startBranchCounts;
     protected int[] storedStartBranchCounts;
+    protected ArrayList<QuasiSpeciesNode> parentHaplo;
+    // TODO from discussion with denise on 25.01.2016
+    // private instead of protected???
+    protected ArrayList<QuasiSpeciesNode> storedParentHaplo;
+    protected ArrayList<QuasiSpeciesNode> aboveNodeHaplo;
+    protected ArrayList<QuasiSpeciesNode> storedAboveNodeHaplo;
+
 
     public QuasiSpeciesTree() { };
 
@@ -132,6 +139,12 @@ public class QuasiSpeciesTree extends Tree {
 
         initAttachmentTimes();
 
+        fillParentHaploAndAboveNodeHaplo();
+
+//        System.arraycopy(parentHaplo,0,storedParentHaplo,0,parentHaplo.size());
+
+//        System.arraycopy(aboveNodeHaplo,0,storedAboveNodeHaplo,0,aboveNodeHaplo.size());
+
         startBranchCounts = countPossibleStartBranches();
         storedStartBranchCounts = new int[startBranchCounts.length];
         System.arraycopy(startBranchCounts,0,storedStartBranchCounts,0,startBranchCounts.length);
@@ -159,14 +172,14 @@ public class QuasiSpeciesTree extends Tree {
             Double[] tempqstimes = new Double[(int) haplotypeCounts.getValue(node.getID()) + 1];
             // start with the star tree, and define start of haplotype at the multi-furcating node time
             for (int i=0; i<=getHaplotypeCounts((QuasiSpeciesNode)node); i++) {
-                if (this.getLeafNodeCount()>1){
+//                if (this.getLeafNodeCount()>1){
                     // TODO write a function that proposes RANDOM attachment times within given interval
-                    // TODO also to be used by the operators
+                    // TODO also to be used by the operators -- > is this really needed?
                     
                     tempqstimes[i]=node.getParent().getHeight()//*0.9999999
                     //if spread the haplotype at start a bit
 //                    -node.getParent().getHeight()*i*(1-0.9999999);
-                    -i*(node.getParent().getHeight()/(1+getHaplotypeCounts((QuasiSpeciesNode)node)));
+                    -(i+1)*(node.getParent().getHeight()/(2+getHaplotypeCounts((QuasiSpeciesNode)node)));
 // testing
 //                  if (node.getID()==this.getExternalNodes().get(2).getID()){
 //                      tempqstimes[i]=node.getParent().getParent().getHeight()*0.9999999
@@ -183,12 +196,12 @@ public class QuasiSpeciesTree extends Tree {
 //                                -i*0.3;
 //                  }
                     // TODO this is just for orig=MRCA  = 17 example
-                } else {
-                    tempqstimes[i]=17//*0.9999999
-                            -i*(17/(1+getHaplotypeCounts((QuasiSpeciesNode)node)));
-//                    System.out.println("The tree has only one haplotype. This is not accepted by the current method implementation.");
-//                    System.exit(0);
-                }
+//                } else {
+//                    tempqstimes[i]=17//*0.9999999
+//                            -(i+1)*(17/(2+getHaplotypeCounts((QuasiSpeciesNode)node)));
+////                    System.out.println("The tree has only one haplotype. This is not accepted by the current method implementation.");
+////                    System.exit(0);
+//                }
 
             }
             ((QuasiSpeciesNode) node).setHaploName(node.getID().toString());
@@ -220,7 +233,7 @@ public class QuasiSpeciesTree extends Tree {
 
     public Double getTotalAttachmentTimes(QuasiSpeciesNode node){
         Double totalTime=0.0;
-        Double [] timesList=attachmentTimesList.get(node.getNr());
+        Double[] timesList=attachmentTimesList.get(node.getNr());
         for (int i=0; i<timesList.length; i++){
             totalTime += timesList[i] ;
         }
@@ -242,6 +255,38 @@ public class QuasiSpeciesTree extends Tree {
     public int[] getStartBranchCounts(){
         return startBranchCounts;
     }
+
+    public void  setStartBranchCounts(int[] startBranchCountsArray){
+        startBranchCounts = startBranchCountsArray;
+    }
+
+    public ArrayList<QuasiSpeciesNode> getParentHaplo() {return parentHaplo; }
+
+    public QuasiSpeciesNode getParentHaplo(int position) {
+        return parentHaplo.get(position);
+    }
+
+
+    // clear and add method for parent haplo
+
+    public ArrayList<QuasiSpeciesNode> getAboveNodeHaplo() {return aboveNodeHaplo; }
+
+
+//    /**
+//     * Method to propose haplotype start time and attachment times for each of its copies
+//     * for each haplotype
+//     *
+//     * @return Array holding for each haplotype (#this.getExternalNodes()) the times of start
+//     *         and attachemtn times, held in array at position determined by node.getNr()
+//     */
+//    public ArrayList<Double[]> proposeHaploStartAndAttachemntTimes(QuasiSpeciesNode node, double time){
+//
+//
+//    }
+
+
+
+
 
 
 
@@ -282,7 +327,7 @@ public class QuasiSpeciesTree extends Tree {
             System.exit(0);
         } else {
             for (int i=1; i < AttachmentTimesTemp.length; i++){
-                // TODO ??????? shall we allow branching from the branch with the same age???????
+                // We do NOT allow branching from the branch with the starting starting age!!!
                 if ( haploseqage < (double) AttachmentTimesTemp[i] && i != ihaploseq ){
                     abcount +=1;
                 }
@@ -293,6 +338,7 @@ public class QuasiSpeciesTree extends Tree {
         return abcount;
     }
 
+
     /**
      * Method to count the possible number of start branches for each haplotype
      * at one pre-order tree pass (prevent energy & resources waste)
@@ -300,61 +346,19 @@ public class QuasiSpeciesTree extends Tree {
      * @return Array holding for each haplotype (#this.getExternalNodes()) the number
      *         of possible start branches, held in array at position determined by node.getNr()
      */
-//    public int[] countPossibleStartBranches(){
-//        // array to store the parent haplotype of each haplotype, if the first haplotype, the parent haplotype is null
-//        ArrayList<QuasiSpeciesNode> parentHaplo = new ArrayList<>();
-//        // array to store the parent node for each haplotype
-//        ArrayList<QuasiSpeciesNode> parentNodes = new ArrayList<>();
-//        for (int i=0; i<this.getLeafNodeCount(); i++){
-//            parentHaplo.add(i, null);
-//            parentNodes.add(i,null);
-//        }
-//        // starting at the root of the tree, see what is the order of the haplotypes, always the haplotype below,
-//        // starts from the haplotype above (parent)
-//        //
-//        // if there is already haplotype arising at root-origin branch, this will have to arise from NULL haplotype anyways
-//        // and by default we set each entry of parentHaplo array to null
-//        getParentHaplo((QuasiSpeciesNode) root, (QuasiSpeciesNode) root, parentHaplo, parentNodes);
-//        // array to store the count of possible start branches for each haplotype
-//        int[] startBranchCountArray = new int[this.getLeafNodeCount()];
-//        // get the counts of possible start branches
-//        for (int i=0; i<this.getLeafNodeCount(); i++){
-//            // once determined the parent haplotype, and haplotype's parent node find out from how many branches
-//            // of the parent haplotype can it actually branch off
-//            if (parentHaplo.get(i)!=root){
-//                startBranchCountArray[i]=countPossibleAttachmentBranches(parentHaplo.get(i), 0,
-////                        this.getAttachmentTimesList((QuasiSpeciesNode) this.getNode(i))[0]);
-//                        parentNodes.get(i).getHeight());
-//            } else {
-//                startBranchCountArray[i]=1;
-//            }
-//// testing
-////            System.out.println("Number of possible attachment branches of " + this.getNode(i).getID()
-////            + " = " + startBranchCountArray[i]);
-//        }
-//        return startBranchCountArray;
-//    }
     public int[] countPossibleStartBranches(){
-        // array to store the parent haplotype of each internal node, if the first haplotype, the parent haplotype is null
-        ArrayList<QuasiSpeciesNode> parentHaplo = new ArrayList<>();
-        for (int i=0; i<=this.getInternalNodeCount(); i++){
-            parentHaplo.add(i, null);
-        }
-        // starting at the root of the tree, see what is the order of the haplotype, always the haplotype below,
-        // starts from the haplotype above (parent)
-        //
-        // if there is already haplotype arising at root-origin branch, this will have to arise from NULL haplotype anyways
-        // and by default we set each entry of parentHaplo array to null
-        getParentHaplo((QuasiSpeciesNode) root, (QuasiSpeciesNode) root, parentHaplo);
-        // array to store the count of possible start branches for each haplotype
-        int[] startBranchCountArray = new int[this.getLeafNodeCount()];
         // get the counts of possible number of start branches for each haplotype (i.e. internal node attachment branches)
         int nTips=this.getLeafNodeCount();
-        for (int i=0; i<=this.getInternalNodeCount(); i++){
+//        // array to store the count of possible start branches for each haplotype
+//        int[] startBranchCountArray = new int[nTips];
+        // array to store the count of possible start branches for each internal node
+        int[] startBranchCountArray = new int[this.getInternalNodeCount()];
+        for (int i=0; i<this.getInternalNodeCount(); i++){
             // once determined the parent haplotype find out from how many branches
             // of the parent haplotype can it actually branch off
-            if (parentHaplo.get(i)!=root && parentHaplo.get(i)!=null){
-                startBranchCountArray[i]=countPossibleAttachmentBranches(parentHaplo.get(i), 0,
+//            if (this.parentHaplo.get(i)!=root && this.parentHaplo.get(i)!=null){
+            if (this.aboveNodeHaplo.get(i)!=null){
+                startBranchCountArray[i]=countPossibleAttachmentBranches(this.aboveNodeHaplo.get(i), 0,
 //                        this.getAttachmentTimesList((QuasiSpeciesNode) this.getNode(i))[0]);
                         this.getNode(nTips + i).getHeight());
             } else {
@@ -367,8 +371,47 @@ public class QuasiSpeciesTree extends Tree {
         return startBranchCountArray;
     }
 
+
     /**
-     * Helper method used by countPossibleStartBranches to assign parent to
+     * Method to determine the parent haplotype for each haplotype
+     *  and determine the haplotype above each internal node (if none, set to null)
+     * at one pre-order tree pass (prevent energy & resources waste)
+     *
+     * input and return:
+     *         1) Array holding for each haplotype (#this.getExternalNodes()) the haplotype
+     *         it arises from, held in array at position determined by node.getNr()
+     *         2) Array holding for each haplotype (#this.getExternalNodes()) the node
+     *         above which it arises on the tree
+     */
+    private void fillParentHaploAndAboveNodeHaplo(){
+        // array to store the parent haplotype of each internal node, if the first haplotype, the parent haplotype is null
+        parentHaplo = new ArrayList<>(this.getLeafNodeCount());
+        storedParentHaplo = new ArrayList<>(this.getLeafNodeCount());
+        for (int i=0; i<this.getLeafNodeCount();i++){
+            parentHaplo.add(i,null);
+            storedParentHaplo.add(i,null);
+        }
+        aboveNodeHaplo = new ArrayList<>(this.getInternalNodeCount());
+        storedAboveNodeHaplo = new ArrayList<>(this.getInternalNodeCount());
+        for (int i=0; i<this.getInternalNodeCount();i++){
+            aboveNodeHaplo.add(i,null);
+            storedAboveNodeHaplo.add(i,null);
+        }
+//        for (int i=0; i<=this.getInternalNodeCount(); i++){
+//            parentHaplo.add(i, null);
+//        }
+        // starting at the root of the tree, see what is the order of the haplotype, always the haplotype below,
+        // starts from the haplotype above (parent)
+        //
+        // if there is already haplotype arising at root-origin branch, this will have to arise from NULL haplotype anyways
+        // and by default we set each entry of parentHaplo array to null
+        findParentHaploAndAboveNodeHaplo(null, (QuasiSpeciesNode) root, parentHaplo, aboveNodeHaplo);
+
+    }
+
+
+    /**
+     * Helper method used by fillParentHaploAndAboveHaplotype to assign parent to
      * each haplotype within quasi-species. This is a pre-order traversal, meaning that
      * starting at the root of the tree, we track what is the order of the
      * haplotypes arising, the haplotype below always has to start from the haplotype above (parent)
@@ -377,61 +420,25 @@ public class QuasiSpeciesTree extends Tree {
      *                      above nextNode (disregarding possible change on the incoming branch)
      * @param nextNode Node whose incoming branch we are testing for haplotype change
      * @param parentHaplo Original array holding parent haplotype for each internal node in the tree,
-     *                if not parent haplotype ... this is by default root node
-//     * @param parentNodes Original array holding parent nodes for each haplotype in the tree
+     *                if not parent haplotype ... this is by default null
+     * @param aboveNodeHaplo Original array holding node it arises above for each internal node in the tree,
+     *                if not parent haplotype ... this is by default null
      */
-//    private void getParentHaplo(QuasiSpeciesNode currentHaploType, QuasiSpeciesNode nextNode,
-//                             ArrayList<QuasiSpeciesNode> parentHaplo, ArrayList<QuasiSpeciesNode> parentNodes){
-//        // get haplotype starting at a branch directly above next node --- if no haplotype (null), check children nodes
-//        // check whether there is a new haplotype arising
-//        if (nextNode.getHaploName()!=null && nextNode.getHaploName() != currentHaploType.getID()){
-//            // check whether the new haplotype is on the same or different branch than that leading to the parent haplotype
-//            // TODO can we do kind of binary search for String here instead of for loop???
-//            Node newHaploType = null;
-//            if (nextNode.getChildCount() > 0 ) {
-//                for (Node childLeafNode : nextNode.getAllLeafNodes()) {
-//                    if (currentHaploType != root && childLeafNode.getID() == currentHaploType.getID()){
-//                        // if new haplotype on the branch to parent haplotype, throw error cannot be the case
-//                        // ... else allow haplotype to arise several times in the tree?
-//                        System.out.println("It seems the haplotype arose more than once in the evolution of the tree -- " +
-//                            "check your tree, or report bug in the code");
-//                        System.exit(0);
-//                    }
-//                    // find child leaf node that represents the new haplotype
-//                    if (childLeafNode.getID() == nextNode.getHaploName()){
-//                        newHaploType = childLeafNode;
-//                    }
-//                }
-//            } else {
-//                newHaploType = nextNode;
-//            }
-//            // set parent haplotype for the haplotype arising on the current branch
-//            parentHaplo.set(newHaploType.getNr(),currentHaploType);
-//            // set parent node for the haplotype arising on the current branch
-//            parentNodes.set(newHaploType.getNr(),(QuasiSpeciesNode) nextNode.getParent());
-//// testing
-////            System.out.println("Parent haplotype of " + newHaploType.getID() + " is " + currentHaploType.getID());
-////            System.out.println("Parent node of " + newHaploType.getID() + " is " + nextNode.getParent().getID());
-//            currentHaploType=(QuasiSpeciesNode) newHaploType;
-//        }
-//        if (nextNode.getChildCount() > 0 ) {
-//            // apply the same getParentHaplo function to the child nodes, with updated current haplotype
-//            for (Node childNode : nextNode.getChildren()) {
-//                getParentHaplo(currentHaploType,(QuasiSpeciesNode) childNode, parentHaplo,parentNodes);
-//            }
-//        }
-//    }
-    private void getParentHaplo(QuasiSpeciesNode currentHaploType, QuasiSpeciesNode nextNode, ArrayList<QuasiSpeciesNode> parentHaplo){
+    public void findParentHaploAndAboveNodeHaplo(QuasiSpeciesNode currentHaploType, QuasiSpeciesNode nextNode,
+                                 ArrayList<QuasiSpeciesNode> parentHaplo, ArrayList<QuasiSpeciesNode> aboveNodeHaplo){
         // get haplotype starting at a branch directly above next node --- if no haplotype (null), check children nodes
         // check whether there is a new haplotype arising
         int nTips=this.getLeafNodeCount();
-        if (nextNode.getHaploName()!=null && nextNode.getHaploName() != currentHaploType.getID()){
+//        if (nextNode.getHaploName()!=null || currentHaploType!=null){
+        if (nextNode.getHaploName()!=null){
             // check whether the new haplotype is on the same or different branch than that leading to the parent haplotype
             // TODO can we do kind of binary search for String here instead of for loop???
             Node newHaploType = null;
             if (nextNode.getChildCount() > 0 ) {
                 for (Node childLeafNode : nextNode.getAllLeafNodes()) {
-                    if (currentHaploType != root && childLeafNode.getID() == currentHaploType.getID()){
+//                    // This is also giving error when the haplotype starts at the direct parent node of the tip -- so comment out
+//                    if (currentHaploType != null && childLeafNode.getID() == currentHaploType.getID()){
+                    if (currentHaploType != null && aboveNodeHaplo.get(childLeafNode.getNr()).getID() == currentHaploType.getID()){
                         // if new haplotype on the branch to parent haplotype, throw error cannot be the case
                         // ... else allow haplotype to arise several times in the tree?
                         System.out.println("It seems the haplotype arose more than once in the evolution of the tree -- " +
@@ -444,10 +451,13 @@ public class QuasiSpeciesTree extends Tree {
                     }
                 }
                 // set parent haplotype for the nextNode
-                parentHaplo.set(nextNode.getNr()-nTips,(QuasiSpeciesNode) newHaploType);
+                aboveNodeHaplo.set(nextNode.getNr()-nTips,(QuasiSpeciesNode) newHaploType);
             } else {
                 newHaploType = nextNode;
             }
+            // set the haplotype from which the next haplotype arises as a parent
+            parentHaplo.set(newHaploType.getNr(),currentHaploType);
+
 // testing
 //            System.out.println("Parent haplotype of " + newHaploType.getID() + " is " + currentHaploType.getID());
             currentHaploType=(QuasiSpeciesNode) newHaploType;
@@ -455,7 +465,7 @@ public class QuasiSpeciesTree extends Tree {
         if (nextNode.getChildCount() > 0 ) {
             // apply the same getParentHaplo function to the child nodes, with updated current haplotype
             for (Node childNode : nextNode.getChildren()) {
-                getParentHaplo(currentHaploType, (QuasiSpeciesNode) childNode, parentHaplo);
+                findParentHaploAndAboveNodeHaplo(currentHaploType, (QuasiSpeciesNode) childNode, parentHaplo, aboveNodeHaplo);
             }
         }
     }
@@ -737,46 +747,49 @@ public class QuasiSpeciesTree extends Tree {
     @Override
     protected void store() {
 
+        Collections.copy(storedParentHaplo, parentHaplo);
+        Collections.copy(storedAboveNodeHaplo, aboveNodeHaplo);
         Collections.copy(storedAttachmentTimesList, attachmentTimesList);
         System.arraycopy(startBranchCounts, 0, storedStartBranchCounts, 0, startBranchCounts.length);
-//        storedRoot = m_storedNodes[root.getNr()];
-//        int iRoot = root.getNr();
-//
-//        storeNodes(0, iRoot);
-//
-//        storedRoot.height = m_nodes[iRoot].height;
-//        storedRoot.parent = null;
-//
-//        if (root.getLeft()!=null)
-//            storedRoot.setLeft(m_storedNodes[root.getLeft().getNr()]);
-//        else
-//            storedRoot.setLeft(null);
-//        if (root.getRight()!=null)
-//            storedRoot.setRight(m_storedNodes[root.getRight().getNr()]);
-//        else
-//            storedRoot.setRight(null);
-//
-//        QuasiSpeciesNode qsStoredRoot = (QuasiSpeciesNode)storedRoot;
-//        qsStoredRoot.haploName = ((QuasiSpeciesNode)m_nodes[iRoot]).haploName;
-//
-//        storeNodes(iRoot+1, nodeCount);
+
+//        final ArrayList<Double[]> tmp = attachmentTimesList;
+//        attachmentTimesList = storedAttachmentTimesList;
+//        storedAttachmentTimesList = tmp;
+//        final ArrayList<QuasiSpeciesNode> tmpparent = parentHaplo;
+//        parentHaplo = storedParentHaplo;
+//        storedParentHaplo = tmpparent;
+//        final ArrayList<QuasiSpeciesNode> tmphaploabove = aboveNodeHaplo;
+//        aboveNodeHaplo = storedAboveNodeHaplo;
+//        storedAboveNodeHaplo = tmphaploabove;
+//        final int[] tmpstart = startBranchCounts;
+//        startBranchCounts = storedStartBranchCounts;
+//        storedStartBranchCounts = tmpstart;
 
 
-//        super.store();
-        // this condition can only be true for sampled ancestor trees
-        if (m_storedNodes.length != nodeCount) {
-            final Node[] tmp = new Node[nodeCount];
-            System.arraycopy(m_storedNodes, 0, tmp, 0, m_storedNodes.length - 1);
-            if (nodeCount > m_storedNodes.length) {
-                tmp[m_storedNodes.length - 1] = m_storedNodes[m_storedNodes.length - 1];
-                tmp[nodeCount - 1] = newNode();
-                tmp[nodeCount - 1].setNr(nodeCount - 1);
-            }
-            m_storedNodes = tmp;
-        }
 
-        storeNodes(0, nodeCount);
+        // from MultiTypeTree class
         storedRoot = m_storedNodes[root.getNr()];
+        int iRoot = root.getNr();
+
+        storeNodes(0, iRoot);
+
+        storedRoot.setHeight(m_nodes[iRoot].getHeight());
+        storedRoot.setParent(null);
+
+        if (root.getLeft()!=null)
+            storedRoot.setLeft(m_storedNodes[root.getLeft().getNr()]);
+        else
+            storedRoot.setLeft(null);
+        if (root.getRight()!=null)
+            storedRoot.setRight(m_storedNodes[root.getRight().getNr()]);
+        else
+            storedRoot.setRight(null);
+
+        QuasiSpeciesNode qsStoredRoot = (QuasiSpeciesNode)storedRoot;
+        qsStoredRoot.haploName = ((QuasiSpeciesNode)m_nodes[iRoot]).haploName;
+
+        storeNodes(iRoot+1, nodeCount);
+        // from MultiTypeTree class
     }
 
 
@@ -785,62 +798,24 @@ public class QuasiSpeciesTree extends Tree {
      */
 
     private void storeNodes(int iStart, int iEnd) {
-//        for (int i = iStart; i<iEnd; i++) {
-//            QuasiSpeciesNode sink = (QuasiSpeciesNode)m_storedNodes[i];
-//            QuasiSpeciesNode src = (QuasiSpeciesNode)m_nodes[i];
-//            sink.height = src.height;
-//            sink.parent = m_storedNodes[src.parent.getNr()];
-//            if (src.getLeft()!=null) {
-//                sink.setLeft(m_storedNodes[src.getLeft().getNr()]);
-//                if (src.getRight()!=null)
-//                    sink.setRight(m_storedNodes[src.getRight().getNr()]);
-//                else
-//                    sink.setRight(null);
-//            }
-//
-//            sink.haploName = src.haploName;
-//        }
-        // Use direct members for speed (we are talking 5-7% or more from total time for large trees :)
-        for (int i = iStart; i < iEnd; i++) {
-            final QuasiSpeciesNode sink = (QuasiSpeciesNode)m_storedNodes[i];
-            final QuasiSpeciesNode src = (QuasiSpeciesNode)m_nodes[i];
+        // from MultiTypeTree class
+        for (int i = iStart; i<iEnd; i++) {
+            QuasiSpeciesNode sink = (QuasiSpeciesNode)m_storedNodes[i];
+            QuasiSpeciesNode src = (QuasiSpeciesNode)m_nodes[i];
             sink.setHeight(src.getHeight());
-
-            if ( src.getParent() != null ) {
-                sink.setParent(m_storedNodes[src.getParent().getNr()]);
-            } else {
-                // currently only called in the case of sampled ancestor trees
-                // where root node is not always last in the list
-                sink.setParent(null);
+            sink.setParent(m_storedNodes[src.getParent().getNr()]);
+            if (src.getLeft()!=null) {
+                sink.setLeft(m_storedNodes[src.getLeft().getNr()]);
+                if (src.getRight()!=null)
+                    sink.setRight(m_storedNodes[src.getRight().getNr()]);
+                else
+                    sink.setRight(null);
             }
-
-            final List<Node> children = sink.getChildren();
-            final List<Node> srcChildren = src.getChildren();
-
-            if( children.size() == srcChildren.size() ) {
-                // shave some more time by avoiding list clear and add
-                for (int k = 0; k < children.size(); ++k) {
-                    final Node srcChild = srcChildren.get(k);
-                    // don't call addChild, which calls  setParent(..., true);
-                    final Node c = m_storedNodes[srcChild.getNr()];
-                    c.setParent(sink);
-                    children.set(k, c);
-                }
-            } else {
-                children.clear();
-                //sink.removeAllChildren(false);
-                for (final Node srcChild : srcChildren) {
-                    // don't call addChild, which calls  setParent(..., true);
-                    final Node c = m_storedNodes[srcChild.getNr()];
-                    c.setParent(sink);
-                    children.add(c);
-                    //sink.addChild(c);
-                }
-            }
-
-            sink.haploName = src.haploName;
+        // from MultiTypeTree class
+            sink.setHaploName(src.getHaploName());
+        // from MultiTypeTree class
         }
-
+        // from MultiTypeTree class
     }
 
 
@@ -850,6 +825,12 @@ public class QuasiSpeciesTree extends Tree {
         final ArrayList<Double[]> tmp = storedAttachmentTimesList;
         storedAttachmentTimesList = attachmentTimesList;
         attachmentTimesList = tmp;
+        final ArrayList<QuasiSpeciesNode> tmpparent = storedParentHaplo;
+        storedParentHaplo = parentHaplo;
+        parentHaplo = tmpparent;
+        final ArrayList<QuasiSpeciesNode> tmphaploabove = storedAboveNodeHaplo;
+        storedAboveNodeHaplo = aboveNodeHaplo;
+        aboveNodeHaplo = tmphaploabove;
         final int[] tmpstart = storedStartBranchCounts;
         storedStartBranchCounts = startBranchCounts;
         startBranchCounts = tmpstart;

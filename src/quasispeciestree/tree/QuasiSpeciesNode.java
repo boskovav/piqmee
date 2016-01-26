@@ -18,7 +18,7 @@ public class QuasiSpeciesNode extends Node {
 
     }
 
-    String haploName;
+    protected String haploName;
 
     /**
      * Obtain the quasi-species type/name, if any, starting on the branch above this node.
@@ -35,7 +35,8 @@ public class QuasiSpeciesNode extends Node {
      * @param haploName New quasi-species name
      */
     public void setHaploName(String haploName) {
-        startEditing();
+        // start editing already set in the QuasiSpeciesHaplotypeStartSwap -- if done by the same operator several times, results in wrong stored tree object
+//        startEditing();
         this.haploName = haploName;
     }
 

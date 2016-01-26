@@ -8,6 +8,8 @@ import quasispeciestree.tree.QuasiSpeciesTree;
 import quasispeciestree.tree.QuasiSpeciesNode;
 import beast.core.parameter.RealParameter;
 
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -260,4 +262,41 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
         oldRoot.makeDirty(QuasiSpeciesTree.IS_FILTHY);
         node.makeDirty(QuasiSpeciesTree.IS_FILTHY);
     }
+
+    /*
+    //
+    //
+    //          OWN FUNCTIONS
+    //
+    //
+    */
+    /**
+     * Function to find a most recent common ancestor of two nodes
+     */
+    public QuasiSpeciesNode findLastCommonAncestor(QuasiSpeciesNode node1, QuasiSpeciesNode node2, QuasiSpeciesNode startInternalNode){
+        QuasiSpeciesNode returnnode = startInternalNode;
+
+        boolean node1found = false;
+        boolean node2found = false;
+
+        for (Node tipnode : startInternalNode.getAllLeafNodes()){
+            if (tipnode.getID() == node1.getID()){
+                node1found = true;
+            }
+            if (tipnode.getID() == node2.getID()){
+                node2found = true;
+            }
+        }
+        if (node1found && node2found){
+            for (Node node : startInternalNode.getChildren()){
+                returnnode = findLastCommonAncestor(node1,node2, (QuasiSpeciesNode) node);
+            }
+        }
+//        else if ((node1found && !node2found) || (!node1found && node2found)){
+        else{
+            returnnode = (QuasiSpeciesNode) startInternalNode.getParent();
+        }
+        return (QuasiSpeciesNode) returnnode;
+    }
+
 }
