@@ -7,6 +7,7 @@ import quasispeciestree.tree.QuasiSpeciesTree;
 import beast.util.Randomizer;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  *  @author Veronika Boskova created on 06/08/2015
@@ -43,10 +44,9 @@ public class QuasiSpeciesHaplotypeStartSwap extends QuasiSpeciesTreeOperator{
             throw new IllegalStateException("Event selection loop fell through!");
 
         // get the haplotype from which the current haplotype arises
-        ArrayList<QuasiSpeciesNode> parentHaploArray = qsTree.getParentHaplo();
-        QuasiSpeciesNode haplotypesParentHaplo = parentHaploArray.get(node.getNr());
-//        QuasiSpeciesNode haplotypesParentHaplo = qsTree.getParentHaplo(node.getNr());
-        QuasiSpeciesNode haplotypesGrandParentHaplo = null;
+        int[] parentHaploArray = qsTree.getParentHaplo();
+        int haplotypesParentHaplo = parentHaploArray[node.getNr()];
+        int haplotypesGrandParentHaplo = -1;
 
         // get a random number deciding where the current haplo will be moved
         double u = Randomizer.nextDouble();
@@ -62,21 +62,21 @@ public class QuasiSpeciesHaplotypeStartSwap extends QuasiSpeciesTreeOperator{
         double originheight = origin.getValue();
 
         // get a node above which the current haplotype arises
-        QuasiSpeciesNode nodeBelow = null;
+        QuasiSpeciesNode currentHaploNodeBelow = null;
 
         // if the parent haplotypes is null, tmax is the origin of the tree
         // We need to only change first position in AttachmentTimesList for the current node & scale the others
         //   startBranchCountsArray
         //   and possibly the haploName for 2 nodes
-        //                the parentHaplo/aboveNodeHaplo arrays
+        //              +  the parentHaplo array
         //
 // NO PARENT
-        if (haplotypesParentHaplo == null){
+        if (haplotypesParentHaplo == -1){
 
             // get a node above which the current haplotype arises
             for (Node inode : qsTree.getNodesAsArray()){
-                if (((QuasiSpeciesNode) inode).getHaploName() == node.getID()) {
-                    nodeBelow = (QuasiSpeciesNode) inode;
+                if (((QuasiSpeciesNode) inode).getHaploAboveName() == node.getNr()) {
+                    currentHaploNodeBelow = (QuasiSpeciesNode) inode;
                     break;
                 }
             }
@@ -92,14 +92,13 @@ public class QuasiSpeciesHaplotypeStartSwap extends QuasiSpeciesTreeOperator{
         // if there is a parent haplotype, we need to change more stuff (also for the parent haplotype)
         else{
             // get a node above which the parent haplotype arises
-            QuasiSpeciesNode parentnodeBelow = null;
+            QuasiSpeciesNode parentHaploNodeBelow = null;
 
             // check what is the grand parent haplotype
-            haplotypesGrandParentHaplo = parentHaploArray.get(haplotypesParentHaplo.getNr());
-//            haplotypesGrandParentHaplo = qsTree.getParentHaplo(haplotypesParentHaplo.getNr());
+            haplotypesGrandParentHaplo = parentHaploArray[haplotypesParentHaplo];
 // NO GRANDPARENT
             // if none, change only the arrays for the parent
-            if (haplotypesGrandParentHaplo == null){
+            if (haplotypesGrandParentHaplo == -1){
 
                 // find out tmax: grandparent haplotype is null, then tmax=origin
                 tmax = originheight;
@@ -108,14 +107,14 @@ public class QuasiSpeciesHaplotypeStartSwap extends QuasiSpeciesTreeOperator{
 
                 // get a node above which the parent haplotype arises
                 for (Node inode : qsTree.getNodesAsArray()){
-                    String currentnodeHaplo = ((QuasiSpeciesNode) inode).getHaploName();
-                    if (currentnodeHaplo == node.getID()) {
-                        nodeBelow = (QuasiSpeciesNode) inode;
+                    int currentnodeHaplo = ((QuasiSpeciesNode) inode).getHaploAboveName();
+                    if (currentnodeHaplo == node.getNr()) {
+                        currentHaploNodeBelow = (QuasiSpeciesNode) inode;
                     }
-                    if (currentnodeHaplo == haplotypesParentHaplo.getID()){
-                        parentnodeBelow = (QuasiSpeciesNode) inode;
+                    if (currentnodeHaplo == haplotypesParentHaplo){
+                        parentHaploNodeBelow = (QuasiSpeciesNode) inode;
                     }
-                    if (parentnodeBelow != null && nodeBelow != null){
+                    if (parentHaploNodeBelow != null && currentHaploNodeBelow != null){
                         break;
                     }
                 }
@@ -124,19 +123,19 @@ public class QuasiSpeciesHaplotypeStartSwap extends QuasiSpeciesTreeOperator{
             // otherwise change stuff also for the grandparent
             else{
                 // get a node above which the grandparent haplotype arises
-                QuasiSpeciesNode grandnodeBelow = null;
+                QuasiSpeciesNode grandparentHaploNodeBelow = null;
                 for (Node inode : qsTree.getNodesAsArray()){
-                    String currentnodeHaplo = ((QuasiSpeciesNode) inode).getHaploName();
-                    if (currentnodeHaplo == node.getID()) {
-                        nodeBelow = (QuasiSpeciesNode) inode;
+                    int currentnodeHaplo = ((QuasiSpeciesNode) inode).getHaploAboveName();
+                    if (currentnodeHaplo == node.getNr()) {
+                        currentHaploNodeBelow = (QuasiSpeciesNode) inode;
                     }
-                    else if  (currentnodeHaplo == haplotypesParentHaplo.getID()){
-                        parentnodeBelow = (QuasiSpeciesNode) inode;
+                    else if  (currentnodeHaplo == haplotypesParentHaplo){
+                        parentHaploNodeBelow = (QuasiSpeciesNode) inode;
                     }
-                    else if (currentnodeHaplo == haplotypesGrandParentHaplo.getID()){
-                        grandnodeBelow = (QuasiSpeciesNode) inode;
+                    else if (currentnodeHaplo == haplotypesGrandParentHaplo){
+                        grandparentHaploNodeBelow = (QuasiSpeciesNode) inode;
                     }
-                    if (grandnodeBelow!= null && parentnodeBelow != null && nodeBelow != null){
+                    if (grandparentHaploNodeBelow!= null && parentHaploNodeBelow != null && currentHaploNodeBelow != null){
                         break;
                     }
                 }
@@ -145,7 +144,8 @@ public class QuasiSpeciesHaplotypeStartSwap extends QuasiSpeciesTreeOperator{
                 QuasiSpeciesNode lastGrandCommonAncestorNode;
 
                 // find the last common ancestor of the chosen haplotype and its grandparent
-                lastGrandCommonAncestorNode = findLastCommonAncestor(node, haplotypesGrandParentHaplo, grandnodeBelow);
+                lastGrandCommonAncestorNode = findLastCommonAncestor(
+                        node, (QuasiSpeciesNode) qsTree.getNode(haplotypesGrandParentHaplo), grandparentHaploNodeBelow);
 
                 // find out tmax: restricted by the last common ancestor node of grandparent haplotype and chosen haplotype
                 // the grandparent haplotype can be from the same subtree or from the other subtree
@@ -159,11 +159,12 @@ public class QuasiSpeciesHaplotypeStartSwap extends QuasiSpeciesTreeOperator{
             QuasiSpeciesNode lastParentCommonAncestorNode;
 
             // find the last common ancestor of the chosen haplotype and its parent
-            lastParentCommonAncestorNode = findLastCommonAncestor(node, haplotypesParentHaplo, parentnodeBelow);
+            lastParentCommonAncestorNode = findLastCommonAncestor(
+                    node, (QuasiSpeciesNode) qsTree.getNode(haplotypesParentHaplo), parentHaploNodeBelow);
 
             // propose a new start time for the parent node uniformly at random between tminparent and tmaxparent
             double tminparent, tmaxparent;
-            tminparent = haplotypesParentHaplo.getHeight();
+            tminparent = qsTree.getNode(haplotypesParentHaplo).getHeight();
             tmaxparent = lastParentCommonAncestorNode.getHeight();
 
             // move the parent haplotype at random below the common ancestor node
@@ -205,23 +206,23 @@ public class QuasiSpeciesHaplotypeStartSwap extends QuasiSpeciesTreeOperator{
 //                    }
 //                }
 //                else {
-                    intnode = haplotypesParentHaplo;
+                    intnode = qsTree.getNode(haplotypesParentHaplo);
                     intnodeparent = intnode.getParent();
                     while (intnodeparent.getHeight() < tnewparent){
                         intnode = intnodeparent;
                         intnodeparent = intnodeparent.getParent();
                     }
 //                }
-                if (intnode != parentnodeBelow){
+                if (intnode != parentHaploNodeBelow){
                     // change the internal nodes' haploName, where necessary
-                    parentnodeBelow.setHaploName(null);
+                    parentHaploNodeBelow.setHaploAboveName(-1);
 
                     // change the internal nodes' haploName, where necessary
-                    ((QuasiSpeciesNode) intnode).setHaploName(haplotypesParentHaplo.getID());
+                    ((QuasiSpeciesNode) intnode).setHaploAboveName(haplotypesParentHaplo);
 
-                    // recalculate parentHaplo array, aboveNodeHaplo array -- > done if node itself moved
+                    // recalculate parentHaplo array, and re-set continuingHaploName -- > done if node itself moved
                 }
-               // in any case (changed or not the aboveNodeHaplo/parentHaplo array) recalculate countPossibleStartBranches -- > done if node itself moved
+               // in any case (if changed or not the parentHaplo array) recalculate countPossibleStartBranches -- > done if node itself moved
             }
             // if the tnew is not above the lastParentCommonAncestorNode, then just reposition the current haplo start
             //else {
@@ -246,7 +247,7 @@ public class QuasiSpeciesHaplotypeStartSwap extends QuasiSpeciesTreeOperator{
 
 
         // change internal node haploName - both remove and add if necessary
-        Node intnode = nodeBelow;
+        Node intnode = currentHaploNodeBelow;
         Node intnodeparent;
         if (tnew > told) {
 //                while (intnode.getHeight() < tmax && intnode.getHeight() < tnew){
@@ -264,34 +265,22 @@ public class QuasiSpeciesHaplotypeStartSwap extends QuasiSpeciesTreeOperator{
                 intnodeparent = intnodeparent.getParent();
             }
         }
-        if (intnode != nodeBelow){
+        if (intnode != currentHaploNodeBelow){
             // change the internal nodes' haploName, where necessary
-            nodeBelow.setHaploName(null);
+            currentHaploNodeBelow.setHaploAboveName(-1);
 
-            ((QuasiSpeciesNode) intnode).setHaploName(node.getID());
+            ((QuasiSpeciesNode) intnode).setHaploAboveName(node.getNr());
 
-            // recalculate parentHaplo array, aboveNodeHaplo array
-            ArrayList<QuasiSpeciesNode> newParentHaplo = new ArrayList<>(qsTree.getLeafNodeCount());
-            for (int i=0; i<qsTree.getLeafNodeCount();i++){
-                newParentHaplo.add(i,null);
-            }
-            ArrayList<QuasiSpeciesNode> newAboveNodeHaplo = new ArrayList<>(qsTree.getInternalNodeCount());
-            for (int i=0; i<qsTree.getInternalNodeCount();i++){
-                newAboveNodeHaplo.add(i,null);
-            }
+            // recalculate parentHaplo array, re-assign continuingHaploName
+            int[] newParentHaplo = new int[qsTree.getLeafNodeCount()];
+            Arrays.fill(newParentHaplo, -1);
 
-            qsTree.findParentHaploAndAboveNodeHaplo(null, (QuasiSpeciesNode) qsTree.getRoot(), newParentHaplo, newAboveNodeHaplo);
+            qsTree.clearContinuingHaploNames();
+            qsTree.findParentHaplo(-1, (QuasiSpeciesNode) qsTree.getRoot(), newParentHaplo);
 
-            // clear and re-set the original arrays
-//            parentHaploArray.clear();
-//            parentHaploArray.addAll(newParentHaplo);
-            qsTree.getParentHaplo().clear();
-            qsTree.getParentHaplo().addAll(newParentHaplo);
-//            ArrayList<QuasiSpeciesNode> aboveNodeHaploArray = qsTree.getAboveNodeHaplo();
-//            aboveNodeHaploArray.clear();
-//            aboveNodeHaploArray.addAll(newAboveNodeHaplo);
-            qsTree.getAboveNodeHaplo().clear();
-            qsTree.getAboveNodeHaplo().addAll(newAboveNodeHaplo);
+            // re-set the original parentHaplo array
+            qsTree.setParentHaplo(newParentHaplo);
+
         }
         // in any case (changed or not the aboveNodeHaplo/parentHaplo array) recalculate countPossibleStartBranches
         int[] startBranchCountsArray = qsTree.countPossibleStartBranches();

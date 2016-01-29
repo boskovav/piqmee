@@ -94,10 +94,10 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
 
         // Check that there are no haplotype sequences that belong to the sub-tree being
         // moved, arising at the branch leading to parent:
-        String parentQSType = ((QuasiSpeciesNode) node.getParent()).getHaploName();
-        if (parentQSType != null){
+        int parentQSType = ((QuasiSpeciesNode) node.getParent()).getHaploAboveName();
+        if (parentQSType != -1){
             for (Node childLeafNode : node.getAllLeafNodes()) {
-                if (childLeafNode.getID() == parentQSType){
+                if (childLeafNode.getNr() == parentQSType){
                     // if haplotype that is in the moved sub-tree arises on the branch
                     // to parent haplotype, throw error cannot be the case
                     System.out.println("Trying to disconnect a branch while quasi-species are evolving on it...");
@@ -107,14 +107,14 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
         } else {
         // Add haplotype start/attachment times originally attached to parent to those attached
         // to node's sister:
-            if (((QuasiSpeciesNode) sister).getHaploName() != null){
+            if (((QuasiSpeciesNode) sister).getHaploAboveName() != -1){
                 // if there is one haplotype arising on the parent's branch and another on sister's branch
                 // there is a problem somewhere in the code!!!
                 System.out.println("There must be a serious problem with the code. There are haplotypes arising at " +
                         "both parent and sister branch, while this should technically be impossible...");
                 System.exit(0);
             } else {
-                ((QuasiSpeciesNode) sister).setHaploName(parentQSType);
+                ((QuasiSpeciesNode) sister).setHaploAboveName(parentQSType);
             }
         }
         // Implement topology change.
@@ -145,10 +145,10 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
 
         // Check that there are no haplotype sequenes that belong to the sub-tree being
         // moved, arising at the branch leading to parent:
-        String parentQSType = ((QuasiSpeciesNode) node.getParent()).getHaploName();
-        if (parentQSType != null){
+        int parentQSType = ((QuasiSpeciesNode) node.getParent()).getHaploAboveName();
+        if (parentQSType != -1){
             for (Node childLeafNode : node.getAllLeafNodes()) {
-                if (childLeafNode.getID() == parentQSType){
+                if (childLeafNode.getNr() == parentQSType){
                     // if haplotype that is in the moved sub-tree arises on the branch
                     // to parent haplotype, throw error cannot be the case
                     System.out.println("Trying to disconnect a branch while quasi-species are evolving on it...");
@@ -158,14 +158,14 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
         } else {
             // Add haplotype start/attachment times originally attached to parent to those attached
             // to node's sister:
-            if (((QuasiSpeciesNode) sister).getHaploName() != null){
+            if (((QuasiSpeciesNode) sister).getHaploAboveName() != -1){
                 // if there is one haplotype arising on the parent's branch and another on sister's branch
                 // there is a problem somewhere in the code!!!
                 System.out.println("There must be a serious problem with the code. There are haplotypes arising at " +
                         "both parent and sister branch, while this should technically be impossible...");
                 System.exit(0);
             } else {
-                ((QuasiSpeciesNode) sister).setHaploName(parentQSType);
+                ((QuasiSpeciesNode) sister).setHaploAboveName(parentQSType);
             }
         }
         // Implement topology change:
@@ -288,8 +288,22 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
             }
         }
         if (node1found && node2found){
-            for (Node node : startInternalNode.getChildren()){
-                returnnode = findLastCommonAncestor(node1,node2, (QuasiSpeciesNode) node);
+            QuasiSpeciesNode returnnode1 = findLastCommonAncestor(node1,node2, (QuasiSpeciesNode) startInternalNode.getLeft());
+            QuasiSpeciesNode returnnode2 = findLastCommonAncestor(node1,node2, (QuasiSpeciesNode) startInternalNode.getRight());
+            if (returnnode1 == returnnode2){
+                returnnode = returnnode1;
+            }
+            else{
+                if(returnnode1 == startInternalNode){
+                    returnnode = returnnode2;
+                }
+                else if(returnnode2 == startInternalNode){
+                    returnnode = returnnode1;
+                }
+                else{
+                    System.out.println("Check your findLastCommonAncestor function!");
+                    System.exit(0);
+                }
             }
         }
 //        else if ((node1found && !node2found) || (!node1found && node2found)){

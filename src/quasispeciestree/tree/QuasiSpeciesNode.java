@@ -18,15 +18,19 @@ public class QuasiSpeciesNode extends Node {
 
     }
 
-    protected String haploName;
+//    protected String haploAboveName;
+//    protected String continuingHaploName;
+    protected int haploAboveName;
+    protected int continuingHaploName;
 
     /**
      * Obtain the quasi-species type/name, if any, starting on the branch above this node.
      *
      * @return quasi-species name
      */
-    public String getHaploName() {
-        return this.haploName;
+//    public String getHaploAboveName() {return this.haploAboveName; }
+    public int getHaploAboveName() {
+        return this.haploAboveName;
     }
 
     /**
@@ -34,14 +38,29 @@ public class QuasiSpeciesNode extends Node {
      *
      * @param haploName New quasi-species name
      */
-    public void setHaploName(String haploName) {
-        // start editing already set in the QuasiSpeciesHaplotypeStartSwap -- if done by the same operator several times, results in wrong stored tree object
-//        startEditing();
-        this.haploName = haploName;
-    }
+//    public void setHaploAboveName(String haploName) { this.haploAboveName = haploName; }
+    public void setHaploAboveName(int haploName) { this.haploAboveName = haploName; }
 
     /**
-     * Set quasi-specied tree for a copied node
+     * Obtain the quasi-species type/name, of a haplotype that started earlier and continues on below this (internal) node.
+     * Only non null (non -1) if this haplo arose at some previous node (so haploAboveName is non-null (non -1))
+     *
+     * @return quasi-species name
+     */
+//    public String getContinuingHaploName() { return this.continuingHaploName; }
+    public int getContinuingHaploName() { return this.continuingHaploName; }
+
+    /**
+     * Sets the quasi-species haplotype as a continuing haplotype below this node
+     *
+     * @param haploName New quasi-species name
+     */
+//    public void setContinuingHaploName(String haploName) { this.continuingHaploName = haploName; }
+    public void setContinuingHaploName(int haploName) { this.continuingHaploName = haploName; }
+
+
+    /**
+     * Set quasi-species tree for a copied node
      */
 
     public void setmTree(QuasiSpeciesTree tree) {
@@ -64,7 +83,8 @@ public class QuasiSpeciesNode extends Node {
             }
         }
 
-        node.haploName = haploName;
+        node.haploAboveName = haploAboveName;
+        node.continuingHaploName = continuingHaploName;
 
         node.labelNr = labelNr;
         node.metaDataString = metaDataString;
@@ -92,7 +112,8 @@ public class QuasiSpeciesNode extends Node {
         node.setParent(null);
         node.ID = ID;
 
-        node.haploName = haploName;
+        node.haploAboveName = haploAboveName;
+        node.continuingHaploName = continuingHaploName;
 
         if (getLeft()!=null) {
             node.setLeft(getLeft().copy());
@@ -119,7 +140,8 @@ public class QuasiSpeciesNode extends Node {
         ID = node.getID();
 
         QuasiSpeciesNode qsNode = (QuasiSpeciesNode)node;
-        haploName = qsNode.haploName;
+        haploAboveName = qsNode.haploAboveName;
+        continuingHaploName = qsNode.continuingHaploName;
 
         if (node.getLeft()!=null) {
             setLeft(nodes[node.getLeft().getNr()]);
