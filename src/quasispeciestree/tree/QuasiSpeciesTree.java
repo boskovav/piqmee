@@ -182,7 +182,7 @@ public class QuasiSpeciesTree extends Tree {
                     tempqstimes[i]=node.getParent().getHeight()//*0.9999999
                     //if spread the haplotype at start a bit
 //                    -node.getParent().getHeight()*i*(1-0.9999999);
-                    -(i+1)*(node.getParent().getHeight()/(2+getHaplotypeCounts((QuasiSpeciesNode)node)));
+                    -(i+1)*((node.getParent().getHeight()-node.getHeight()) /(2+getHaplotypeCounts((QuasiSpeciesNode)node)));
 // testing
 //                  if (node.getID()==this.getExternalNodes().get(2).getID()){
 //                      tempqstimes[i]=node.getParent().getParent().getHeight()*0.9999999
