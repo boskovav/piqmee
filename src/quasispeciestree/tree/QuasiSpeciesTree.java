@@ -283,6 +283,11 @@ public class QuasiSpeciesTree extends Tree {
             ((QuasiSpeciesNode) node).setContinuingHaploName(-1);
         }
     }
+    public void clearContinuingHaploNames(Node belowThisNode) {
+        for (Node node : belowThisNode.getAllChildNodes()){
+            ((QuasiSpeciesNode) node).setContinuingHaploName(-1);
+        }
+    }
 
     // clear and add method for parent haplo
 

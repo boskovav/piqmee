@@ -9,6 +9,7 @@ import quasispeciestree.tree.QuasiSpeciesNode;
 import beast.core.parameter.RealParameter;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 
@@ -311,6 +312,28 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
             returnnode = (QuasiSpeciesNode) startInternalNode.getParent();
         }
         return (QuasiSpeciesNode) returnnode;
+    }
+
+    /**
+     * Function to find a most recent common ancestor of two nodes
+     */
+    public void recalculateParentHaploAndCorrectContinuingHaploName(int currentHaplo, QuasiSpeciesNode nextNode){
+        // recalculate parentHaplo array, re-assign continuingHaploName
+        int[] newParentHaplo = new int[qsTree.getLeafNodeCount()];
+        //Arrays.fill(newParentHaplo, -1);
+        System.arraycopy(qsTree.getParentHaplo(), 0, newParentHaplo, 0, newParentHaplo.length);
+        for(Node node : nextNode.getAllLeafNodes()){
+            newParentHaplo[node.getNr()]=-1;
+        }
+        if (currentHaplo != -1){
+            newParentHaplo[currentHaplo]=qsTree.getParentHaplo(currentHaplo);
+        }
+
+        qsTree.clearContinuingHaploNames(nextNode);
+        qsTree.findParentHaplo(currentHaplo, nextNode, newParentHaplo);
+
+        // re-set the original parentHaplo array
+        qsTree.setParentHaplo(newParentHaplo);
     }
 
 }
