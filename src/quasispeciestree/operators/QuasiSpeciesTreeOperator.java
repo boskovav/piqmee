@@ -69,55 +69,88 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
         replacement.makeDirty(QuasiSpeciesTree.IS_FILTHY);
     }
 
-    /* **********************************************************************/
-
-
-
-
+    /* **********************************************************************
+    * The following two methods are adapted from MultiTypeTreeOperator.
+    */
 
     /**
      * Disconnect edge <node,node.getParent()> by joining node's sister directly
-     * to node's grandmother
-     * This move can only be done if the haplotype in the sub-tree to be moved,
-     * i.e. sub-tree below the node, does not arise above the node.getParent().
+     * to node's grandparent
+     * If the haplotype in the sub-tree to be moved, i.e. sub-tree below the node,
+     * does arise above the node.getParent(), choose new attachment for the haplo
+     * If the haplotype in the sister sub-tree does arise above node.getParent(),
+     * no need to change anything but the node.getParent().haploAboveName and continuingHaploName
      *
-     * @param node
+     * @param node to detach
+     * @param haplotype to detach (change haploAboveName for the corresponding node)
+     * return the QuasiSpeciesNode (parent/grandparent/.../root) above which the haplotype of the subtree to be moved arises
+     *                  (and for/below which the continuingHaploName have to be corrected)
      */
-    public void disconnectBranch(Node node) {
+    public QuasiSpeciesNode disconnectBranch(QuasiSpeciesNode node, int haplotype) {
 
         // Check argument validity:
-        Node parent = node.getParent();
+        QuasiSpeciesNode parent = (QuasiSpeciesNode) node.getParent();
+
         if (node.isRoot() || parent.isRoot())
             throw new IllegalArgumentException("Illegal argument to "
                     + "disconnectBranch().");
 
-        Node sister = getOtherChild(parent, node);
+        QuasiSpeciesNode sister = (QuasiSpeciesNode) getOtherChild(parent, node);
 
-        // Check that there are no haplotype sequences that belong to the sub-tree being
-        // moved, arising at the branch leading to parent:
-        int parentQSType = ((QuasiSpeciesNode) node.getParent()).getHaploAboveName();
-        if (parentQSType != -1){
-            for (Node childLeafNode : node.getAllLeafNodes()) {
-                if (childLeafNode.getNr() == parentQSType){
-                    // if haplotype that is in the moved sub-tree arises on the branch
-                    // to parent haplotype, throw error cannot be the case
-                    System.out.println("Trying to disconnect a branch while quasi-species are evolving on it...");
-                    System.exit(0);
-                }
+        // keep track of whether there is haplotype arising anywhere between the current node and origin
+        QuasiSpeciesNode nodeBelowHaploMoved = null;
+
+        // Disconnect the haplotype chosen to be moved when disconnecting the node
+        // if the haplotype to be moved is already present at node, then it must have arisen above in the tree
+        if (haplotype == node.getContinuingHaploName()){
+            // first check whether it arises at the node itself
+            if (node.getHaploAboveName() == haplotype){
+                node.setHaploAboveName(-1);
+                nodeBelowHaploMoved = node;
             }
-        } else {
+            // second see whether there is continuing haplotype at the parent node
+            else {
+                // check at which parent it arises
+                QuasiSpeciesNode nodeAbove = parent;
+                while (nodeAbove.getHaploAboveName() != haplotype){
+                    nodeAbove = (QuasiSpeciesNode) nodeAbove.getParent();
+                }
+                // set the node above which the haploMoved arises to -1, as haploMoved will be moved away
+                // -- the continuingHaploName will help us recover which haplotype it was that was moved
+                nodeAbove.setHaploAboveName(-1);
+                nodeBelowHaploMoved = nodeAbove;
+            }
+        }
+        // otherwise the haplotype to be moved must have arisen below the node (need to clear the haploAboveName)
+        else{
+            // start checking at the tip
+            QuasiSpeciesNode nodeBelow = (QuasiSpeciesNode) qsTree.getNode(haplotype);
+            while (nodeBelow.getHaploAboveName() != haplotype){
+                nodeBelow = (QuasiSpeciesNode) nodeBelow.getParent();
+            }
+            // set the node above which the haploMoved arises to -1, as haploMoved will be moved away
+            // -- the continuingHaploName will help us recover which haplotype it was that was moved
+            nodeBelow.setHaploAboveName(-1);
+            nodeBelowHaploMoved = nodeBelow;
+        }
+
         // Add haplotype start/attachment times originally attached to parent to those attached
         // to node's sister:
-            if (((QuasiSpeciesNode) sister).getHaploAboveName() != -1){
+        if ( parent.getHaploAboveName() != -1 ){
+            if ( sister.getHaploAboveName() != -1 ){
                 // if there is one haplotype arising on the parent's branch and another on sister's branch
                 // there is a problem somewhere in the code!!!
                 System.out.println("There must be a serious problem with the code. There are haplotypes arising at " +
                         "both parent and sister branch, while this should technically be impossible...");
                 System.exit(0);
-            } else {
-                ((QuasiSpeciesNode) sister).setHaploAboveName(parentQSType);
+            }
+            else {
+                int haploAboveParentNode = parent.getHaploAboveName();
+                sister.setHaploAboveName(haploAboveParentNode);
+                parent.setHaploAboveName(-1);
             }
         }
+
         // Implement topology change.
         replace(parent.getParent(), parent, sister);
 
@@ -125,69 +158,122 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
         parent.makeDirty(QuasiSpeciesTree.IS_FILTHY);
         sister.makeDirty(QuasiSpeciesTree.IS_FILTHY);
         node.makeDirty(QuasiSpeciesTree.IS_FILTHY);
+
+        // return from which node is the haplotype moved --- we have to re-attach and rescale it!
+        // and re-assign continuing haplotypes/parenthaploarray from parent node onwards
+        return nodeBelowHaploMoved;
     }
 
     /**
      * Disconnect node from root
-     * * This move can only be done if the haplotype in the sub-tree to be moved,
-     * i.e. sub-tree below the node, does not arise at the <node,root> branch.
+     * * If the haplotype in the sub-tree to be moved, i.e. sub-tree below the node,
+     *   does arise at the <node,root> branch, record it and need to be reassigned
+     *   starting point at the destination branch.
      *
-     * @param node
+     * @param node to detach
+     * @param haplotype to detach (change haploAboveName for the corresponding node)
+     * return the QuasiSpeciesNode (parent/grandparent/.../root) above which the haplotype of the subtree to be moved arises
+     *                  (and for/below which the continuingHaploName have to be corrected)
      */
-    public void disconnectBranchFromRoot(Node node) {
+    public QuasiSpeciesNode disconnectBranchFromRoot(QuasiSpeciesNode node, int haplotype) {
 
         // Check argument validity:
-        Node parent = node.getParent();
+        QuasiSpeciesNode parent = (QuasiSpeciesNode) node.getParent();
+
         if (node.isRoot() || !parent.isRoot())
-            throw new IllegalArgumentException("Illegal argument to"
-                    + " disconnectBranchFromRoot().");
+            throw new IllegalArgumentException("Illegal argument to "
+                    + "disconnectBranchFromRoot().");
 
-        Node sister = getOtherChild(parent, node);
+        QuasiSpeciesNode sister = (QuasiSpeciesNode) getOtherChild(parent, node);
 
-        // Check that there are no haplotype sequenes that belong to the sub-tree being
-        // moved, arising at the branch leading to parent:
-        int parentQSType = ((QuasiSpeciesNode) node.getParent()).getHaploAboveName();
-        if (parentQSType != -1){
-            for (Node childLeafNode : node.getAllLeafNodes()) {
-                if (childLeafNode.getNr() == parentQSType){
-                    // if haplotype that is in the moved sub-tree arises on the branch
-                    // to parent haplotype, throw error cannot be the case
-                    System.out.println("Trying to disconnect a branch while quasi-species are evolving on it...");
-                    System.exit(0);
-                }
+        // keep track of whether there is haplotype arising anywhere between the current node and origin
+        QuasiSpeciesNode nodeBelowHaploMoved = null;
+
+        // Disconnect the haplotype chosen to be moved when disconnecting the node
+        // if the haplotype to be moved is already present at node, then it must have arisen above in the tree
+        if (haplotype == node.getContinuingHaploName()){
+            // first check whether it arises at the node itself
+            if (node.getHaploAboveName() == haplotype){
+                node.setHaploAboveName(-1);
+                nodeBelowHaploMoved = node;
             }
-        } else {
-            // Add haplotype start/attachment times originally attached to parent to those attached
-            // to node's sister:
-            if (((QuasiSpeciesNode) sister).getHaploAboveName() != -1){
+            // second see whether there is continuing haplotype at the parent node
+            else {
+                // check at which parent it arises
+                QuasiSpeciesNode nodeAbove = parent;
+                while (nodeAbove.getHaploAboveName() != haplotype){
+                    nodeAbove = (QuasiSpeciesNode) nodeAbove.getParent();
+                }
+                // set the node above which the haploMoved arises to -1, as haploMoved will be moved away
+                // -- the continuingHaploName will help us recover which haplotype it was that was moved
+                nodeAbove.setHaploAboveName(-1);
+                nodeBelowHaploMoved = nodeAbove;
+                // if nodeBelowHaploMoved is not root, then we have got a problem
+                if (! nodeBelowHaploMoved.isRoot())
+                    throw new IllegalArgumentException(
+                            "Somehow the parent node of the haplotype be detached"
+                            + " is not the same as the root, and we are using"
+                            + " disconnectBranchFromRoot() method.");
+            }
+        }
+        // otherwise the haplotype to be moved must have arisen below the node (need to clear the haploAboveName)
+        else{
+            // start checking at the tip
+            QuasiSpeciesNode nodeBelow = (QuasiSpeciesNode) qsTree.getNode(haplotype);
+            while (nodeBelow.getHaploAboveName() != haplotype){
+                nodeBelow = (QuasiSpeciesNode) nodeBelow.getParent();
+            }
+            // set the node above which the haploMoved arises to -1, as haploMoved will be moved away
+            // -- the continuingHaploName will help us recover which haplotype it was that was moved
+            nodeBelow.setHaploAboveName(-1);
+            nodeBelowHaploMoved = nodeBelow;
+        }
+
+        // Add haplotype start/attachment times originally attached to parent to those attached
+        // to node's sister:
+        if ( parent.getHaploAboveName() != -1 ){
+            if ( sister.getHaploAboveName() != -1 ){
                 // if there is one haplotype arising on the parent's branch and another on sister's branch
                 // there is a problem somewhere in the code!!!
                 System.out.println("There must be a serious problem with the code. There are haplotypes arising at " +
                         "both parent and sister branch, while this should technically be impossible...");
                 System.exit(0);
-            } else {
-                ((QuasiSpeciesNode) sister).setHaploAboveName(parentQSType);
+            }
+            else {
+                int haploAboveParentNode = parent.getHaploAboveName();
+                sister.setHaploAboveName(haploAboveParentNode);
+                parent.setHaploAboveName(-1);
             }
         }
+
         // Implement topology change:
-        sister.setParent(null);
+        sister.setParent(null, true);
         parent.getChildren().remove(sister);
 
         // Ensure BEAST knows to update affected likelihoods:
         parent.makeDirty(QuasiSpeciesTree.IS_FILTHY);
         sister.makeDirty(QuasiSpeciesTree.IS_FILTHY);
         node.makeDirty(QuasiSpeciesTree.IS_FILTHY);
+
+        // return from which node is the haplotype moved --- we have to re-attach and rescale it!
+        // and re-assign continuing haplotypes/parenthaploarray from parent node onwards
+        return nodeBelowHaploMoved;
     }
 
     /**
      * Creates a new branch between node and a new node at time destTime between
-     * destBranchBase and its parent.
+     * destBranchBase and its parent and sets the haploAboveName for the appropriate node.
      *
      * @param node
      * @param destBranchBase
-     * @param destTime
+     * @param destTime time at which the node attaches
+     * @param haplotype the haplotype that has to attach to new destination
+     * @param haploAttachTime the time at which the new haplotype attaches at new destination
+     * return the QuasiSpeciesNode above which the moved haplotype is arising now
+     *                          (and for/below which the continuingHaploName have to be corrected)
      */
-    public void connectBranch(Node node, Node destBranchBase, double destTime) {
+    public QuasiSpeciesNode connectBranch(QuasiSpeciesNode node, QuasiSpeciesNode destBranchBase,
+                                          double destTime, int haplotype, double haploAttachTime) {
 
         // Check argument validity:
         if (node.isRoot() || destBranchBase.isRoot())
@@ -198,14 +284,6 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
         Node parent = node.getParent();
         parent.setHeight(destTime);
 
-        // destTime must be higher than, if existant, the first haplotype arising below the node.getParent()
-        for (Node childLeafNode : node.getAllLeafNodes()){
-            if (destTime < qsTree.getAttachmentTimesList((QuasiSpeciesNode)childLeafNode)[0]){
-                System.out.println("Cannot attach subtree to new destination. The haplotype arises above the " +
-                        "destination attachment point...");
-                System.exit(0);
-            }
-        }
         // Implement topology changes:
         replace(destBranchBase.getParent(), destBranchBase, parent);
         destBranchBase.setParent(parent);
@@ -219,6 +297,25 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
         node.makeDirty(QuasiSpeciesTree.IS_FILTHY);
         parent.makeDirty(QuasiSpeciesTree.IS_FILTHY);
         destBranchBase.makeDirty(QuasiSpeciesTree.IS_FILTHY);
+
+        // set the aboveNodeHaplo for the node above which the haplotype moved arises to haplotypeNumber
+        QuasiSpeciesNode nodeBelowHaploMoved = null;
+        if (haploAttachTime >= destTime){
+            nodeBelowHaploMoved = (QuasiSpeciesNode) parent;
+            while (haploAttachTime > nodeBelowHaploMoved.getParent().getHeight()){
+                nodeBelowHaploMoved = (QuasiSpeciesNode) nodeBelowHaploMoved.getParent();
+            }
+        }
+        else{
+            nodeBelowHaploMoved = (QuasiSpeciesNode) qsTree.getNode(haplotype);
+            while (haploAttachTime > nodeBelowHaploMoved.getParent().getHeight()){
+                nodeBelowHaploMoved = (QuasiSpeciesNode) nodeBelowHaploMoved.getParent();
+            }
+        }
+        nodeBelowHaploMoved.setHaploAboveName(haplotype);
+
+        // return the node for which the haploAboveName changed
+        return nodeBelowHaploMoved;
     }
 
     /**
@@ -227,23 +324,20 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
      *
      * @param node
      * @param oldRoot
-     * @param destTime
+     * @param destTime time at which the node attaches
+     * @param haplotype the haplotype that has to attach to new destination
+     * @param haploAttachTime the time at which the new haplotype attaches at new destination
+     * return the QuasiSpeciesNode above which the moved haplotype is arising now
+     *                          (and for/below which the continuingHaploName have to be corrected)
      */
-    public void connectBranchToRoot(Node node, Node oldRoot, double destTime) {
+    public QuasiSpeciesNode connectBranchToRoot(Node node, Node oldRoot,
+                                    double destTime, int haplotype, double haploAttachTime) {
 
         // Check argument validity:
         if (node.isRoot() || !oldRoot.isRoot())
             throw new IllegalArgumentException("Illegal argument "
                     + "to connectBranchToRoot().");
 
-        // destTime must be higher than, if existant, the first haplotype arising below the node.getParent()
-        for (Node childLeafNode : node.getAllLeafNodes()){
-            if (destTime < qsTree.getAttachmentTimesList((QuasiSpeciesNode)childLeafNode)[0]){
-                System.out.println("Cannot set root of new tree to the destination time. The haplotype arises above the " +
-                        "destination attachment point...");
-                System.exit(0);
-            }
-        }
         // Obtain existing parent of node and set new time:
         Node newRoot = node.getParent();
         newRoot.setHeight(destTime);
@@ -262,6 +356,22 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
         newRoot.makeDirty(QuasiSpeciesTree.IS_FILTHY);
         oldRoot.makeDirty(QuasiSpeciesTree.IS_FILTHY);
         node.makeDirty(QuasiSpeciesTree.IS_FILTHY);
+
+        // set the aboveNodeHaplo for the node above which the haplotype moved arises to haplotypeNumber
+        QuasiSpeciesNode nodeBelowHaploMoved = null;
+        if (haploAttachTime >= destTime){
+            nodeBelowHaploMoved = (QuasiSpeciesNode) newRoot;
+        }
+        else{
+            nodeBelowHaploMoved = (QuasiSpeciesNode) qsTree.getNode(haplotype);
+            while (haploAttachTime > nodeBelowHaploMoved.getParent().getHeight()){
+                nodeBelowHaploMoved = (QuasiSpeciesNode) nodeBelowHaploMoved.getParent();
+            }
+        }
+        nodeBelowHaploMoved.setHaploAboveName(haplotype);
+
+        // return the node for which the haploAboveName changed
+        return nodeBelowHaploMoved;
     }
 
     /*
@@ -273,6 +383,11 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
     */
     /**
      * Function to find a most recent common ancestor of two nodes
+     *
+     * @param node1 tip node 1
+     * @param node2 tip node 2
+     * @param startInternalNode internal node from which to start the search, going down the tree towards to tips
+     * return the QuasiSpeciesNode that is the MRCA for two haplotypes
      */
     public QuasiSpeciesNode findLastCommonAncestor(QuasiSpeciesNode node1, QuasiSpeciesNode node2, QuasiSpeciesNode startInternalNode){
         QuasiSpeciesNode returnnode = startInternalNode;
@@ -334,6 +449,93 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
 
         // re-set the original parentHaplo array
         qsTree.setParentHaplo(newParentHaplo);
+    }
+
+    /**
+     * Function to find a maximum height until which the haplo can attach to (start from)
+     *
+     * @param currentHaplo the haplotype for which we search how far in the current tree it can start
+     * @param startNode the node at which to start the search going up towards the origin
+     * return the maximum time up to which the current haplo can be attaching
+     */
+    public double getMaxPossibleHaploAttachTime(int currentHaplo, QuasiSpeciesNode startNode){
+        // starting from the startNode look for parent's continuingHaploName and if present
+        // that node is the max possible attachment time of the haplotype
+        QuasiSpeciesNode nodeToCheck = startNode;
+        while (nodeToCheck.getContinuingHaploName() == -1
+                || nodeToCheck.getHaploAboveName() == currentHaplo
+                || nodeToCheck != qsTree.getRoot()){
+            nodeToCheck = (QuasiSpeciesNode) nodeToCheck.getParent();
+        }
+        if (nodeToCheck == qsTree.getRoot() && nodeToCheck.getHaploAboveName() != -1)
+            return origin.getValue();
+        else
+            return nodeToCheck.getHeight();
+    }
+
+    /**
+     * Function to find a maximum height until which the haplo can attach to (start from)
+     *
+     * @param startNode the node at which to start the search going up towards the origin
+     * return the maximum time up to which there is no haplotype yet
+     */
+    public double getMaxPossibleHaploAttachTime(QuasiSpeciesNode startNode){
+        // starting from the startNode look for parent's continuingHaploName and if present
+        // that node is the max possible attachment time of the haplotype
+        QuasiSpeciesNode nodeToCheck = startNode;
+        while (nodeToCheck.getContinuingHaploName() == -1 || nodeToCheck != qsTree.getRoot()){
+            nodeToCheck = (QuasiSpeciesNode) nodeToCheck.getParent();
+        }
+        if (nodeToCheck == qsTree.getRoot() && nodeToCheck.getHaploAboveName() == -1)
+            return origin.getValue();
+        else
+            return nodeToCheck.getHeight();
+    }
+
+    /**
+     * Function to find a maximum node until which the haplo can attach to (start from)
+     *
+     * @param startNode the node at which to start the search going up towards the origin
+     * return the maximum node up to which there is no haplotype yet
+     */
+    public QuasiSpeciesNode getMaxPossibleHaploAttachNode(QuasiSpeciesNode startNode){
+        // starting from the startNode look for parent's continuingHaploName and if present
+        // that node is the max possible attachment time of the haplotype
+        QuasiSpeciesNode nodeToCheck = startNode;
+        while (nodeToCheck.getContinuingHaploName() == -1 || nodeToCheck != qsTree.getRoot()){
+            nodeToCheck = (QuasiSpeciesNode) nodeToCheck.getParent();
+        }
+        return nodeToCheck;
+    }
+
+    /**
+     * Function to find number of haplotypes in a subtree starting at startNode that can be pulled up
+     *  without the need to push any haplotypes below the common ancestor
+     *
+     * @param startNode the node at which to start the search going down towards the tips
+     * @param parentHaplo the array of parent haplotypes for each haplotype
+     * @param parentHaplo the number of haplotypes that can be pulled up - will be re-written here
+     */
+    public void checkNumberOfPossibleSrcHaplo(QuasiSpeciesNode startNode, int[] parentHaplo,
+                                              ArrayList<Integer> possibleHaplo){
+        List<Node> children = startNode.getAllLeafNodes();
+        for (Node childLeafNode : children) {
+            int childLeafNodeNr = childLeafNode.getNr();
+            if (parentHaplo[childLeafNodeNr]==-1){
+                possibleHaplo.add(childLeafNodeNr);
+            }
+            else {
+                boolean addnode = true;
+                for (Node otherChildLeafNode : children){
+                    if(otherChildLeafNode.getNr()==parentHaplo[childLeafNodeNr]){
+                        addnode = false;
+                        break;
+                    }
+                }
+                if (addnode == true)
+                    possibleHaplo.add(childLeafNodeNr);
+            }
+        }
     }
 
 }

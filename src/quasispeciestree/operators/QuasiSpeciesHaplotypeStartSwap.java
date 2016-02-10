@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 /**
- *  @author Veronika Boskova created on 06/08/2015
+ *  @author Veronika Boskova created on 06/08/2015 finished on 31.01.2016
  */
 @Description("Chooses a haplotype at random and moves"
         + "its start time uniformly in interval "
@@ -25,7 +25,6 @@ public class QuasiSpeciesHaplotypeStartSwap extends QuasiSpeciesTreeOperator{
      */
     @Override
     public double proposal() {
-        final QuasiSpeciesTree qsTree = quasiSpeciesTreeInput.get();
 
         // mark the tree as dirty (startEditing)
         qsTree.startEditing(null);
@@ -173,9 +172,10 @@ public class QuasiSpeciesHaplotypeStartSwap extends QuasiSpeciesTreeOperator{
                 // choose new time to attach
                 double tnewparent = v*tminparent + (1-v)*tmaxparent;
 
-                // set the log(Hastings ratio)
-                logHastingsRatio =  Math.log(((tmax - tminparent)*(tmaxparent - tmin)) /
-                        ((tmax - tmin)*(tmaxparent - tminparent)));
+                // set the log(Hastings ratio) Pr(backwardmove)/Pr(forwardmove)=(1/sthback)/(1/sthforth)=sthforth/sthback
+                logHastingsRatio =  Math.log(
+                        ((tmax - tmin)*(tmaxparent - tminparent)) /
+                        ((tmax - tminparent)*(tmaxparent - tmin)) );
 
                 // reposition parent haplo attachment times: attach ((time - tminparent) * (tnew/told)) + tminparent
                 Double[] tempqstimes=qsTree.getAttachmentTimesList(haplotypesParentHaplo).clone();

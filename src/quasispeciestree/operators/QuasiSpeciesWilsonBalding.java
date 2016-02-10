@@ -11,27 +11,33 @@ import beast.core.Description;
 import beast.core.Input;
 import beast.evolution.tree.Node;
 import beast.util.Randomizer;
+import quasispeciestree.tree.QuasiSpeciesNode;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 /**
- * @author Veronika Boskova created on 15/07/2015.
+ * @author Veronika Boskova created on 02/02/2016.
  */
 @Description("Implements the unweighted Wilson-Balding branch"
         +" swapping move.  This move is similar to one proposed by WILSON"
         +" and BALDING 1998 and involves removing a subtree and"
         +" re-attaching it on a new parent branch. "
         +" See <a href='http://www.genetics.org/cgi/content/full/161/3/1307/F1'>picture</a>."
-        +" This version retypes each newly generated branch by drawing a"
-        +" path from the migration model conditional on the types at the"
-        +" branch ends.")
-public class QuasiSpeciesWilsonBalding {
-}
+        +" This version selects a new starting point for the 'interrupted' haplotype"
+        + "rescales all the attachment times of the corresponding haplotype on a newly "
+        + "generated branch")
 
+// TODO 1 for the normal Wilson-balding need to implement pushing down of all QS in tips of chosen subtree
+// TODO    and then moving and reseeding QS on that sub-tree.  -->> actually, I only need to choose a new attachemtn time
+// TODO    which is delimited with "new" parent haplo and the current haplotype's tip height!
 
-// TODO: for the normal WIlson-balding need to implement pushing down of all QS in tips of chosen subtree
-// and then moving and reseeding QS on that sub-tree.
-// TODO make a function in QS tree to re-seed start points of QS and their copy sequences --- can be used by above WB
-// TODO: Do I need to re-calculate the array holding the number of possible attachment branches of each internal node?
-// --- I think YES
+// TODO 2 make a function in QS tree to re-seed start points of QS and their copy sequences --- can be used by above WB
+// TODO    -->> re-seeding not necessary, keep everything as it was, just randomly choose haplo start point, if possible and scale all the copies
+
+// TODO 3 Do I need to re-calculate the array holding the number of possible attachment branches of each internal node?
+// TODO    -->> I think YES
 
 
 /*
@@ -46,105 +52,111 @@ public class QuasiSpeciesWilsonBalding {
  */
 
 
-// import beast.util.Randomizer;
-//    /**
-//     * Use beast RNG to select random node from list.
-//     *
-//     * @param nodeList
-//     * @return A randomly selected node.
-//     */
-//    private MultiTypeNode selectRandomNode(List<MultiTypeNode> nodeList) {
-//        return nodeList.get(Randomizer.nextInt(nodeList.size()));
-//    }
-
-
-
-
-
-
-
+public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
 ////public class TypedWilsonBalding extends UniformizationRetypeOperator {
-//
-//    public Input<Double> alphaInput = new Input<>("alpha",
-//            "Root height proposal parameter", Input.Validate.REQUIRED);
-//    private double alpha;
-//
-//    @Override
-//    public void initAndValidate() throws Exception {
-//        super.initAndValidate();
-//
-//        alpha = alphaInput.get();
-//    }
-//
-//    @Override
-//    public double proposal() {
-//        // Check that operator can be applied to tree:
-//        if (mtTree.getLeafNodeCount()<3)
-//            throw new IllegalStateException("Tree too small for"
-//                    +" TypedWilsonBalding operator.");
-//
-//        // Select source node:
-//        Node srcNode;
-//        do {
-//            srcNode = mtTree.getNode(Randomizer.nextInt(mtTree.getNodeCount()));
-//        } while (invalidSrcNode(srcNode));
-//        Node srcNodeP = srcNode.getParent();
-//        Node srcNodeS = getOtherChild(srcNodeP, srcNode);
-//        double t_srcNode = srcNode.getHeight();
-//        double t_srcNodeP = srcNodeP.getHeight();
-//        double t_srcNodeS = srcNodeS.getHeight();
-//
-//        // Select destination branch node:
-//        Node destNode;
-//        do {
-//            destNode = mtTree.getNode(Randomizer.nextInt(mtTree.getNodeCount()));
-//        } while (invalidDestNode(srcNode, destNode));
-//        Node destNodeP = destNode.getParent();
-//        double t_destNode = destNode.getHeight();
-//
-//        // Handle special cases involving root:
-//
+    /**
+     * Change the start time and return the hastings ratio.
+     *
+     * @return log of Hastings Ratio
+     */
+    @Override
+    public double proposal() {
+
+        // mark the tree as dirty (startEditing)
+        qsTree.startEditing(null);
+
+        // Check that operator can be applied to tree:
+        if (qsTree.getLeafNodeCount()<3)
+            throw new IllegalStateException("Tree too small for"
+                    +" TypedWilsonBalding operator.");
+
+        // Select source node:
+        Node srcNode;
+        do {
+            srcNode = qsTree.getNode(Randomizer.nextInt(qsTree.getNodeCount()));
+        } while (invalidSrcNode(srcNode));
+        Node srcNodeP = srcNode.getParent();
+        Node srcNodeS = getOtherChild(srcNodeP, srcNode);
+        int srcHaplo = ((QuasiSpeciesNode) srcNode).getContinuingHaploName();
+        // if there is no haplotype passing the current chosen node,
+        //  get all the possible haplotypes that can be moved up
+        ArrayList<Integer> possibleHaplo = new ArrayList<>();
+        int[] oldParentHaplo = qsTree.getParentHaplo();
+        if (srcHaplo == -1){
+            checkNumberOfPossibleSrcHaplo((QuasiSpeciesNode) srcNode, oldParentHaplo, possibleHaplo);
+            // choose randomly from the array of haplotypes one to move up
+            srcHaplo = possibleHaplo.get(Randomizer.nextInt(possibleHaplo.size()));
+        }
+        else {
+            possibleHaplo.add(srcHaplo);
+        }
+        double t_srcNode = srcNode.getHeight();
+        double t_srcNodeP = srcNodeP.getHeight();
+        double t_srcNodeS = srcNodeS.getHeight();
+
+        // Select destination branch node:
+        Node destNode;
+        do {
+            destNode = qsTree.getNode(Randomizer.nextInt(qsTree.getNodeCount()));
+        } while (invalidDestNode(srcNode, destNode));
+        Node destNodeP = destNode.getParent();
+        double t_destNode = destNode.getHeight();
+
+
+        // Handle special cases involving root:
 //        if (destNode.isRoot()) {
 //            // FORWARD ROOT MOVE
 //
-//            double logHR = 0.0;
+//            double logHastingsRatio = 0.0;
 //
+//
+//            // get probability that the current haplotype attaches where it does now ..
+//            // get branch length to MRCA
 //            // Record probability of current colouring:
-//            logHR += getBranchTypeProb(srcNode);
+//            logHastingsRatio += getBranchTypeProb(srcNode);
 //
 //            // Record srcNode grandmother height:
 //            double t_srcNodeG = srcNodeP.getParent().getHeight();
 //
 //            // Choose new root height:
-//            double newTime = t_destNode+Randomizer.nextExponential(1.0/(alpha*t_destNode));
+//            double newTime = qs_destNode+Randomizer.nextExponential(1.0/(alpha*qs_destNode));
 //
 //            // Implement tree changes:
 //            disconnectBranch(srcNode);
+//            // TODO return which haplotype is moved --- we have to re-attach and rescale it!
+//            // TODO and re-assign continuing haplotypes/parenthaploarray from parent node onwards
 //            connectBranchToRoot(srcNode, destNode, newTime);
-//            mtTree.setRoot(srcNodeP);
+//            qsTree.setRoot(srcNodeP);
 //
 //            // Recolour root branches:
 //            try {
-//                logHR -= retypeRootBranches(srcNode);
+//                logHastingsRatio -= retypeRootBranches(srcNode);
 //            } catch (NoValidPathException e) {
 //                return Double.NEGATIVE_INFINITY;
 //            }
 //
 //            // Return HR:
-//            logHR += Math.log(alpha*t_destNode)
-//                    +(1.0/alpha)*(newTime/t_destNode-1.0)
-//                    -Math.log(t_srcNodeG-Math.max(t_srcNode, t_srcNodeS));
+//            logHastingsRatio += Math.log(alpha*qs_destNode)
+//                    +(1.0/alpha)*(newTime/qs_destNode-1.0)
+//                    -Math.log(t_srcNodeG-Math.max(qs_srcNode, qs_srcNodeS));
 //
-//            return logHR;
+//            return logHastingsRatio;
 //        }
+
+
+
+
+
+
 //
 //        if (srcNodeP.isRoot()) {
 //            // BACKWARD ROOT MOVE
 //
-//            double logHR = 0.0;
+//            double logHastingsRatio = 0.0;
 //
-//            // Incorporate probability of current colouring:
-//            logHR += getRootBranchTypeProb(srcNode);
+//            // get probability that the current haplotype attaches where it does now ..
+//            // get branch length to MRCA
+//            logHastingsRatio += getRootBranchTypeProb(srcNode);
 //
 //            // Record old srcNode parent height
 //            double oldTime = t_srcNodeP;
@@ -163,158 +175,169 @@ public class QuasiSpeciesWilsonBalding {
 //
 //            // Recolour new branch:
 //            try {
-//                logHR -= retypeBranch(srcNode);
+//                logHastingsRatio -= retypeBranch(srcNode);
 //            } catch (NoValidPathException e) {
 //                return Double.NEGATIVE_INFINITY;
 //            }
 //
 //            // Return HR:
-//            logHR += Math.log(t_destNodeP-Math.max(t_srcNode, t_destNode))
+//            logHastingsRatio += Math.log(t_destNodeP-Math.max(t_srcNode, t_destNode))
 //                    -Math.log(alpha*t_srcNodeS)
 //                    -(1.0/alpha)*(oldTime/t_srcNodeS-1.0);
 //
-//            return logHR;
+//            return logHastingsRatio;
 //        }
-//
-//        // NON-ROOT MOVE
-//
-//        double logHR = 0.0;
-//
-//        // Incorporate probability of current colouring.
-//        logHR += getBranchTypeProb(srcNode);
-//
-//        // Record srcNode grandmother height:
-//        double t_srcNodeG = srcNodeP.getParent().getHeight();
-//
-//        // Choose height of new attachment point:
-//        double min_newTime = Math.max(t_destNode, t_srcNode);
-//        double t_destNodeP = destNodeP.getHeight();
-//        double span = t_destNodeP-min_newTime;
-//        double newTime = min_newTime+span*Randomizer.nextDouble();
-//
-//        // Implement tree changes:
-//        disconnectBranch(srcNode);
-//        connectBranch(srcNode, destNode, newTime);
-//
-//        // Recolour new branch:
-//        try {
-//            logHR -= retypeBranch(srcNode);
-//        } catch (NoValidPathException e) {
-//            return Double.NEGATIVE_INFINITY;
-//        }
-//
-//        // HR contribution of topology and node height changes:
-//        logHR += Math.log(t_destNodeP-Math.max(t_srcNode, t_destNode))
-//                -Math.log(t_srcNodeG-Math.max(t_srcNode, t_srcNodeS));
-//
-//        return logHR;
-//    }
-//
-//    /**
-//     * Returns true if srcNode CANNOT be used for the CWBR move.
-//     *
-//     * @param srcNode
-//     * @return True if srcNode invalid.
-//     */
-//    private boolean invalidSrcNode(Node srcNode) {
-//
-//        if (srcNode.isRoot())
-//            return true;
-//
-//        Node parent = srcNode.getParent();
-//
-//        // This check is important for avoiding situations where it is
-//        // impossible to choose a valid destNode:
-//        if (parent.isRoot()) {
-//
-//            Node sister = getOtherChild(parent, srcNode);
-//
-//            if (sister.isLeaf())
-//                return true;
-//
-//            if (srcNode.getHeight()>=sister.getHeight())
-//                return true;
-//        }
-//
-//        return false;
-//    }
-//
-//    /**
-//     * Returns true if destNode CANNOT be used for the CWBR move in conjunction
-//     * with srcNode.
-//     *
-//     * @param srcNode
-//     * @param destNode
-//     * @return True if destNode invalid.
-//     */
-//    private boolean invalidDestNode(Node srcNode, Node destNode) {
-//
-//        if (destNode==srcNode
-//                ||destNode==srcNode.getParent()
-//                ||destNode.getParent()==srcNode.getParent())
-//            return true;
-//
-//        Node destNodeP = destNode.getParent();
-//
-//        if (destNodeP!=null&&(destNodeP.getHeight()<=srcNode.getHeight()))
-//            return true;
-//
-//        return false;
-//    }
-//
-//    /**
-//     * Retype branches with nChanges between srcNode and the root (srcNode's
-//     * parent) and nChangesSister between the root and srcNode's sister.
-//     *
-//     * @param srcNode
-//     * @return Probability of new state.
-//     */
-//    private double retypeRootBranches(Node srcNode) throws NoValidPathException {
-//
-//        double logProb = 0.0;
-//
-//        Node srcNodeP = srcNode.getParent();
-//        Node srcNodeS = getOtherChild(srcNodeP, srcNode);
-//
-//        // Select new root colour:
-//        ((MultiTypeNode)srcNodeP).setNodeType(Randomizer.nextInt(migModel.getNTypes()));
-//
-//        // Incorporate probability of new root colour:
-//        logProb += Math.log(1.0/migModel.getNTypes());
-//
-//        // Recolour branches conditional on root type:
-//        logProb += retypeBranch(srcNode);
-//        logProb += retypeBranch(srcNodeS);
-//
-//
-//        // Return probability of new colouring given boundary conditions:
-//        return logProb;
-//    }
-//
-//
-//    /**
-//     * Obtain joint probability of typing along branches between srcNode and
-//     * the root, the sister of srcNode and the root, and the node type of the
-//     * root.
-//     *
-//     * @param srcNode
-//     * @return
-//     */
-//    protected double getRootBranchTypeProb(Node srcNode) {
-//
-//        double logProb = 0.0;
-//
-//        Node srcNodeP = srcNode.getParent();
-//        Node srcNodeS = getOtherChild(srcNodeP, srcNode);
-//
-//        // Probability of node type:
-//        logProb += Math.log(1.0/migModel.getNTypes());
-//
-//        // Probability of branch types conditional on node types:
-//        logProb += getBranchTypeProb(srcNode);
-//        logProb += getBranchTypeProb(srcNodeS);
-//
-//        return logProb;
-//    }
-//
-//}
+
+
+
+
+
+
+
+
+
+
+        // NON-ROOT MOVE
+
+        double logHastingsRatio = 0.0;
+        // Incorporate probability of choosing current haplotype to move
+        logHastingsRatio += Math.log(possibleHaplo.size());
+
+        // Incorporate probability of current positioning of the start time of the haplotype.
+        double haploStartMin = qsTree.getNode(srcHaplo).getHeight();
+        double haploStartMax = getMaxPossibleHaploAttachTime(srcHaplo,(QuasiSpeciesNode) srcNode);
+
+        logHastingsRatio -= Math.log(haploStartMax-haploStartMin);
+
+        // Record srcNode grandmother height:
+        double t_srcNodeG = srcNodeP.getParent().getHeight();
+
+        // Choose height of new attachment point:
+        double min_newTime = Math.max(t_destNode, t_srcNode);
+        double t_destNodeP = destNodeP.getHeight();
+        double span = t_destNodeP-min_newTime;
+        double newTime = min_newTime+span*Randomizer.nextDouble();
+
+        // Choose attachment point for the moved haplotype
+        QuasiSpeciesNode haploStartMaxNode = getMaxPossibleHaploAttachNode((QuasiSpeciesNode) destNode);
+        double haploStartMaxNew = getMaxPossibleHaploAttachTime((QuasiSpeciesNode) destNode);
+        // choose new time to attach
+        // get a random number deciding where the current haplo will be moved
+        double u = Randomizer.nextDouble();
+        double tHaploNew = u*haploStartMin + (1-u)*haploStartMin;
+        // reposition attachment times: attach ((time - haploStartMin) * (tHaploNew/told)) + haploStartMin
+        Double[] tempqstimes=qsTree.getAttachmentTimesList(srcHaplo).clone();
+        // get the haplotype's starting time
+        double told = tempqstimes[0];
+        // Scale the haplotype strains
+        // scale all the other positions in the array but the 0 position (haplo start time)
+        double scalefactor = (tHaploNew - haploStartMin)/(told - haploStartMaxNew);
+        for (int i=1; i<tempqstimes.length; i++) {
+            tempqstimes[i] = ((tempqstimes[i] - haploStartMin) * scalefactor) + haploStartMin;
+        }
+        // set the haplotype's starting time to the new time
+        tempqstimes[0] = tHaploNew;
+        // rewrite the attachment times array
+        qsTree.setAttachmentTimesList(srcHaplo, tempqstimes);
+        // Incorporate probability of current positioning of the start time of the haplotype.
+        logHastingsRatio += Math.log(haploStartMaxNew-haploStartMin);
+
+
+        // Implement tree changes:
+        QuasiSpeciesNode correctTreeFromThisNode1 = disconnectBranch((QuasiSpeciesNode) srcNode, srcHaplo);
+        QuasiSpeciesNode correctTreeFromThisNode2 = connectBranch((QuasiSpeciesNode) srcNode,
+                (QuasiSpeciesNode) destNode, newTime, srcHaplo, tHaploNew);
+
+        // Recalculate continuingHaplo and HaploAbove arrays
+        if(correctTreeFromThisNode1 == qsTree.getRoot()){
+            recalculateParentHaploAndCorrectContinuingHaploName(-1, correctTreeFromThisNode1);
+        }
+        else if (correctTreeFromThisNode2 == qsTree.getRoot()){
+            recalculateParentHaploAndCorrectContinuingHaploName(-1, correctTreeFromThisNode2);
+        }
+        else {
+            // for source node, need to find what the parent haplo was and start at the changed node
+            recalculateParentHaploAndCorrectContinuingHaploName(oldParentHaplo[srcHaplo], correctTreeFromThisNode1);
+            // for the destination node, need to find out new parent haplo and start at the changed node
+            recalculateParentHaploAndCorrectContinuingHaploName(oldParentHaplo[haploStartMaxNode.getContinuingHaploName()], correctTreeFromThisNode2);
+        }
+
+        // Incorporate probability of choosing current haplotype to move back
+        if (((QuasiSpeciesNode) srcNode).getContinuingHaploName() != srcHaplo){
+            // check how many haplotypes can be pulled up
+            ArrayList<Integer> backPossibleHaplo = new ArrayList<>();
+            int[] newParentHaplo = qsTree.getParentHaplo();
+            checkNumberOfPossibleSrcHaplo((QuasiSpeciesNode) srcNode,newParentHaplo, backPossibleHaplo);
+            // account for this in the hastings ratio
+            logHastingsRatio -= Math.log(backPossibleHaplo.size());
+        }
+        // no need to be adding 0.0, so just commented out
+        // else{
+        //  logHastingsRatio -= Math.log(1);
+        // }
+
+        // HR contribution of topology and node height changes:
+        logHastingsRatio += Math.log(t_destNodeP-Math.max(t_srcNode, t_destNode))
+                           -Math.log(t_srcNodeG-Math.max(t_srcNode, t_srcNodeS));
+
+        return logHastingsRatio;
+    }
+
+    /**
+     * Returns true if srcNode CANNOT be used for the CWBR ? Wilson-Balding ? move.
+     *
+     * @param srcNode
+     * @return True if srcNode invalid.
+     */
+    private boolean invalidSrcNode(Node srcNode) {
+
+        if (srcNode.isRoot())
+            return true;
+
+        Node parent = srcNode.getParent();
+
+        // This check is important for avoiding situations where it is
+        // impossible to choose a valid destNode:
+        if (parent.isRoot()) {
+
+            Node sister = getOtherChild(parent, srcNode);
+
+            if (sister.isLeaf())
+                return true;
+            // make sure that the target branch is above the subtree being moved
+            // if the parent is root then the only possibility is the sister branch tip/node,
+            // and if this one is below the source node, we cannot attach it to it
+            // and attaching to root would just swap left/right = not much use
+            if (srcNode.getHeight()>=sister.getHeight())
+                return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Returns true if destNode CANNOT be used for the CWBR move in conjunction
+     * with srcNode.
+     *
+     * @param srcNode
+     * @param destNode
+     * @return True if destNode invalid.
+     */
+    private boolean invalidDestNode(Node srcNode, Node destNode) {
+
+        if (    // cannot attach to the same place
+                destNode==srcNode
+                ||destNode==srcNode.getParent()
+                // swapping left right, does not change anything
+                ||destNode.getParent()==srcNode.getParent())
+            return true;
+
+        Node destNodeP = destNode.getParent();
+        // make sure that the target branch is above the subtree being moved
+        if (destNodeP!=null&&(destNodeP.getHeight()<=srcNode.getHeight()))
+            return true;
+
+        return false;
+    }
+
+}

@@ -99,6 +99,20 @@ public class QuasiSpeciesNode extends Node {
      ***************************
      */
 
+    /**
+     * Sets the parent of this node
+     *
+     * @param parent     the node to become parent
+     * @param inOperator if true, then startEditing() is called and setting the parent will make tree "filthy"
+     */
+    public void setParent(final Node parent, final boolean inOperator) {
+        // start editing set in operator itself
+        //if (inOperator) startEditing();
+        if (this.getParent() != parent) {
+            this.setParent(parent);
+            if (inOperator) this.makeDirty(QuasiSpeciesTree.IS_FILTHY);
+        }
+    }
 
     /**
      * @return (deep) copy of node
