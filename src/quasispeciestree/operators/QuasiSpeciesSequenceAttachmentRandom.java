@@ -102,6 +102,10 @@ public class QuasiSpeciesSequenceAttachmentRandom extends QuasiSpeciesTreeOperat
         }
         qsTree.setAttachmentTimesList(node, tempqstimes);
 
+        // recalculate countPossibleStartBranches
+        int[] startBranchCountsArray = qsTree.countPossibleStartBranches();
+        qsTree.setStartBranchCounts(startBranchCountsArray);
+
         node.makeDirty(QuasiSpeciesTree.IS_FILTHY);
 
         return Math.log(newRange/oldRange);

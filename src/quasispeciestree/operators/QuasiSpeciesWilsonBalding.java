@@ -19,8 +19,8 @@ import java.util.ArrayList;
         +" and BALDING 1998 and involves removing a subtree and"
         +" re-attaching it on a new parent branch. "
         +" See <a href='http://www.genetics.org/cgi/content/full/161/3/1307/F1'>picture</a>."
-        +" This version selects a new starting point for the 'interrupted' haplotype"
-        + "rescales all the attachment times of the corresponding haplotype on a newly "
+        +" This version selects a new starting point for the 'interrupted' or randomly chosen haplotype"
+        + "from the moved subtree, rescales all the attachment times of the corresponding haplotype on a newly "
         + "generated branch")
 public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
 
@@ -59,6 +59,10 @@ public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
         } while (invalidSrcNode(srcNode));
         Node srcNodeP = srcNode.getParent();
         Node srcNodeS = getOtherChild(srcNodeP, srcNode);
+        double t_srcNode = srcNode.getHeight();
+        double t_srcNodeP = srcNodeP.getHeight();
+        double t_srcNodeS = srcNodeS.getHeight();
+
         int srcHaplo = ((QuasiSpeciesNode) srcNode).getContinuingHaploName();
         // if there is no haplotype passing the current chosen node,
         //  get all the possible haplotypes that can be moved up
@@ -72,9 +76,6 @@ public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
         else {
             possibleHaplo.add(srcHaplo);
         }
-        double t_srcNode = srcNode.getHeight();
-        double t_srcNodeP = srcNodeP.getHeight();
-        double t_srcNodeS = srcNodeS.getHeight();
 
         // Select destination branch node:
         Node destNode;
@@ -107,7 +108,9 @@ public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
             double newTime = t_destNode+Randomizer.nextExponential(1.0/(alpha*t_destNode));
 
             // Choose attachment point for the moved haplotype
-            double haploStartMaxNew = qsTree.originInput.get().getValue();
+//            double haploStartMaxNew = origin.getValue();
+            ArrayList haploStartMaxNewArray = getMaxPossibleHaploAttachTime((QuasiSpeciesNode) destNode, srcHaplo, newTime);
+            double haploStartMaxNew = (double) haploStartMaxNewArray.get(1);
             // choose new time to attach
             // get a random number deciding where the current haplo will be moved
             double u = Randomizer.nextDouble();
@@ -137,6 +140,9 @@ public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
 
             // Recalculate continuingHaplo and HaploAbove arrays
             recalculateParentHaploAndCorrectContinuingHaploName(-1, (QuasiSpeciesNode) srcNodeP);
+            // in any case (changed or not the aboveNodeHaplo/parentHaplo array) recalculate countPossibleStartBranches
+            int[] startBranchCountsArray = qsTree.countPossibleStartBranches();
+            qsTree.setStartBranchCounts(startBranchCountsArray);
 
             // Incorporate probability of choosing current haplotype to move back
             if (((QuasiSpeciesNode) srcNode).getContinuingHaploName() != srcHaplo){
@@ -187,8 +193,9 @@ public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
             double newTime = min_newTime+span*Randomizer.nextDouble();
 
             // Choose attachment point for the moved haplotype
-            QuasiSpeciesNode haploStartMaxNode = getMaxPossibleHaploAttachNode((QuasiSpeciesNode) srcNode, (QuasiSpeciesNode) destNode, newTime);
-            double haploStartMaxNew = getMaxPossibleHaploAttachTime((QuasiSpeciesNode) destNode, newTime);
+            //QuasiSpeciesNode haploStartMaxNode = getMaxPossibleHaploAttachNode((QuasiSpeciesNode) srcNode, (QuasiSpeciesNode) destNode, newTime);
+            ArrayList haploStartMaxNewArray = getMaxPossibleHaploAttachTime((QuasiSpeciesNode) destNode, srcHaplo, newTime);
+            double haploStartMaxNew = (double) haploStartMaxNewArray.get(1);
             // choose new time to attach
             // get a random number deciding where the current haplo will be moved
             double u = Randomizer.nextDouble();
@@ -212,12 +219,13 @@ public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
 
             // Implement tree changes:
             QuasiSpeciesNode correctTreeFromThisNode1 = disconnectBranchFromRoot((QuasiSpeciesNode) srcNode, srcHaplo);
-            QuasiSpeciesNode correctTreeFromThisNode2 = connectBranch((QuasiSpeciesNode) srcNode,
-                    (QuasiSpeciesNode) destNode, newTime, srcHaplo, tHaploNew);
             srcNodeS.setParent(null);
             qsTree.setRoot(srcNodeS);
+            QuasiSpeciesNode correctTreeFromThisNode2 = connectBranch((QuasiSpeciesNode) srcNode,
+                    (QuasiSpeciesNode) destNode, newTime, srcHaplo, tHaploNew);
 
             // Recalculate continuingHaplo and HaploAbove arrays
+//            recalculateParentHaploAndCorrectContinuingHaploName(-1, (QuasiSpeciesNode) qsTree.getRoot());
             if(correctTreeFromThisNode1 == qsTree.getRoot()){
                 recalculateParentHaploAndCorrectContinuingHaploName(-1, correctTreeFromThisNode1);
             }
@@ -226,10 +234,38 @@ public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
             }
             else {
                 // for source node, need to find what the parent haplo was and start at the changed node
-                recalculateParentHaploAndCorrectContinuingHaploName(oldParentHaplo[srcHaplo], correctTreeFromThisNode1);
-                // for the destination node, need to find out new parent haplo and start at the changed node
-                recalculateParentHaploAndCorrectContinuingHaploName(oldParentHaplo[haploStartMaxNode.getContinuingHaploName()], correctTreeFromThisNode2);
+                if (correctTreeFromThisNode1!=null)
+                    recalculateParentHaploAndCorrectContinuingHaploName(oldParentHaplo[srcHaplo], correctTreeFromThisNode1);
+                // for the attached haplotype, need to find out new parent haplo and start at the changed node
+                // changed node can be newly attached parent or any node above
+                // getMaxPossibleHaploAttachTime function returned array of Node, time, haplo (above in the tree)
+                if (correctTreeFromThisNode2.getHaploAboveName()!=-1){
+                    if ((int) haploStartMaxNewArray.get(2) != correctTreeFromThisNode2.getHaploAboveName())
+                        recalculateParentHaploAndCorrectContinuingHaploName((int) haploStartMaxNewArray.get(2), correctTreeFromThisNode2);
+                    else
+                        recalculateParentHaploAndCorrectContinuingHaploName(oldParentHaplo[(int) haploStartMaxNewArray.get(2)], correctTreeFromThisNode2);
+                }
+                // if the continuingHaplo is -1, we must have attached the haplo below the moved parent
+                // there can however still be some other haplo up in the tree (and not coming to this part)
+                else{
+                    // we have to start correcting from the srcNode
+                    int contHaplo = (int) haploStartMaxNewArray.get(2);
+                    boolean contHaploHere = false;
+                    for (Node node : correctTreeFromThisNode2.getAllLeafNodes()){
+                        if (node.getNr() == contHaplo){
+                            contHaploHere = true;
+                        }
+                    }
+                    if (contHaploHere)
+                        correctTreeFromThisNode2.setContinuingHaploName(contHaplo);
+                    else
+                        correctTreeFromThisNode2.setContinuingHaploName(-1);
+                    recalculateParentHaploAndCorrectContinuingHaploName(contHaplo, (QuasiSpeciesNode) srcNode);
+                }
             }
+            // in any case (changed or not the aboveNodeHaplo/parentHaplo array) recalculate countPossibleStartBranches
+            int[] startBranchCountsArray = qsTree.countPossibleStartBranches();
+            qsTree.setStartBranchCounts(startBranchCountsArray);
 
             // Incorporate probability of choosing current haplotype to move back
             if (((QuasiSpeciesNode) srcNode).getContinuingHaploName() != srcHaplo){
@@ -279,8 +315,9 @@ public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
         double newTime = min_newTime+span*Randomizer.nextDouble();
 
         // Choose attachment point for the moved haplotype
-        QuasiSpeciesNode haploStartMaxNode = getMaxPossibleHaploAttachNode((QuasiSpeciesNode) srcNode, (QuasiSpeciesNode) destNode, newTime);
-        double haploStartMaxNew = getMaxPossibleHaploAttachTime((QuasiSpeciesNode) destNode, newTime);
+        //QuasiSpeciesNode haploStartMaxNode = getMaxPossibleHaploAttachNode((QuasiSpeciesNode) srcNode, (QuasiSpeciesNode) destNode, newTime);
+        ArrayList haploStartMaxNewArray = getMaxPossibleHaploAttachTime((QuasiSpeciesNode) destNode, srcHaplo, newTime);
+        double haploStartMaxNew = (double) haploStartMaxNewArray.get(1);
         // choose new time to attach
         // get a random number deciding where the current haplo will be moved
         double u = Randomizer.nextDouble();
@@ -309,6 +346,7 @@ public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
                 (QuasiSpeciesNode) destNode, newTime, srcHaplo, tHaploNew);
 
         // Recalculate continuingHaplo and HaploAbove arrays
+//        recalculateParentHaploAndCorrectContinuingHaploName(-1, (QuasiSpeciesNode) qsTree.getRoot());
         if(correctTreeFromThisNode1 == qsTree.getRoot()){
             recalculateParentHaploAndCorrectContinuingHaploName(-1, correctTreeFromThisNode1);
         }
@@ -317,10 +355,38 @@ public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
         }
         else {
             // for source node, need to find what the parent haplo was and start at the changed node
-            recalculateParentHaploAndCorrectContinuingHaploName(oldParentHaplo[srcHaplo], correctTreeFromThisNode1);
-            // for the destination node, need to find out new parent haplo and start at the changed node
-            recalculateParentHaploAndCorrectContinuingHaploName(oldParentHaplo[haploStartMaxNode.getContinuingHaploName()], correctTreeFromThisNode2);
+            if (correctTreeFromThisNode1!=null)
+                recalculateParentHaploAndCorrectContinuingHaploName(oldParentHaplo[srcHaplo], correctTreeFromThisNode1);
+            // for the attached haplotype, need to find out new parent haplo and start at the changed node
+            // changed node can be newly attached parent or any node above
+            // getMaxPossibleHaploAttachTime function returned array of Node, time, haplo (above in the tree)
+            if (correctTreeFromThisNode2.getHaploAboveName()!=-1){
+                if ((int) haploStartMaxNewArray.get(2) != correctTreeFromThisNode2.getHaploAboveName())
+                    recalculateParentHaploAndCorrectContinuingHaploName((int) haploStartMaxNewArray.get(2), correctTreeFromThisNode2);
+                else
+                    recalculateParentHaploAndCorrectContinuingHaploName(oldParentHaplo[(int) haploStartMaxNewArray.get(2)], correctTreeFromThisNode2);
+            }
+            // if the continuingHaplo is -1, we must have attached the haplo below the moved parent
+            // there can however still be some other haplo up in the tree (and not coming to this part)
+            else{
+                // we have to start correcting from the srcNode
+                int contHaplo = (int) haploStartMaxNewArray.get(2);
+                boolean contHaploHere = false;
+                for (Node node : correctTreeFromThisNode2.getAllLeafNodes()){
+                    if (node.getNr() == contHaplo){
+                        contHaploHere = true;
+                    }
+                }
+                if (contHaploHere)
+                    correctTreeFromThisNode2.setContinuingHaploName(contHaplo);
+                else
+                    correctTreeFromThisNode2.setContinuingHaploName(-1);
+                recalculateParentHaploAndCorrectContinuingHaploName(contHaplo, (QuasiSpeciesNode) srcNode);
+            }
         }
+        // in any case (changed or not the aboveNodeHaplo/parentHaplo array) recalculate countPossibleStartBranches
+        int[] startBranchCountsArray = qsTree.countPossibleStartBranches();
+        qsTree.setStartBranchCounts(startBranchCountsArray);
 
         // Incorporate probability of choosing current haplotype to move back
         if (((QuasiSpeciesNode) srcNode).getContinuingHaploName() != srcHaplo){
@@ -388,7 +454,7 @@ public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
         if (    // cannot attach to the same place
                 destNode==srcNode
                 ||destNode==srcNode.getParent()
-                // swapping left right, does not change anything
+                // changing height of attachment, does not change much
                 ||destNode.getParent()==srcNode.getParent())
             return true;
 
