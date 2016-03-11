@@ -30,7 +30,7 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
     protected RealParameter origin;
 
     @Override
-    public void initAndValidate() throws Exception {
+    public void initAndValidate(){
         qsTree = quasiSpeciesTreeInput.get();
         origin = originInput.get();
     }

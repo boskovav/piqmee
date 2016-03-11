@@ -58,7 +58,7 @@ public class QuasiSpeciesTree extends Tree {
         initArrays();
     }
 
-    public void initAndValidate() throws Exception {
+    public void initAndValidate(){
 
 
 
@@ -102,16 +102,16 @@ public class QuasiSpeciesTree extends Tree {
                     parent.setRight(right);
                     left = parent;
                 }
-                root = left;
+                root = (QuasiSpeciesNode) left;
                 leafNodeCount = sTaxa.size();
                 nodeCount = leafNodeCount * 2 - 1;
                 internalNodeCount = leafNodeCount - 1;
 
             } else {
                 // make dummy tree with a single root node
-                root = new Node();
+                root = new QuasiSpeciesNode();
                 root.setNr(0);
-                ((QuasiSpeciesNode) root).setmTree(this);
+                ((QuasiSpeciesNode) root).setqsTree(this);
                 nodeCount = 1;
                 internalNodeCount = 0;
                 leafNodeCount = 1;
@@ -493,7 +493,7 @@ public class QuasiSpeciesTree extends Tree {
      */
     private void listNodes(QuasiSpeciesNode node, QuasiSpeciesNode[] nodes) {
         nodes[node.getNr()] = node;
-        node.setmTree(this);
+        node.setqsTree(this);
         if (!node.isLeaf()) {
             listNodes((QuasiSpeciesNode) node.getLeft(), nodes);
             if (node.getRight()!=null)
@@ -560,7 +560,7 @@ public class QuasiSpeciesTree extends Tree {
         if (m_nodes == null) {
             initArrays();
         }
-        root = m_nodes[qsTree.root.getNr()];
+        root = (QuasiSpeciesNode) m_nodes[qsTree.root.getNr()];
         Node[] otherNodes = qsTree.m_nodes;
         int iRoot = root.getNr();
         assignFromFragileHelper(0, iRoot, otherNodes);
@@ -614,7 +614,7 @@ public class QuasiSpeciesTree extends Tree {
      * @param regularTree
      * @throws java.lang.Exception
      */
-    public void initFromRegularTree(Tree regularTree) throws Exception {
+    public void initFromRegularTree(Tree regularTree){
 
         // Build new quasi-species tree:
 
@@ -767,13 +767,13 @@ public class QuasiSpeciesTree extends Tree {
 
 
         // from MultiTypeTree class
-        storedRoot = m_storedNodes[root.getNr()];
+        storedRoot = (QuasiSpeciesNode) m_storedNodes[root.getNr()];
         int iRoot = root.getNr();
 
         storeNodes(0, iRoot);
 
         storedRoot.setHeight(m_nodes[iRoot].getHeight());
-        storedRoot.setParent(null);
+        ((QuasiSpeciesNode) storedRoot).setParent(null, false);
 
         if (root.getLeft()!=null)
             storedRoot.setLeft(m_storedNodes[root.getLeft().getNr()]);
@@ -803,7 +803,7 @@ public class QuasiSpeciesTree extends Tree {
             QuasiSpeciesNode sink = (QuasiSpeciesNode)m_storedNodes[i];
             QuasiSpeciesNode src = (QuasiSpeciesNode)m_nodes[i];
             sink.setHeight(src.getHeight());
-            sink.setParent(m_storedNodes[src.getParent().getNr()]);
+            sink.setParent(m_storedNodes[src.getParent().getNr()], false);
             if (src.getLeft()!=null) {
                 sink.setLeft(m_storedNodes[src.getLeft().getNr()]);
                 if (src.getRight()!=null)
@@ -840,7 +840,7 @@ public class QuasiSpeciesTree extends Tree {
     // Methods implementing the Loggable interface //
     /////////////////////////////////////////////////
     @Override
-    public void init(PrintStream printStream) throws Exception {
+    public void init(PrintStream printStream){
 
         printStream.println("#NEXUS\n");
         printStream.println("Begin taxa;");

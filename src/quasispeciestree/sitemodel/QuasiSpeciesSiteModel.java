@@ -64,7 +64,7 @@ public class QuasiSpeciesSiteModel extends QuasiSpeciesSiteModelInterface.Base {
     boolean useBeast1StyleGamma;
     
     @Override
-    public void initAndValidate() throws Exception {
+    public void initAndValidate(){
     	useBeast1StyleGamma = true; //useBeast1StyleGammaInput.get();
         muParameter = muParameterInput.get();
         if (muParameter == null) {
@@ -91,7 +91,7 @@ public class QuasiSpeciesSiteModel extends QuasiSpeciesSiteModelInterface.Base {
 
 
         if (/*invarParameter != null && */(invarParameter.getValue() < 0 || invarParameter.getValue() > 1)) {
-            throw new Exception("proportion invariant should be between 0 and 1");
+            throw new IllegalArgumentException("proportion invariant should be between 0 and 1");
         }
         refresh();
 

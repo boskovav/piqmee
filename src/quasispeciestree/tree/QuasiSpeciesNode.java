@@ -12,7 +12,7 @@ public class QuasiSpeciesNode extends Node {
 
 
     @Override
-    public void initAndValidate() throws Exception {
+    public void initAndValidate(){
 
         super.initAndValidate();
 
@@ -22,6 +22,21 @@ public class QuasiSpeciesNode extends Node {
 //    protected String continuingHaploName;
     protected int haploAboveName;
     protected int continuingHaploName;
+
+    /**
+     * Signal to BEAST that we need to start editing the tree from this node.
+     */
+    //    public String getHaploAboveName() {return this.haploAboveName; }
+    public void dostartEditing() {
+        this.startEditing();
+//        this.makeDirty(QuasiSpeciesTree.IS_DIRTY);
+//        if (!isLeaf()) {
+//            getLeft().makeDirty(QuasiSpeciesTree.IS_DIRTY);
+//            if (getRight() != null) {
+//                getRight().makeDirty(QuasiSpeciesTree.IS_DIRTY);
+//            }
+//        }
+    }
 
     /**
      * Obtain the quasi-species type/name, if any, starting on the branch above this node.
@@ -63,7 +78,7 @@ public class QuasiSpeciesNode extends Node {
      * Set quasi-species tree for a copied node
      */
 
-    public void setmTree(QuasiSpeciesTree tree) {
+    public void setqsTree(QuasiSpeciesTree tree) {
         this.m_tree = tree;
     }
 
@@ -107,7 +122,7 @@ public class QuasiSpeciesNode extends Node {
      */
     public void setParent(final Node parent, final boolean inOperator) {
         // start editing set in operator itself
-        //if (inOperator) startEditing();
+        if (inOperator) startEditing();
         if (this.getParent() != parent) {
             this.setParent(parent);
             if (inOperator) this.makeDirty(QuasiSpeciesTree.IS_FILTHY);
@@ -165,6 +180,19 @@ public class QuasiSpeciesNode extends Node {
                 setRight(nodes[node.getRight().getNr()]);
                 getRight().assignFrom(nodes, node.getRight());
                 getRight().setParent(this);
+            }
+        }
+    }
+
+
+    public void setHeight(final double height) {
+//        startEditing();
+        this.height = height;
+        this.makeDirty(QuasiSpeciesTree.IS_DIRTY);
+        if (!isLeaf()) {
+            getLeft().makeDirty(QuasiSpeciesTree.IS_DIRTY);
+            if (getRight() != null) {
+                getRight().makeDirty(QuasiSpeciesTree.IS_DIRTY);
             }
         }
     }

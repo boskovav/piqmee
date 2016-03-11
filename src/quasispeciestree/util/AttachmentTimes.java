@@ -62,7 +62,7 @@ public class AttachmentTimes extends CalculationNode implements Function, Loggab
     }
 
     @Override
-    public void init(PrintStream out) throws Exception {
+    public void init(PrintStream out){
 
         String idString = qsTree.getID();
         int maxtime=qsTree.getAttachmentTimesList(haploNode).length;

@@ -30,7 +30,7 @@ public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
     private double alpha;
 
     @Override
-    public void initAndValidate() throws Exception {
+    public void initAndValidate(){
         super.initAndValidate();
 
         alpha = alphaInput.get();
@@ -44,8 +44,10 @@ public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
     @Override
     public double proposal() {
 
-        // mark the tree as dirty (startEditing)
-        qsTree.startEditing(null);
+        // start editing the tree at this node
+        ((QuasiSpeciesNode) qsTree.getRoot()).dostartEditing();
+//        // mark the tree as dirty (startEditing)
+//        qsTree.startEditing(null);
 
         // Check that operator can be applied to tree:
         if (qsTree.getLeafNodeCount()<3)

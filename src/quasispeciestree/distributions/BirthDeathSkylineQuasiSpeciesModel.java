@@ -280,7 +280,7 @@ public class BirthDeathSkylineQuasiSpeciesModel extends QuasiSpeciesTreeDistribu
 
 
 
-    public void initAndValidate() throws Exception {
+    public void initAndValidate(){
 
         super.initAndValidate();
 

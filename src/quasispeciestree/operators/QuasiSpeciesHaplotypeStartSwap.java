@@ -26,8 +26,10 @@ public class QuasiSpeciesHaplotypeStartSwap extends QuasiSpeciesTreeOperator{
     @Override
     public double proposal() {
 
-        // mark the tree as dirty (startEditing)
-        qsTree.startEditing(null);
+        // start editing the tree at this node
+        ((QuasiSpeciesNode) qsTree.getRoot()).dostartEditing();
+//        // mark the tree as dirty (startEditing)
+//        qsTree.startEditing(null);
 
         // keep track of the Hastings ratio
         double logHastingsRatio = 0.0;

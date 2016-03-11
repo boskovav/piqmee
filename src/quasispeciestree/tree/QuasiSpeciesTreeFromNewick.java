@@ -22,7 +22,7 @@ public class QuasiSpeciesTreeFromNewick extends QuasiSpeciesTree implements Stat
 //            new Input<TraitSet>("quasiSpeciesCounts","QS counts for each haplotype (excluding the one representative of each haplotype in the tree input)", Input.Validate.REQUIRED);
 
     @Override
-    public void initAndValidate() throws Exception {
+    public void initAndValidate(){
 // gives NULL pointer warning here... what can I do --> nothing this is normal behavior!!!
 
         TreeParser inputTree = new TreeParser();
@@ -43,7 +43,7 @@ public class QuasiSpeciesTreeFromNewick extends QuasiSpeciesTree implements Stat
     }
 
     @Override
-    public void initStateNodes() throws Exception {
+    public void initStateNodes(){
 
     }
 

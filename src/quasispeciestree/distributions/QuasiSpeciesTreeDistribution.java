@@ -24,7 +24,7 @@ public abstract class QuasiSpeciesTreeDistribution extends Distribution {
     protected QuasiSpeciesTree qsTree;
 
     @Override
-    public void initAndValidate() throws Exception {
+    public void initAndValidate(){
         qsTree = qsTreeInput.get();
     }
 

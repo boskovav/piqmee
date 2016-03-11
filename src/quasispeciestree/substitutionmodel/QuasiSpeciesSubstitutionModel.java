@@ -110,7 +110,7 @@ public interface QuasiSpeciesSubstitutionModel{
         protected int nrOfStates;
 
         @Override
-        public void initAndValidate() throws Exception {
+        public void initAndValidate(){
             frequencies = frequenciesInput.get();
         }
 

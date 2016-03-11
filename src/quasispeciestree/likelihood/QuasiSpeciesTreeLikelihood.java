@@ -127,10 +127,10 @@ public class QuasiSpeciesTreeLikelihood extends QuasiSpeciesGenericTreeLikelihoo
 //    List<Integer> constantPattern = null;
 
     @Override
-    public void initAndValidate() throws Exception {
+    public void initAndValidate(){
         // sanity check: alignment should have same #taxa as tree
         if (dataInput.get().getTaxonCount() != treeInput.get().getLeafNodeCount()) {
-            throw new Exception("The number of nodes in the tree does not match the number of sequences");
+            throw new IllegalArgumentException("The number of nodes in the tree does not match the number of sequences");
         }
 //        beagle = null;
 //        beagle = new BeagleTreeLikelihood();
@@ -152,7 +152,7 @@ public class QuasiSpeciesTreeLikelihood extends QuasiSpeciesGenericTreeLikelihoo
         int nodeCount = treeInput.get().getNodeCount();
         int leafNodeCount = treeInput.get().getLeafNodeCount();
         if (!(siteModelInput.get() instanceof QuasiSpeciesSiteModel.Base)) {
-        	throw new Exception ("siteModel input should be of type SiteModel.Base");
+        	throw new IllegalArgumentException ("siteModel input should be of type SiteModel.Base");
         }
         m_siteModel = (QuasiSpeciesSiteModel.Base) siteModelInput.get();
         m_siteModel.setDataType(dataInput.get().getDataType());
@@ -360,15 +360,20 @@ public class QuasiSpeciesTreeLikelihood extends QuasiSpeciesGenericTreeLikelihoo
     int X = 100;
 
     @Override
-    public double calculateLogP() throws Exception {
+    public double calculateLogP(){
 //        if (beagle != null) {
 //            logP = beagle.calculateLogP();
 //            return logP;
 //        }
         final TreeInterface tree = treeInput.get();
 
-        if (traverse((QuasiSpeciesNode) tree.getRoot()) != Tree.IS_CLEAN)
-            calcLogP();
+        try {
+            if (traverse((QuasiSpeciesNode) tree.getRoot()) != Tree.IS_CLEAN)
+                calcLogP();
+        }
+        catch (ArithmeticException e) {
+            return Double.NEGATIVE_INFINITY;
+        }
 
         m_nScale++;
         if (logP > 0 || (likelihoodCore.getUseScaling() && m_nScale > X)) {
@@ -394,7 +399,7 @@ public class QuasiSpeciesTreeLikelihood extends QuasiSpeciesGenericTreeLikelihoo
         return logP;
     }
 
-    void calcLogP() throws Exception {
+    void calcLogP(){
         logP = 0.0;
         if (useAscertainedSitePatterns) {
             final double ascertainmentCorrection = dataInput.get().getAscertainmentCorrection(patternLogLikelihoods);
@@ -489,7 +494,7 @@ public class QuasiSpeciesTreeLikelihood extends QuasiSpeciesGenericTreeLikelihoo
 
 
     /* Assumes there IS a branch rate model as opposed to traverse() */
-    int traverse(final QuasiSpeciesNode node) throws Exception {
+    int traverse(final QuasiSpeciesNode node){
 
         QuasiSpeciesTree tree = (QuasiSpeciesTree) treeInput.get();
 
