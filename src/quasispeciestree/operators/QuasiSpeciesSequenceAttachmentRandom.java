@@ -23,6 +23,8 @@ public class QuasiSpeciesSequenceAttachmentRandom extends QuasiSpeciesTreeOperat
      */
     @Override
     public double proposal() {
+
+        ((QuasiSpeciesNode) qsTree.getRoot()).dostartEditing();
 //        final QuasiSpeciesTree qsTree = quasiSpeciesTreeInput.get(this);
 //        qsTree.startEditing(null);
         // Randomly select event on tree:
@@ -55,16 +57,13 @@ public class QuasiSpeciesSequenceAttachmentRandom extends QuasiSpeciesTreeOperat
         if (node == null)
             throw new IllegalStateException("Event selection loop fell through!");
 
-        // start editing the tree at this node
-        node.dostartEditing();
-
-
         // reposition the event (i.e. haplotype sequence changeIdx attachment time)
         double tmin, tmax;
         int tminIdx, tmaxIdx;
         Double[] tempqstimes=qsTree.getAttachmentTimesList(node).clone();
 
         // choose new max index between 0 - #sequences of this haplotype
+        // TODO rewrite this to be more efficient, choose new random integer, until acceptable
         tmaxIdx = Randomizer.nextInt(tempqstimes.length);
         tmax = tempqstimes[tmaxIdx];
         tminIdx = tmaxIdx + 1;

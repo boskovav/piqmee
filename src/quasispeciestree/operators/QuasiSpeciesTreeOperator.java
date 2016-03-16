@@ -266,7 +266,7 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
         }
 
         // Implement topology change:
-        sister.setParent(null, true);
+        sister.setParent(null);
         parent.removeChild(sister);
 
         // Ensure BEAST knows to update affected likelihoods:
