@@ -228,6 +228,7 @@ public class QuasiSpeciesTree extends Tree {
     }
 
     public void setAttachmentTimesList(QuasiSpeciesNode node, Double[] tempqstimes){
+        node.setAttachmentTimesList();
         attachmentTimesList.set(node.getNr(),tempqstimes);
     }
 
@@ -236,6 +237,7 @@ public class QuasiSpeciesTree extends Tree {
     }
 
     public void setAttachmentTimesList(int position, Double[] tempqstimes){
+        ((QuasiSpeciesNode) this.getNode(position)).setAttachmentTimesList();
         attachmentTimesList.set(position,tempqstimes);
     }
 
@@ -269,6 +271,7 @@ public class QuasiSpeciesTree extends Tree {
     }
 
     public void  setStartBranchCounts(int[] startBranchCountsArray){
+        ((QuasiSpeciesNode) this.getRoot()).setStartBranchCounts();
         startBranchCounts = startBranchCountsArray;
     }
 
@@ -276,7 +279,10 @@ public class QuasiSpeciesTree extends Tree {
 
     public int getParentHaplo(int position) { return parentHaplo[position]; }
 
-    public void setParentHaplo(int[] newParentHaploArray) { parentHaplo = newParentHaploArray; }
+    public void setParentHaplo(int[] newParentHaploArray) {
+        ((QuasiSpeciesNode) this.getRoot()).setParentHaplo();
+        parentHaplo = newParentHaploArray;
+    }
 
     public void clearContinuingHaploNames() {
         for (Node node : this.getNodesAsArray()){
@@ -772,7 +778,7 @@ public class QuasiSpeciesTree extends Tree {
 
         storeNodes(0, iRoot);
 
-        storedRoot.setHeight(m_nodes[iRoot].getHeight());
+        ((QuasiSpeciesNode) storedRoot).setHeight(m_nodes[iRoot].getHeight(),false);
         ((QuasiSpeciesNode) storedRoot).setParent(null, false);
 
         if (root.getLeft()!=null)
@@ -802,7 +808,7 @@ public class QuasiSpeciesTree extends Tree {
         for (int i = iStart; i<iEnd; i++) {
             QuasiSpeciesNode sink = (QuasiSpeciesNode)m_storedNodes[i];
             QuasiSpeciesNode src = (QuasiSpeciesNode)m_nodes[i];
-            sink.setHeight(src.getHeight());
+            sink.setHeight(src.getHeight(),false);
             sink.setParent(m_storedNodes[src.getParent().getNr()], false);
             if (src.getLeft()!=null) {
                 sink.setLeft(m_storedNodes[src.getLeft().getNr()]);
@@ -812,8 +818,8 @@ public class QuasiSpeciesTree extends Tree {
                     sink.setRight(null);
             }
         // from MultiTypeTree class
-            sink.setHaploAboveName(src.getHaploAboveName());
-            sink.setContinuingHaploName(src.getContinuingHaploName());
+            sink.haploAboveName = src.getHaploAboveName();
+            sink.continuingHaploName = src.getContinuingHaploName();
         // from MultiTypeTree class
         }
         // from MultiTypeTree class

@@ -23,20 +23,19 @@ public class QuasiSpeciesNode extends Node {
     protected int haploAboveName;
     protected int continuingHaploName;
 
-    /**
-     * Signal to BEAST that we need to start editing the tree from this node.
-     */
-    //    public String getHaploAboveName() {return this.haploAboveName; }
-    public void dostartEditing() {
-        this.startEditing();
-//        this.makeDirty(QuasiSpeciesTree.IS_DIRTY);
-//        if (!isLeaf()) {
-//            getLeft().makeDirty(QuasiSpeciesTree.IS_DIRTY);
-//            if (getRight() != null) {
-//                getRight().makeDirty(QuasiSpeciesTree.IS_DIRTY);
-//            }
-//        }
+
+    public void setAttachmentTimesList(){
+        startEditing();
     }
+
+    public void  setStartBranchCounts(){
+        startEditing();
+    }
+
+    public void setParentHaplo() {
+        startEditing();
+    }
+
 
     /**
      * Obtain the quasi-species type/name, if any, starting on the branch above this node.
@@ -54,7 +53,10 @@ public class QuasiSpeciesNode extends Node {
      * @param haploName New quasi-species name
      */
 //    public void setHaploAboveName(String haploName) { this.haploAboveName = haploName; }
-    public void setHaploAboveName(int haploName) { this.haploAboveName = haploName; }
+    public void setHaploAboveName(int haploName) {
+        startEditing();
+        this.haploAboveName = haploName;
+    }
 
     /**
      * Obtain the quasi-species type/name, of a haplotype that started earlier and continues on below this (internal) node.
@@ -71,7 +73,10 @@ public class QuasiSpeciesNode extends Node {
      * @param haploName New quasi-species name
      */
 //    public void setContinuingHaploName(String haploName) { this.continuingHaploName = haploName; }
-    public void setContinuingHaploName(int haploName) { this.continuingHaploName = haploName; }
+    public void setContinuingHaploName(int haploName) {
+        startEditing();
+        this.continuingHaploName = haploName;
+    }
 
 
     /**
@@ -79,6 +84,7 @@ public class QuasiSpeciesNode extends Node {
      */
 
     public void setqsTree(QuasiSpeciesTree tree) {
+        startEditing();
         this.m_tree = tree;
     }
 
@@ -183,10 +189,10 @@ public class QuasiSpeciesNode extends Node {
             }
         }
     }
-
-
-    public void setHeight(final double height) {
-//        startEditing();
+    public void setHeight(final double height, boolean inOperator) {
+        if (inOperator){
+            this.startEditing();
+        }
         this.height = height;
         this.makeDirty(QuasiSpeciesTree.IS_DIRTY);
         if (!isLeaf()) {
@@ -196,5 +202,4 @@ public class QuasiSpeciesNode extends Node {
             }
         }
     }
-
 }

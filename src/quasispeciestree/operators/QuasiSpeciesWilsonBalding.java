@@ -54,10 +54,6 @@ public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
         //        System.exit(0);
         //    }
         //}
-        // start editing the tree at this node
-        ((QuasiSpeciesNode) qsTree.getRoot()).dostartEditing();
-//        // mark the tree as dirty (startEditing)
-//        qsTree.startEditing(null);
 
         // Check that operator can be applied to tree:
         if (qsTree.getLeafNodeCount()<3)

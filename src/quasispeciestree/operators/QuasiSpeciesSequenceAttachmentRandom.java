@@ -23,10 +23,6 @@ public class QuasiSpeciesSequenceAttachmentRandom extends QuasiSpeciesTreeOperat
      */
     @Override
     public double proposal() {
-
-        ((QuasiSpeciesNode) qsTree.getRoot()).dostartEditing();
-//        final QuasiSpeciesTree qsTree = quasiSpeciesTreeInput.get(this);
-//        qsTree.startEditing(null);
         // Randomly select event on tree:
         // weighted by the number of events (i.e. count of each haplotype)
         int event = Randomizer.nextInt(qsTree.getTotalAttachmentCounts());

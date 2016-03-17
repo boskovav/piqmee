@@ -28,7 +28,7 @@ public class QuasiSpeciesSequenceAttachmentUniform extends QuasiSpeciesTreeOpera
      */
     @Override
     public double proposal() {
-        final QuasiSpeciesTree qsTree = quasiSpeciesTreeInput.get(this);
+//        final QuasiSpeciesTree qsTree = quasiSpeciesTreeInput.get(this);
         // Randomly select event on tree:
         // weighted by the number of events (i.e. count of each haplotype)
         int event = Randomizer.nextInt(qsTree.getTotalAttachmentCounts());
