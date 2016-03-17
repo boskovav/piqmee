@@ -1143,14 +1143,16 @@ public class BirthDeathSkylineQuasiSpeciesModel extends QuasiSpeciesTreeDistribu
         // middle product term in f[T]
         for (int i = 0; i < nTips; i++) {
         // TODO what happens if not all tips have QS counts specified in XML --- we get warning, is this enough?
-            if (!isRhoTip[i] || m_rho.get() == null || tree.getHaplotypeCounts((QuasiSpeciesNode) tree.getNode(i))>0) {
+            if (!isRhoTip[i] || m_rho.get() == null){
+//            || tree.getHaplotypeCounts((QuasiSpeciesNode) tree.getNode(i))>0) {
+                int nQSTemp = (int) tree.getHaplotypeCounts((QuasiSpeciesNode) tree.getNode(i));
                 double y = times[totalIntervals - 1] - tree.getNode(i).getHeight();
                 index = index(y);
 // testing
 //                System.out.println("2nd factor included");
-                if (!(tree.getNode(i)).isDirectAncestor()) {
+//                if (!(tree.getNode(i)).isDirectAncestor()) {
 //                    if (!SAModel) {
-                        temp = Math.log(psi[index]) - Math.log(g(index, times[index], y));
+                        temp = (nQSTemp+1)*(+Math.log(psi[index]) - Math.log(g(index, times[index], y)));
 //                    } else {
 //                        temp = Math.log(psi[index] * (r[index] + (1 - r[index]) * p0(index, times[index], y))) - Math.log(g(index, times[index], y));
 //                    }
@@ -1158,18 +1160,18 @@ public class BirthDeathSkylineQuasiSpeciesModel extends QuasiSpeciesTreeDistribu
                     if (printTempResults) System.out.println("2nd PI = " + temp);
                     if (psi[index] == 0 || Double.isInfinite(logP))
                         return logP;
-                } else {
-                    if (r[index] != 1) {
-                        logP += Math.log((1 - r[index])*psi[index]);
-                        if (Double.isInfinite(logP)) {
-                            return logP;
-                        }
-                    } else {
-                        //throw new Exception("There is a sampled ancestor in the tree while r parameter is 1");
-                        System.out.println("There is a sampled ancestor in the tree while r parameter is 1");
-                        System.exit(0);
-                    }
-                }
+//                } else {
+//                    if (r[index] != 1) {
+//                        logP += Math.log((1 - r[index])*psi[index]);
+//                        if (Double.isInfinite(logP)) {
+//                            return logP;
+//                        }
+//                    } else {
+//                        //throw new Exception("There is a sampled ancestor in the tree while r parameter is 1");
+//                        System.out.println("There is a sampled ancestor in the tree while r parameter is 1");
+//                        System.exit(0);
+//                    }
+//                }
             }
         }
 
