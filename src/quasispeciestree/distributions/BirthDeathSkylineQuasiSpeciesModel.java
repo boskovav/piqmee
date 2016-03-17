@@ -1143,7 +1143,7 @@ public class BirthDeathSkylineQuasiSpeciesModel extends QuasiSpeciesTreeDistribu
         // middle product term in f[T]
         for (int i = 0; i < nTips; i++) {
         // TODO what happens if not all tips have QS counts specified in XML --- we get warning, is this enough?
-            if (!isRhoTip[i] || m_rho.get() == null || tree.getHaplotypeCounts((QuasiSpeciesNode) tree.getNode(i))<1) {
+            if (!isRhoTip[i] || m_rho.get() == null || tree.getHaplotypeCounts((QuasiSpeciesNode) tree.getNode(i))>0) {
                 double y = times[totalIntervals - 1] - tree.getNode(i).getHeight();
                 index = index(y);
 // testing
