@@ -175,7 +175,7 @@ public class QuasiSpeciesTree extends Tree {
             Double[] tempqstimes = new Double[(int) haplotypeCounts.getValue(node.getID()) + 1];
             // start with the star tree, and define start of haplotype at the multi-furcating node time
             for (int i=0; i<=getHaplotypeCounts((QuasiSpeciesNode)node); i++) {
-//                if (this.getLeafNodeCount()>1){
+                if (this.getLeafNodeCount()>1){
                     // TODO write a function that proposes RANDOM attachment times within given interval
                     // TODO also to be used by the operators -- > is this really needed?
                     
@@ -199,12 +199,19 @@ public class QuasiSpeciesTree extends Tree {
 //                                -i*0.3;
 //                  }
                     // TODO this is just for orig=MRCA  = 17 example
-//                } else {
-//                    tempqstimes[i]=17//*0.9999999
-//                            -(i+1)*(17/(2+getHaplotypeCounts((QuasiSpeciesNode)node)));
+                } else {
+                    if (i==0)
+                        tempqstimes[i]=origin.getValue()-origin.getValue()/10000;
+                    else
+                    tempqstimes[i]=origin.getValue()//*0.9999999
+                            -(i+1)*(origin.getValue()/(2+getHaplotypeCounts((QuasiSpeciesNode)node)));
+//                    tempqstimes[i]=99.99999;
+//                    else
+//                    tempqstimes[i]=100//*0.9999999
+//                            -(i+1)*(100/(2+getHaplotypeCounts((QuasiSpeciesNode)node)));
 ////                    System.out.println("The tree has only one haplotype. This is not accepted by the current method implementation.");
 ////                    System.exit(0);
-//                }
+                }
 
             }
             ((QuasiSpeciesNode) node).setHaploAboveName(node.getNr());
@@ -779,17 +786,18 @@ public class QuasiSpeciesTree extends Tree {
         storeNodes(0, iRoot);
 
         ((QuasiSpeciesNode) storedRoot).setHeight(m_nodes[iRoot].getHeight(),false);
-        ((QuasiSpeciesNode) storedRoot).setParent(null, false);
+        if (this.getLeafNodeCount()>1){
+            ((QuasiSpeciesNode) storedRoot).setParent(null, false);
 
-        if (root.getLeft()!=null)
-            storedRoot.setLeft(m_storedNodes[root.getLeft().getNr()]);
-        else
-            storedRoot.setLeft(null);
-        if (root.getRight()!=null)
-            storedRoot.setRight(m_storedNodes[root.getRight().getNr()]);
-        else
-            storedRoot.setRight(null);
-
+            if (root.getLeft()!=null)
+                storedRoot.setLeft(m_storedNodes[root.getLeft().getNr()]);
+            else
+                storedRoot.setLeft(null);
+            if (root.getRight()!=null)
+                storedRoot.setRight(m_storedNodes[root.getRight().getNr()]);
+            else
+                storedRoot.setRight(null);
+        }
         QuasiSpeciesNode qsStoredRoot = (QuasiSpeciesNode)storedRoot;
         qsStoredRoot.haploAboveName = ((QuasiSpeciesNode)m_nodes[iRoot]).haploAboveName;
         qsStoredRoot.continuingHaploName = ((QuasiSpeciesNode)m_nodes[iRoot]).continuingHaploName;
