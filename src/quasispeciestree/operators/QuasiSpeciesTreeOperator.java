@@ -539,7 +539,7 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
      * return ArrayList with elements (in this order): [0] maximum node, [1] maximum time up to which there is no haplotype yet,
      *                      and if present the limiting (next) [2] haplotype
      */
-    public ArrayList getMaxPossibleHaploAttachTime(QuasiSpeciesNode startNode, int haplo,double newParentTime){
+    public ArrayList getMaxPossibleHaploAttachTime(QuasiSpeciesNode startNode, int haplo, double newParentTime){
 
         ArrayList output = new ArrayList(3);
         // starting from the startNode look for parent's continuingHaploName and if present and not the same as haplo

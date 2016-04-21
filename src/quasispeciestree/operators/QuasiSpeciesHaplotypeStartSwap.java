@@ -3,19 +3,19 @@ package quasispeciestree.operators;
 import beast.core.Description;
 import beast.evolution.tree.Node;
 import quasispeciestree.tree.QuasiSpeciesNode;
-import quasispeciestree.tree.QuasiSpeciesTree;
 import beast.util.Randomizer;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 
 /**
- *  @author Veronika Boskova created on 06/08/2015 finished on 31.01.2016
+ *  @author Veronika Boskova created on 06/08/2015 finished on 20/04/2016
  */
 @Description("Chooses a haplotype at random and moves"
-        + "its start time uniformly in interval "
+        + "its first attachment time uniformly in interval "
         + "restricted by the grand-parent haplotype"
-        +" and tip time of the same haplotype.")
+        +" and tip time of the same haplotype,"
+        +" and scales all the attachment times accordingly."
+        +" If there is another haplotype in the way, this will"
+        +" be scalde down below the MRCA of the two haplotypes.")
 public class QuasiSpeciesHaplotypeStartSwap extends QuasiSpeciesTreeOperator{
 
     /**
@@ -43,16 +43,18 @@ public class QuasiSpeciesHaplotypeStartSwap extends QuasiSpeciesTreeOperator{
         int[] parentHaploArray = qsTree.getParentHaplo();
         int haplotypesParentHaplo = parentHaploArray[node.getNr()];
         int haplotypesGrandParentHaplo = -1;
+        Double[] tempqstimes=qsTree.getAttachmentTimesList(node).clone();
 
         // get a random number deciding where the current haplo will be moved
         double u = Randomizer.nextDouble();
-        // weight the attachment height by the total haplo count wrt to all others
-//        double weight = qsTree.getHaplotypeCounts(node)/qsTree.getTotalAttachmentCounts();
-//        u = u*weight;
+        double scalefactor=0;
+        double toldQSstart=0;
+        double tnewQSstart=0;
 
         // propose a new start time
-        // reposition the event (i.e. haplotype starting time) uniformly at random between tmin and tmax
-        double tmin, tmax, tnew;
+        // reposition the event (i.e. haplotype's first attachment time) uniformly at random between tmin and tmax
+        double tmin, tmax;
+        double tnew=0;
         tmin = node.getHeight();
         // get origin height
         double originheight = origin.getValue();
@@ -73,19 +75,56 @@ public class QuasiSpeciesHaplotypeStartSwap extends QuasiSpeciesTreeOperator{
         if (haplotypesParentHaplo == -1){
 
             // get a node above which the current haplotype arises
-            for (Node inode : qsTree.getNodesAsArray()){
-                if (((QuasiSpeciesNode) inode).getHaploAboveName() == node.getNr()) {
-                    currentHaploNodeBelow = (QuasiSpeciesNode) inode;
-                    break;
+            QuasiSpeciesNode inode = node;
+            while(currentHaploNodeBelow == null){
+//            while (inode.getHaploAboveName() != node.getNr()){
+                int currentnodeHaplo = inode.getHaploAboveName();
+                if (currentnodeHaplo == node.getNr()){
+                    currentHaploNodeBelow = inode;
                 }
+                inode = (QuasiSpeciesNode) inode.getParent();
             }
+//            currentHaploNodeBelow = inode;
 
             // find out tmax
             tmax = originheight;
             // choose new time to attach
-            tnew = u*tmin + (1-u)*tmax;
+            if (tempqstimes.length >1)
+                tnew = u*tmin + (1-u)*tmax;
 
             //logHastingsRatio = 0.0;
+
+            // reposition attachment times: attach ((time - tmin) * (tnew/told)) + tmin
+            // get the haplotype's starting time
+            toldQSstart = tempqstimes[0];
+            if (tempqstimes.length > 1){
+                double told = tempqstimes[1];
+                // scale all the other positions in the array but the 0 position (haplo start time)
+                // reposition attachment times: attach ((time - tmin) * (tnew/told)) + tmin
+                scalefactor = (tnew - tmin)/(told - tmin);
+                for (int i=1; i<tempqstimes.length; i++) {
+                    tempqstimes[i] = ((tempqstimes[i] - tmin) * scalefactor) + tmin;
+                }
+                // set the haplotype's starting time to the new time
+                double x = Randomizer.nextDouble();
+                tnewQSstart = x*tempqstimes[1] + (1-x)*tmax;
+                tempqstimes[0] = tnewQSstart;
+                // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
+//              logHastingsRatio -= Math.log(tmax - told);
+//              logHastingsRatio += Math.log(tmax - tempqstimes[1]);
+            }
+            else {
+                // set the haplotype's starting time to the new time
+                double x = Randomizer.nextDouble();
+                tnewQSstart = x*tmin + (1-x)*tmax;
+                tempqstimes[0] = tnewQSstart;
+                // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
+                //              logHastingsRatio -= Math.log(tmax - tmin);
+                //              logHastingsRatio += Math.log(tmax - tmin);
+                // since they are identical, no need to change Hastings ratio
+            }
+            // rewrite the attachment times array
+            qsTree.setAttachmentTimesList(node, tempqstimes);
         }
 // PARENT
         // if there is a parent haplotype, we need to change more stuff (also for the parent haplotype)
@@ -96,42 +135,41 @@ public class QuasiSpeciesHaplotypeStartSwap extends QuasiSpeciesTreeOperator{
             // if none, change only the arrays for the parent
             if (haplotypesGrandParentHaplo == -1){
 
+                // get a node above which the parent haplotype arises
+                QuasiSpeciesNode inode = node;
+                while (parentHaploNodeBelow == null || currentHaploNodeBelow == null){
+                    int currentnodeHaplo = inode.getHaploAboveName();
+                    if (currentnodeHaplo == node.getNr()){
+                        currentHaploNodeBelow = inode;
+                    }
+                    else if (currentnodeHaplo == haplotypesParentHaplo){
+                        parentHaploNodeBelow = inode;
+                    }
+                    inode = (QuasiSpeciesNode) inode.getParent();
+                }
+
                 // find out tmax: grandparent haplotype is null, then tmax=origin
                 tmax = originheight;
                 // choose new time to attach
-                tnew = u*tmin + (1-u)*tmax;
-
-                // get a node above which the parent haplotype arises
-                for (Node inode : qsTree.getNodesAsArray()){
-                    int currentnodeHaplo = ((QuasiSpeciesNode) inode).getHaploAboveName();
-                    if (currentnodeHaplo == node.getNr()) {
-                        currentHaploNodeBelow = (QuasiSpeciesNode) inode;
-                    }
-                    if (currentnodeHaplo == haplotypesParentHaplo){
-                        parentHaploNodeBelow = (QuasiSpeciesNode) inode;
-                    }
-                    if (parentHaploNodeBelow != null && currentHaploNodeBelow != null){
-                        break;
-                    }
-                }
+                if (tempqstimes.length >1)
+                    tnew = u*tmin + (1-u)*tmax;
             }
 // GRANDPARENT
             // otherwise change stuff also for the grandparent
             else{
-                for (Node inode : qsTree.getNodesAsArray()){
-                    int currentnodeHaplo = ((QuasiSpeciesNode) inode).getHaploAboveName();
-                    if (currentnodeHaplo == node.getNr()) {
-                        currentHaploNodeBelow = (QuasiSpeciesNode) inode;
+                QuasiSpeciesNode inode = node;
+                while (grandparentHaploNodeBelow== null || parentHaploNodeBelow == null || currentHaploNodeBelow == null){
+                    int currentnodeHaplo = inode.getHaploAboveName();
+                    if (currentnodeHaplo == node.getNr()){
+                        currentHaploNodeBelow = inode;
                     }
-                    else if  (currentnodeHaplo == haplotypesParentHaplo){
-                        parentHaploNodeBelow = (QuasiSpeciesNode) inode;
+                    else if (currentnodeHaplo == haplotypesParentHaplo){
+                        parentHaploNodeBelow = inode;
                     }
                     else if (currentnodeHaplo == haplotypesGrandParentHaplo){
-                        grandparentHaploNodeBelow = (QuasiSpeciesNode) inode;
+                        grandparentHaploNodeBelow = inode;
                     }
-                    if (grandparentHaploNodeBelow!= null && parentHaploNodeBelow != null && currentHaploNodeBelow != null){
-                        break;
-                    }
+                    inode = (QuasiSpeciesNode) inode.getParent();
                 }
 
                 // keep track of common ancestor of parent, grandparent and current haplotype
@@ -149,6 +187,39 @@ public class QuasiSpeciesHaplotypeStartSwap extends QuasiSpeciesTreeOperator{
                 tnew = u*tmin + (1-u)*tmax;
             }
 // PARENT AND GRANDPARENT
+
+            // reposition attachment times: attach ((time - tmin) * (tnew/told)) + tmin
+            // get the haplotype's starting time
+            toldQSstart = tempqstimes[0];
+            if (tempqstimes.length > 1){
+                double told = tempqstimes[1];
+                // scale all the other positions in the array but the 0 position (haplo start time)
+                // reposition attachment times: attach ((time - tmin) * (tnew/told)) + tmin
+                scalefactor = (tnew - tmin)/(told - tmin);
+                for (int i=1; i<tempqstimes.length; i++) {
+                    tempqstimes[i] = ((tempqstimes[i] - tmin) * scalefactor) + tmin;
+                }
+                // set the haplotype's starting time to the new time
+                double x = Randomizer.nextDouble();
+                tnewQSstart = x*tempqstimes[1] + (1-x)*tmax;
+                tempqstimes[0] = tnewQSstart;
+                // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
+//              logHastingsRatio -= Math.log(tmax - told);
+//              logHastingsRatio += Math.log(tmax - tempqstimes[1]);
+            }
+            else {
+                // set the haplotype's starting time to the new time
+                double x = Randomizer.nextDouble();
+                tnewQSstart = x*tmin + (1-x)*tmax;
+                tempqstimes[0] = tnewQSstart;
+                // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
+                //              logHastingsRatio -= Math.log(tmax - tmin);
+                //              logHastingsRatio += Math.log(tmax - tmin);
+                // since they are identical, no need to change Hastings ratio
+            }
+            // rewrite the attachment times array
+            qsTree.setAttachmentTimesList(node, tempqstimes);
+
             // keep track of common ancestor of parent and current haplotype
             QuasiSpeciesNode lastParentCommonAncestorNode;
 
@@ -163,51 +234,79 @@ public class QuasiSpeciesHaplotypeStartSwap extends QuasiSpeciesTreeOperator{
 
             // move the parent haplotype at random below the common ancestor node
             // ! only if chosen haplo moves above last common ancestor of parent and current haplo
-            if (tnew > tmaxparent) {
+
+            if (tnewQSstart > tmaxparent) {
                 // choose new time to attach for the moved parent node and scale all attachment times of this haplo
                 double v = Randomizer.nextDouble();
                 // choose new time to attach
                 double tnewparent = v*tminparent + (1-v)*tmaxparent;
 
-                // set the log(Hastings ratio) Pr(backwardmove)/Pr(forwardmove)=(1/sthback)/(1/sthforth)=sthforth/sthback
-                logHastingsRatio =  Math.log(
-                        ((tmax - tmin)*(tmaxparent - tminparent)) /
-                        ((tmax - tminparent)*(tmaxparent - tmin)) );
-
                 // reposition parent haplo attachment times: attach ((time - tminparent) * (tnew/told)) + tminparent
-                Double[] tempqstimes=qsTree.getAttachmentTimesList(haplotypesParentHaplo).clone();
+                Double[] tempqstimesparent=qsTree.getAttachmentTimesList(haplotypesParentHaplo).clone();
                 // get the haplotype's starting time
-                double toldparent = tempqstimes[0];
-                // scale all the other positions in the array but the 0 position (haplo start time)
-                double scalefactor = (tnewparent - tminparent)/(toldparent - tminparent);
-                for (int i=1; i<tempqstimes.length; i++) {
-                    tempqstimes[i] = ((tempqstimes[i] - tminparent) * scalefactor) + tminparent;
+                double toldQSstartparent = tempqstimesparent[0];
+                double grandscalefactor=0;
+                double tnewQSstartparent;
+                if (tempqstimesparent.length > 1){
+                    double toldparent = tempqstimesparent[1];
+                    // scale all the other positions in the array but the 0 position (haplo start time)
+                    grandscalefactor = (tnewparent - tminparent)/(toldparent - tminparent);
+                    for (int i=1; i<tempqstimesparent.length; i++) {
+                        tempqstimesparent[i] = ((tempqstimesparent[i] - tminparent) * grandscalefactor) + tminparent;
+                    }
+                    // set the haplotype's starting time to the new time
+                    double y = Randomizer.nextDouble();
+                    tnewQSstartparent = y*tempqstimesparent[1] + (1-y)*tmaxparent;
+                    tempqstimesparent[0] = tnewQSstartparent;
+                    // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
+//            logHastingsRatio -= Math.log(tmaxparent - toldparent);
+//            logHastingsRatio += Math.log(tmaxparent - tempqstimesparent[1]);
                 }
-                // set the haplotype's starting time to the new time
-                tempqstimes[0] = tnewparent;
-                // rewrite the attachment times array
-                qsTree.setAttachmentTimesList(haplotypesParentHaplo, tempqstimes);
+                else {
+                    // set the haplotype's starting time to the new time
+                    double x = Randomizer.nextDouble();
+                    tnewQSstartparent = x*tminparent + (1-x)*tmaxparent;
+                    tempqstimesparent[0] = tnewQSstartparent;
+                    // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
+                    //              logHastingsRatio -= Math.log(tmaxparent - tminparent);
+                    //              logHastingsRatio += Math.log(tmaxparent - tminparent);
+                    // since they are identical, no need to change Hastings ratio
+                }
 
+                // rewrite the attachment times array
+                qsTree.setAttachmentTimesList(haplotypesParentHaplo, tempqstimesparent);
+
+                // set the log(Hastings ratio) Pr(backwardmove)/Pr(forwardmove)=(1/sthback)/(1/sthforth)=sthforth/sthback
+                if (tempqstimes.length > 1 && tempqstimesparent.length > 1)
+                    logHastingsRatio += Math.log(tmax - tmin) + Math.log(tmaxparent - tminparent) -
+                                        Math.log(tmax - tminparent) - Math.log(tmaxparent - tmin);
+                else if (tempqstimes.length > 1)
+                    logHastingsRatio += Math.log(tmax - tmin) - Math.log(tmaxparent - tmin);
+                else if (tempqstimesparent.length > 1)
+                    logHastingsRatio += Math.log(tmaxparent - tminparent) - Math.log(tmax - tminparent);
+                // Incorporate the probability of scaling all the attachment times
+                if (tempqstimesparent.length > 1)
+                    logHastingsRatio += (tempqstimesparent.length-3) * Math.log(grandscalefactor);
 
                 // change internal node haploName - both remove and add if necessary
-                Node intnode;
+                Node intnode = parentHaploNodeBelow;
                 Node intnodeparent;
-//                if (tnewparent > tmaxparent){
-////                    while (intnode.getHeight() < tmax && intnode.getHeight() < tnewparent){
-//                    intnodeparent = intnode.getParent();
-//                    while (intnodeparent != null && intnodeparent.getHeight() < tnewparent){
-//                        intnode = intnodeparent;
-//                        intnodeparent = intnodeparent.getParent();
-//                    }
-//                }
-//                else {
-                    intnode = qsTree.getNode(haplotypesParentHaplo);
+                if (tnewQSstartparent > toldQSstartparent){
+//                    while (intnode.getHeight() < tmax && intnode.getHeight() < tnewparent){
                     intnodeparent = intnode.getParent();
-                    while (intnodeparent.getHeight() < tnewparent){
+                    while (intnodeparent != null && intnodeparent.getHeight() < tnewQSstartparent){
                         intnode = intnodeparent;
                         intnodeparent = intnodeparent.getParent();
                     }
-//                }
+                }
+                else {
+                    intnode = qsTree.getNode(haplotypesParentHaplo);
+                    intnodeparent = intnode.getParent();
+                    while (intnodeparent.getHeight() < tnewQSstartparent){
+                        intnode = intnodeparent;
+                        intnodeparent = intnodeparent.getParent();
+                    }
+                }
                 if (intnode != parentHaploNodeBelow){
                     // change the internal nodes' haploName, where necessary
                     parentHaploNodeBelow.setHaploAboveName(-1);
@@ -226,28 +325,17 @@ public class QuasiSpeciesHaplotypeStartSwap extends QuasiSpeciesTreeOperator{
         }
 // NODE ITSELF
 // FOR ALL CASES: reposition the HAPLOTYPE START ITSELF
-        // reposition attachment times: attach ((time - tmin) * (tnew/told)) + tmin
-        Double[] tempqstimes=qsTree.getAttachmentTimesList(node).clone();
-        // get the haplotype's starting time
-        double told = tempqstimes[0];
-        // scale all the other positions in the array but the 0 position (haplo start time)
-        double scalefactor = (tnew - tmin)/(told - tmin);
-        for (int i=1; i<tempqstimes.length; i++) {
-            tempqstimes[i] = ((tempqstimes[i] - tmin) * scalefactor) + tmin;
-        }
-        // set the haplotype's starting time to the new time
-        tempqstimes[0] = tnew;
-        // rewrite the attachment times array
-        qsTree.setAttachmentTimesList(node, tempqstimes);
 
+        // Incorporate the probability of scaling all the attachment times
+        if (tempqstimes.length > 1)
+            logHastingsRatio += (tempqstimes.length-3) * Math.log(scalefactor);
 
         // change internal node haploName - both remove and add if necessary
         Node intnode = currentHaploNodeBelow;
         Node intnodeparent;
-        if (tnew > told) {
-//                while (intnode.getHeight() < tmax && intnode.getHeight() < tnew){
+        if (tnewQSstart > toldQSstart) {
             intnodeparent = intnode.getParent();
-            while (intnodeparent!=null && intnodeparent.getHeight() < tnew){
+            while (intnodeparent!=null && intnodeparent.getHeight() < tnewQSstart){
                 intnode = intnodeparent;
                 intnodeparent = intnodeparent.getParent();
             }
@@ -255,7 +343,7 @@ public class QuasiSpeciesHaplotypeStartSwap extends QuasiSpeciesTreeOperator{
         else {
             intnode = node;
             intnodeparent = intnode.getParent();
-            while (intnodeparent != null && intnodeparent.getHeight() < tnew){
+            while (intnodeparent != null && intnodeparent.getHeight() < tnewQSstart){
                 intnode = intnodeparent;
                 intnodeparent = intnodeparent.getParent();
             }
@@ -273,7 +361,7 @@ public class QuasiSpeciesHaplotypeStartSwap extends QuasiSpeciesTreeOperator{
             else {
                 recalculateParentHaploAndCorrectContinuingHaploName(-1, (QuasiSpeciesNode) qsTree.getRoot());
             }
-        }
+         }
         // in any case (changed or not the aboveNodeHaplo/parentHaplo array) recalculate countPossibleStartBranches
         int[] startBranchCountsArray = qsTree.countPossibleStartBranches();
         qsTree.setStartBranchCounts(startBranchCountsArray);
