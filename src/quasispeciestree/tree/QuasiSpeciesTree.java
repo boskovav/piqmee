@@ -200,9 +200,9 @@ public class QuasiSpeciesTree extends Tree {
 //                  }
                     // TODO this is just for orig=MRCA  = 17 example
                 } else {
-                    if (i==0)
-                        tempqstimes[i]=origin.getValue()-origin.getValue()/10000;
-                    else
+//                    if (i==0)
+//                        tempqstimes[i]=origin.getValue()-origin.getValue()/10000;
+//                    else
                     tempqstimes[i]=origin.getValue()//*0.9999999
                             -(i+1)*(origin.getValue()/(2+getHaplotypeCounts((QuasiSpeciesNode)node)));
 //                    tempqstimes[i]=99.99999;

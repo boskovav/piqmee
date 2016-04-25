@@ -11,7 +11,7 @@ import java.util.ArrayList;
 
 
 /**
- * @author Veronika Boskova created on 02/02/2016 finished on 21/04/2016
+ * @author Veronika Boskova created on 02/02/2016 finished on 23/04/2016
  *      largely based on TypedWilsonBalding
  */
 @Description("Implements the unweighted Wilson-Balding branch"
@@ -128,8 +128,9 @@ public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
             Double[] tempqstimes=qsTree.getAttachmentTimesList(srcHaplo).clone();
             // get the haplotype's starting time
             toldQSstart = tempqstimes[0];
+            double told=0;
             if (tempqstimes.length > 1){
-                double told = tempqstimes[1];
+                told = tempqstimes[1];
                 // Scale the haplotype strains
                 // scale all the other positions in the array but the 0 position (haplo start time)
                 scalefactor = (tnew - haploStartMin)/(told - haploStartMin);
@@ -141,8 +142,8 @@ public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
                 tnewQSstart = x*tempqstimes[1] + (1-x)*haploStartMaxNew;
                 tempqstimes[0] = tnewQSstart;
                 // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
-//              logHastingsRatio -= Math.log(haploStartMax - told);
-//              logHastingsRatio += Math.log(haploStartMaxNew - tempqstimes[1]);
+//                logHastingsRatio -= Math.log(haploStartMax - told);
+//                logHastingsRatio += Math.log(haploStartMaxNew - tempqstimes[1]);
             }
             else {
                 // set the haplotype's starting time to the new time
@@ -150,8 +151,8 @@ public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
                 tnewQSstart = x*haploStartMin + (1-x)*haploStartMaxNew;
                 tempqstimes[0] = tnewQSstart;
                 // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
-//              logHastingsRatio -= Math.log(haploStartMax - haploStartMin);
-//              logHastingsRatio += Math.log(haploStartMaxNew - haploStartMin);
+//                logHastingsRatio -= Math.log(haploStartMax - haploStartMin);
+//                logHastingsRatio += Math.log(haploStartMaxNew - haploStartMin);
             }
             // rewrite the attachment times array
             qsTree.setAttachmentTimesList(srcHaplo, tempqstimes);
@@ -176,7 +177,12 @@ public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
                 // Incorporate probability of selected positioning of the start time of the haplotype.
                 logHastingsRatio += Math.log(haploStartMaxNew-haploStartMin);
                 // scaling the attachment times (see Scaling Operator)
-                logHastingsRatio += (tempqstimes.length-3) * Math.log(scalefactor);
+                // assign contribution to the Hastings ratio for having different possible scales for told
+                logHastingsRatio += Math.log(haploStartMaxNew/told - haploStartMin/told);
+                logHastingsRatio -= Math.log(haploStartMaxNew/tnew - haploStartMin/tnew);
+                // assign contribution of each scaled attachment time
+                logHastingsRatio -= 2 * (scalefactor * (haploStartMaxNew - haploStartMin) + haploStartMin)/(haploStartMaxNew);
+                logHastingsRatio += (tempqstimes.length-1) * Math.log(scalefactor);
             }
             // Incorporate probability of choosing current haplotype to move back --- only with Felsenstein
             if (((QuasiSpeciesNode) srcNode).getContinuingHaploName() != srcHaplo){
@@ -234,8 +240,9 @@ public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
             Double[] tempqstimes=qsTree.getAttachmentTimesList(srcHaplo).clone();
             // get the haplotype's starting time
             toldQSstart = tempqstimes[0];
+            double told=0;
             if (tempqstimes.length > 1){
-                double told = tempqstimes[1];
+                told = tempqstimes[1];
                 // Scale the haplotype strains
                 // scale all the other positions in the array but the 0 position (haplo start time)
                 scalefactor = (tnew - haploStartMin)/(told - haploStartMin);
@@ -247,8 +254,8 @@ public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
                 tnewQSstart = x*tempqstimes[1] + (1-x)*haploStartMaxNew;
                 tempqstimes[0] = tnewQSstart;
                 // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
-//              logHastingsRatio -= Math.log(haploStartMax - told);
-//              logHastingsRatio += Math.log(haploStartMaxNew - tempqstimes[1]);
+//                logHastingsRatio -= Math.log(haploStartMax - told);
+//                logHastingsRatio += Math.log(haploStartMaxNew - tempqstimes[1]);
             }
             else {
                 // set the haplotype's starting time to the new time
@@ -256,8 +263,8 @@ public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
                 tnewQSstart = x*haploStartMin + (1-x)*haploStartMaxNew;
                 tempqstimes[0] = tnewQSstart;
                 // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
-//              logHastingsRatio -= Math.log(haploStartMax - haploStartMin);
-//              logHastingsRatio += Math.log(haploStartMaxNew - haploStartMin);
+//                logHastingsRatio -= Math.log(haploStartMax - haploStartMin);
+//                logHastingsRatio += Math.log(haploStartMaxNew - haploStartMin);
             }
             // rewrite the attachment times array
             qsTree.setAttachmentTimesList(srcHaplo, tempqstimes);
@@ -322,7 +329,12 @@ public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
                 // Incorporate probability of selected positioning of the start time of the haplotype.
                 logHastingsRatio += Math.log(haploStartMaxNew-haploStartMin);
                 // scaling the attachment times (see Scaling Operator)
-                logHastingsRatio += (tempqstimes.length-3) * Math.log(scalefactor);
+                // assign contribution to the Hastings ratio for having different possible scales for told
+                logHastingsRatio += Math.log(haploStartMaxNew/told - haploStartMin/told);
+                logHastingsRatio -= Math.log(haploStartMaxNew/tnew - haploStartMin/tnew);
+                // assign contribution of each scaled attachment time
+                logHastingsRatio -= 2 * (scalefactor * (haploStartMaxNew - haploStartMin) + haploStartMin)/(haploStartMaxNew);
+                logHastingsRatio += (tempqstimes.length-1) * Math.log(scalefactor);
             }
             // Incorporate probability of choosing current haplotype to move back --- only with Felsenstein
             if (((QuasiSpeciesNode) srcNode).getContinuingHaploName() != srcHaplo){
@@ -380,8 +392,9 @@ public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
         Double[] tempqstimes=qsTree.getAttachmentTimesList(srcHaplo).clone();
         // get the haplotype's starting time
         toldQSstart = tempqstimes[0];
+        double told=0;
         if (tempqstimes.length > 1){
-            double told = tempqstimes[1];
+            told = tempqstimes[1];
             // Scale the haplotype strains
             // scale all the other positions in the array but the 0 position (haplo start time)
             scalefactor = (tnew - haploStartMin)/(told - haploStartMin);
@@ -393,8 +406,8 @@ public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
             tnewQSstart = x*tempqstimes[1] + (1-x)*haploStartMaxNew;
             tempqstimes[0] = tnewQSstart;
             // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
-//              logHastingsRatio -= Math.log(haploStartMax - told);
-//              logHastingsRatio += Math.log(haploStartMaxNew - tempqstimes[1]);
+//            logHastingsRatio -= Math.log(haploStartMax - told);
+//            logHastingsRatio += Math.log(haploStartMaxNew - tempqstimes[1]);
         }
         else {
             // set the haplotype's starting time to the new time
@@ -402,8 +415,8 @@ public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
             tnewQSstart = x*haploStartMin + (1-x)*haploStartMaxNew;
             tempqstimes[0] = tnewQSstart;
             // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
-//              logHastingsRatio -= Math.log(haploStartMax - haploStartMin);
-//              logHastingsRatio += Math.log(haploStartMaxNew - haploStartMin);
+//            logHastingsRatio -= Math.log(haploStartMax - haploStartMin);
+//            logHastingsRatio += Math.log(haploStartMaxNew - haploStartMin);
         }
         // rewrite the attachment times array
         qsTree.setAttachmentTimesList(srcHaplo, tempqstimes);
@@ -466,7 +479,12 @@ public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
             // Incorporate probability of current positioning of the start time of the haplotype.
             logHastingsRatio += Math.log(haploStartMaxNew-haploStartMin);
             // scaling the attachment times (see Scaling Operator)
-            logHastingsRatio += (tempqstimes.length-3) * Math.log(scalefactor);
+            // assign contribution to the Hastings ratio for having different possible scales for told
+            logHastingsRatio += Math.log(haploStartMaxNew/told - haploStartMin/told);
+            logHastingsRatio -= Math.log(haploStartMaxNew/tnew - haploStartMin/tnew);
+            // assign contribution of each scaled attachment time
+            logHastingsRatio -= 2 * (scalefactor * (haploStartMaxNew - haploStartMin) + haploStartMin)/(haploStartMaxNew);
+            logHastingsRatio += (tempqstimes.length-1) * Math.log(scalefactor);
         }
         // Incorporate probability of choosing current haplotype to move back --- only with Felsenstein
         if (((QuasiSpeciesNode) srcNode).getContinuingHaploName() != srcHaplo){
