@@ -126,6 +126,12 @@ public class QuasiSpeciesHaplotypeStartSwap extends QuasiSpeciesTreeOperator{
             }
             // rewrite the attachment times array
             qsTree.setAttachmentTimesList(node, tempqstimes);
+
+            if (tempqstimes.length > 1){
+                // assign contribution to the Hastings ratio for having different possible scales for told
+                logHastingsRatio += Math.log(tmax/told - tmin/told);
+                logHastingsRatio -= Math.log(tmax/tnew - tmin/tnew);
+            }
         }
 // PARENT
         // if there is a parent haplotype, we need to change more stuff (also for the parent haplotype)
@@ -189,6 +195,18 @@ public class QuasiSpeciesHaplotypeStartSwap extends QuasiSpeciesTreeOperator{
             }
 // PARENT AND GRANDPARENT
 
+            // keep track of common ancestor of parent and current haplotype
+            QuasiSpeciesNode lastParentCommonAncestorNode;
+
+            // find the last common ancestor of the chosen haplotype and its parent
+            lastParentCommonAncestorNode = findLastCommonAncestor(
+                    node, (QuasiSpeciesNode) qsTree.getNode(haplotypesParentHaplo), parentHaploNodeBelow);
+
+            // propose a new start time for the parent node uniformly at random between tminparent and tmaxparent
+            double tminparent, tmaxparent;
+            tminparent = qsTree.getNode(haplotypesParentHaplo).getHeight();
+            tmaxparent = lastParentCommonAncestorNode.getHeight();
+
             // reposition attachment times: attach ((time - tmin) * (tnew/told)) + tmin
             // get the haplotype's starting time
             toldQSstart = tempqstimes[0];
@@ -205,7 +223,7 @@ public class QuasiSpeciesHaplotypeStartSwap extends QuasiSpeciesTreeOperator{
                 tnewQSstart = x*tempqstimes[1] + (1-x)*tmax;
                 tempqstimes[0] = tnewQSstart;
                 // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
-//                logHastingsRatio -= Math.log(tmax - told);
+//                logHastingsRatio -= Math.log(tmaxparent - told);
 //                logHastingsRatio += Math.log(tmax - tempqstimes[1]);
             }
             else {
@@ -214,24 +232,13 @@ public class QuasiSpeciesHaplotypeStartSwap extends QuasiSpeciesTreeOperator{
                 tnewQSstart = x*tmin + (1-x)*tmax;
                 tempqstimes[0] = tnewQSstart;
                 // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
-                //              logHastingsRatio -= Math.log(tmax - tmin);
+                //              logHastingsRatio -= Math.log(tmaxparent - tmin);
                 //              logHastingsRatio += Math.log(tmax - tmin);
                 // since they are identical, no need to change Hastings ratio
             }
             // rewrite the attachment times array
             qsTree.setAttachmentTimesList(node, tempqstimes);
 
-            // keep track of common ancestor of parent and current haplotype
-            QuasiSpeciesNode lastParentCommonAncestorNode;
-
-            // find the last common ancestor of the chosen haplotype and its parent
-            lastParentCommonAncestorNode = findLastCommonAncestor(
-                    node, (QuasiSpeciesNode) qsTree.getNode(haplotypesParentHaplo), parentHaploNodeBelow);
-
-            // propose a new start time for the parent node uniformly at random between tminparent and tmaxparent
-            double tminparent, tmaxparent;
-            tminparent = qsTree.getNode(haplotypesParentHaplo).getHeight();
-            tmaxparent = lastParentCommonAncestorNode.getHeight();
             double tnewparent=0;
             double toldparent=0;
             // move the parent haplotype at random below the common ancestor node
@@ -261,7 +268,7 @@ public class QuasiSpeciesHaplotypeStartSwap extends QuasiSpeciesTreeOperator{
                     tnewQSstartparent = y*tempqstimesparent[1] + (1-y)*tmaxparent;
                     tempqstimesparent[0] = tnewQSstartparent;
                     // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
-//                    logHastingsRatio -= Math.log(tmaxparent - toldparent);
+//                    logHastingsRatio -= Math.log(tmax - toldparent);
 //                    logHastingsRatio += Math.log(tmaxparent - tempqstimesparent[1]);
                 }
                 else {
@@ -270,7 +277,7 @@ public class QuasiSpeciesHaplotypeStartSwap extends QuasiSpeciesTreeOperator{
                     tnewQSstartparent = x*tminparent + (1-x)*tmaxparent;
                     tempqstimesparent[0] = tnewQSstartparent;
                     // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
-                    //              logHastingsRatio -= Math.log(tmaxparent - tminparent);
+                    //              logHastingsRatio -= Math.log(tmax - tminparent);
                     //              logHastingsRatio += Math.log(tmaxparent - tminparent);
                     // since they are identical, no need to change Hastings ratio
                 }
@@ -287,12 +294,18 @@ public class QuasiSpeciesHaplotypeStartSwap extends QuasiSpeciesTreeOperator{
 //                else if (tempqstimesparent.length > 1)
 //                    logHastingsRatio += Math.log(tmaxparent - tminparent) - Math.log(tmax - tminparent);
                 // Incorporate the probability of scaling all the attachment times
-                if (tempqstimesparent.length > 1){
+                if (tempqstimes.length > 1){
                     // assign contribution to the Hastings ratio for having different possible scales for told
+                    logHastingsRatio += Math.log(tmax/told - tmin/told);
+                    logHastingsRatio -= Math.log(tmaxparent/tnew - tmin/tnew);
+                }
+
+                if (tempqstimesparent.length > 1){
+                    // assign contribution to the Hastings ratio for having different possible scales for toldparent
                     logHastingsRatio += Math.log(tmaxparent/toldparent - tminparent/toldparent);
-                    logHastingsRatio -= Math.log(tmaxparent/tnewparent - tminparent/tnewparent);
+                    logHastingsRatio -= Math.log(tmax/tnewparent - tminparent/tnewparent);
                     // assign contribution of each scaled attachment time
-                    logHastingsRatio -= 2 * (grandscalefactor * (toldparent - tminparent) + tminparent)/(toldparent);
+                    logHastingsRatio -= 2 * (Math.log (grandscalefactor * (toldparent - tminparent) + tminparent) - Math.log(toldparent));
                     logHastingsRatio += (tempqstimesparent.length-1) * Math.log(grandscalefactor);
                 }
 
@@ -331,18 +344,18 @@ public class QuasiSpeciesHaplotypeStartSwap extends QuasiSpeciesTreeOperator{
                                   - (Math.log(tmax-tmaxparent) - Math.log(tmax-tminparent));
             }
             // if the tnew is not above the lastParentCommonAncestorNode, then just reposition the current haplo start
-            //else {
+            else {
+                if (tempqstimes.length > 1)
+                    logHastingsRatio += Math.log(tmaxparent-tmin) - Math.log(tmax-tmin)
+                                      - (Math.log(tmaxparent-tminparent) - Math.log(tmax-tminparent));
             //    //logHastingsRatio = 0.0;
-            //}
+            }
         }
 // NODE ITSELF
 // FOR ALL CASES: reposition the HAPLOTYPE START ITSELF
 
         // Incorporate the probability of scaling all the attachment times
         if (tempqstimes.length > 1){
-            // assign contribution to the Hastings ratio for having different possible scales for told
-            logHastingsRatio += Math.log(tmax/told - tmin/told);
-            logHastingsRatio -= Math.log(tmax/tnew - tmin/tnew);
             // assign contribution of each scaled attachment time
             logHastingsRatio -= 2 * (Math.log (scalefactor * (told - tmin) + tmin) - Math.log(told));
             logHastingsRatio += (tempqstimes.length-1) * Math.log(scalefactor);
