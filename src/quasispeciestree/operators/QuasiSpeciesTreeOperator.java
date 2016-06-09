@@ -4,6 +4,8 @@ import beast.core.Description;
 import beast.core.Input;
 import beast.core.Operator;
 import beast.evolution.tree.Node;
+import beast.util.Randomizer;
+import org.apache.commons.math3.analysis.function.Abs;
 import quasispeciestree.tree.QuasiSpeciesTree;
 import quasispeciestree.tree.QuasiSpeciesNode;
 import beast.core.parameter.RealParameter;
@@ -545,8 +547,65 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
         // starting from the startNode look for parent's continuingHaploName and if present and not the same as haplo
         // that node is the max possible attachment time of the haplotype
         QuasiSpeciesNode nodeToCheck = startNode;
-        if(nodeToCheck.getContinuingHaploName() != -1 && nodeToCheck.getContinuingHaploName() != haplo &&
-                qsTree.getAttachmentTimesList((QuasiSpeciesNode) qsTree.getNode(nodeToCheck.getContinuingHaploName()))[0] > newParentTime){
+        if(nodeToCheck.getContinuingHaploName() != -1 && nodeToCheck.getContinuingHaploName() != haplo
+                && qsTree.getAttachmentTimesList((QuasiSpeciesNode) qsTree.getNode(nodeToCheck.getContinuingHaploName())).length > 1
+//                && qsTree.getAttachmentTimesList((QuasiSpeciesNode) qsTree.getNode(nodeToCheck.getContinuingHaploName()))[0] > newParentTime
+                && qsTree.getAttachmentTimesList((QuasiSpeciesNode) qsTree.getNode(nodeToCheck.getContinuingHaploName()))[1] > newParentTime
+                && qsTree.getAttachmentTimesList((QuasiSpeciesNode) qsTree.getNode(nodeToCheck.getContinuingHaploName()))[1] > nodeToCheck.getHeight()
+            ){
+            // the max node is the new to be created node at the attach time!
+            output.add(0,null);
+            output.add(1,newParentTime);
+            output.add(2,nodeToCheck.getContinuingHaploName());
+            return output;
+            //return newParentTime;
+        }
+        else {
+            if (!nodeToCheck.isRoot())
+                nodeToCheck = (QuasiSpeciesNode) nodeToCheck.getParent();
+            while ((nodeToCheck.getContinuingHaploName() == -1 || nodeToCheck.getContinuingHaploName() == haplo
+                    || qsTree.getAttachmentTimesList((QuasiSpeciesNode) qsTree.getNode(nodeToCheck.getContinuingHaploName())).length == 1
+                    || qsTree.getAttachmentTimesList((QuasiSpeciesNode) qsTree.getNode(nodeToCheck.getContinuingHaploName()))[1] > nodeToCheck.getHeight())
+                    && nodeToCheck != qsTree.getRoot()){
+                nodeToCheck = (QuasiSpeciesNode) nodeToCheck.getParent();
+            }
+            if (nodeToCheck == qsTree.getRoot() &&
+                    (nodeToCheck.getHaploAboveName() == -1
+                            || nodeToCheck.getHaploAboveName() == haplo
+                            || qsTree.getAttachmentTimesList((QuasiSpeciesNode) qsTree.getNode(nodeToCheck.getContinuingHaploName())).length == 1)
+                    ){
+                output.add(0,origin);
+                output.add(1,origin.getValue());
+                output.add(2,-1);
+                return output;
+                //return origin.getValue();
+            }
+            else{
+                output.add(0,nodeToCheck);
+                output.add(1,nodeToCheck.getHeight());
+                output.add(2,nodeToCheck.getContinuingHaploName());
+                return output;
+                //return nodeToCheck.getHeight();
+            }
+        }
+    }
+
+    /**
+     * Function to find a maximum height until which the haplo can attach to (start from)
+     *
+     * @param startNode the node at which to start the search going up towards the origin
+     * @param newParentTime the time at which the new parent of startNode arises
+     * return ArrayList with elements (in this order): [0] maximum node, [1] maximum time up to which there is no haplotype yet,
+     *                      and if present the limiting (next) [2] haplotype
+     */
+    public ArrayList getMaxPossibleHaploAttachTimeForQSStart(QuasiSpeciesNode startNode, int haplo, double newParentTime){
+
+        ArrayList output = new ArrayList(3);
+        // starting from the startNode look for parent's continuingHaploName and if present and not the same as haplo
+        // that node is the max possible attachment time of the haplotype
+        QuasiSpeciesNode nodeToCheck = startNode;
+        if(nodeToCheck.getContinuingHaploName() != -1 && nodeToCheck.getContinuingHaploName() != haplo
+                && qsTree.getAttachmentTimesList((QuasiSpeciesNode) qsTree.getNode(nodeToCheck.getContinuingHaploName()))[0] > newParentTime){
             // the max node is the new to be created node at the attach time!
             output.add(0,null);
             output.add(1,newParentTime);
@@ -635,5 +694,380 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
             }
         }
     }
+
+    /**
+     * Function to find the nodes that were passed between the startNode and the endNode
+     *
+     * @param startNode the node at which to start the search going up towards the root
+     * @param endNode the node at which to end the search
+     * @param nodesPassed array of nodes that were passed between the startNode and the endNode
+     * @param include do you want to include the end node in the nodesPassed array?
+     */
+    public void findNodesPassed (Node startNode, Node endNode, ArrayList<QuasiSpeciesNode> nodesPassed, boolean include){
+        if (startNode.getHeight() > endNode.getHeight()){
+        //throw new Exception("In QuasiSpeciesHaploSwap operator --- start node is above end node?");
+            System.out.println("In QuasiSpeciesHaploSwap operator --- start node is above end node?");
+            System.exit(0);
+        }
+        nodesPassed.add((QuasiSpeciesNode)startNode);
+        Node startNodeParent=startNode.getParent();
+        while (startNodeParent != null && startNodeParent.getHeight() < endNode.getHeight()){
+            nodesPassed.add((QuasiSpeciesNode)startNodeParent);
+            startNodeParent=startNodeParent.getParent();
+        }
+        if (include & startNode.getNr() != endNode.getNr())
+            nodesPassed.add((QuasiSpeciesNode)endNode);
+    }
+
+    /**
+     * Function to find the node above which the newly re-positioned haplotype arises
+     *
+     * @param startNode the node at which to start the search going up towards the root
+     * @param newTime time at which the haplotype newly arises
+     */
+    public Node findNodeBelowAfterRepositioningHaploStart (Node startNode, double newTime){
+        Node startNodeParent=startNode.getParent();
+        while (startNodeParent != null && startNodeParent.getHeight() < newTime){
+            startNode = startNodeParent;
+            startNodeParent=startNodeParent.getParent();
+        }
+        return startNode;
+    }
+
+    /**
+     * Function to find the node above which the newly re-positioned haplotype arises and returns also
+     * array of nodes that were passed between the startNode and the new node below the haplo
+     *
+     * @param startNode the node at which to start the search going up towards the root
+     * @param newTime time at which the haplotype newly arises
+     * @param nodesPassed array of nodes that were passed between the startNode and the new node below the haplo
+     */
+    public Node findNodeBelowAfterRepositioningHaploStart (Node startNode, double newTime, ArrayList<QuasiSpeciesNode> nodesPassed){
+        nodesPassed.add((QuasiSpeciesNode)startNode);
+        Node startNodeParent=startNode.getParent();
+        while (startNodeParent != null && startNodeParent.getHeight() < newTime){
+            nodesPassed.add((QuasiSpeciesNode)startNodeParent);
+            startNode = startNodeParent;
+            startNodeParent=startNodeParent.getParent();
+        }
+        return startNode;
+    }
+
+    /**
+     * Function to find the node above which the haplotype arises
+     *
+     * @param startNode the node at which to start the search going up towards the root
+     * @param haplo the haplotype whose node below we are looking for
+     */
+    public QuasiSpeciesNode findNodeBelowThisHaplo(QuasiSpeciesNode startNode, int haplo){
+        QuasiSpeciesNode currentHaploNodeBelowPassed = null;
+        while(currentHaploNodeBelowPassed == null){
+            int currentnodeHaplo = startNode.getHaploAboveName();
+            if (currentnodeHaplo == haplo){
+                currentHaploNodeBelowPassed = startNode;
+            }
+            startNode = (QuasiSpeciesNode) startNode.getParent();
+        }
+        return currentHaploNodeBelowPassed;
+    }
+
+    /**
+     * Function to reshuffle QS start times that were passed when another haplo was moved up or down
+     *
+     * @param tmax the maximum time the first haplotype can attach to
+     * @param tmin the minimum time the first haplotype can attach to
+     * @param tnewQSstart the new time of the moved QS start time
+     * @param toldQSstart the old time of the moved QS start time
+     * @param nodesPassed the arrayList with the names of nodes that were passed when the original QS was moved up or down,
+     *                    including the node originally/or newly below the QS
+     * @param parentHaploArray array of parentHaplo
+     */
+    public double moveQSInWayAfterMovingHaplotype(double tmax, double tmin, double tnewQSstart, double toldQSstart, ArrayList<QuasiSpeciesNode> nodesPassed, int[] parentHaploArray){
+
+        double logHastingsRatio=0.0;
+        double tmaxpassednew=tmax;
+        double tmaxpassed=tmax;
+        if (tnewQSstart > toldQSstart){
+            for (int i=nodesPassed.size()-1; i>0 ;i--){
+                QuasiSpeciesNode currentNodePassed = nodesPassed.get(i);
+
+                // adjust the tmaxpassednew
+                tmaxpassednew=currentNodePassed.getHeight();
+
+                QuasiSpeciesNode otherchild = (QuasiSpeciesNode) getOtherChild(currentNodePassed,nodesPassed.get(i-1));
+
+                boolean haplohere = false;
+                if (otherchild.isLeaf() && otherchild.getNr() == currentNodePassed.getContinuingHaploName())
+                    haplohere=true;
+                else {
+                    for (Node nodetocheckforhaplo : otherchild.getAllLeafNodes()){
+                        if (nodetocheckforhaplo.getNr() == currentNodePassed.getContinuingHaploName()){
+                            haplohere=true;
+                            break;
+                        }
+                    }
+                }
+
+                if (currentNodePassed.getHaploAboveName()!=-1 && haplohere){
+                    // move the haplotype's start time
+                    int moveHaplo=-1;
+                    if (currentNodePassed.getHaploAboveName()!=-1)
+                        moveHaplo=currentNodePassed.getHaploAboveName();
+                    else
+                        moveHaplo=currentNodePassed.getContinuingHaploName();
+                    Double[] tempqstimespassed = qsTree.getAttachmentTimesList(moveHaplo).clone();
+                    double x = Randomizer.nextDouble();
+                    if (tempqstimespassed.length>1){
+                        tempqstimespassed[0] = x*tempqstimespassed[1] + (1-x)*tmaxpassednew;
+                    }
+                    else {
+                        tempqstimespassed[0] = x*qsTree.getNode(moveHaplo).getHeight() + (1-x)*tmaxpassednew;
+                    }
+                    qsTree.setAttachmentTimesList(moveHaplo, tempqstimespassed);
+
+                    // get a node above which the current haplotype arises -- is the same as currentNodePassed
+                    currentNodePassed.setHaploAboveName(-1);
+                    // get a node above which the repositioned start of the haplotype moved
+                    QuasiSpeciesNode currentHaploNewNodeBelowPassed=(QuasiSpeciesNode)findNodeBelowAfterRepositioningHaploStart(qsTree.getNode(moveHaplo),tempqstimespassed[0]);
+                    currentHaploNewNodeBelowPassed.setHaploAboveName(moveHaplo);
+
+                    // check how many haplotypes could be chosen on backward move
+                    ArrayList<Integer> backPossibleHaplo = new ArrayList<>();
+                    QuasiSpeciesNode tempnode = (QuasiSpeciesNode) currentHaploNewNodeBelowPassed.getParent();
+                    QuasiSpeciesNode tempnodeotherchild = (QuasiSpeciesNode) getOtherChild(tempnode,currentHaploNewNodeBelowPassed);
+                    if (tempnode.getNr()==currentNodePassed.getNr())
+                        backPossibleHaplo.add(moveHaplo);
+                    while (tempnode.getNr()!=currentNodePassed.getNr()){
+                        checkNumberOfPossibleSrcHaplo(tempnodeotherchild,parentHaploArray,backPossibleHaplo);
+                        QuasiSpeciesNode tempnodeold = tempnode;
+                        tempnode = (QuasiSpeciesNode) tempnode.getParent();
+                        tempnodeotherchild = (QuasiSpeciesNode) getOtherChild(tempnode,tempnodeold);
+                    }
+
+                    // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
+//                    logHastingsRatio += Math.log(tmaxpassednew - tempqstimespassed[1]);
+                    // probability of the backward move also takes into account the fact that we do not choose
+                    // haplotypes to move in random order (random order of passed nodes) but start from the top
+                    // and go down, so the first node has a chance of 1/n to be chosen first -- this always is the case
+                    // furthermore, we take into account the probability that on the back move we chose this exact haplo
+//                    if (tempqstimespassed.length>1){
+//                        logHastingsRatio -= (Math.log(tmaxpassed - tempqstimespassed[1])
+//                                           + Math.log(i+1)
+//                                           + Math.log(backPossibleHaplo.size()));
+//                    }
+//                    else{
+//                        logHastingsRatio -= (Math.log(tmaxpassed - qsTree.getNode(moveHaplo).getHeight()
+//                                           + Math.log(i+1))
+//                                           + Math.log(backPossibleHaplo.size()));
+//                    }
+
+                    // adjust the tmaxpassed
+                    tmaxpassed=tmaxpassednew;
+                }
+                else{
+                    // move the haplotype's start time
+                    ArrayList<Integer> forthPossibleHaplo = new ArrayList<>();
+                    if(otherchild.getContinuingHaploName()==-1)
+                        checkNumberOfPossibleSrcHaplo(otherchild, parentHaploArray, forthPossibleHaplo);
+                    else
+                        forthPossibleHaplo.add(otherchild.getContinuingHaploName());
+
+                    // Incorporate probability of choosing current haplotype to move --- only with Felsenstein
+//                    logHastingsRatio += Math.log(forthPossibleHaplo.size());
+
+                    // choose one haplo and move its start around
+                    int moveHaplo=forthPossibleHaplo.get(Randomizer.nextInt(forthPossibleHaplo.size()));
+                    Double[] tempqstimespassed = qsTree.getAttachmentTimesList(moveHaplo).clone();
+                    double x = Randomizer.nextDouble();
+                    if (tempqstimespassed.length>1){
+                        tempqstimespassed[0] = x*tempqstimespassed[1] + (1-x)*tmaxpassednew;
+                    }
+                    else {
+                        tempqstimespassed[0] = x*qsTree.getNode(moveHaplo).getHeight() + (1-x)*tmaxpassednew;
+                    }
+                    qsTree.setAttachmentTimesList(moveHaplo, tempqstimespassed);
+
+                    // get a node above which the current haplotype arises
+                    QuasiSpeciesNode currentHaploNodeBelowPassed = findNodeBelowThisHaplo((QuasiSpeciesNode)qsTree.getNode(moveHaplo),moveHaplo);
+                    currentHaploNodeBelowPassed.setHaploAboveName(-1);
+                    // get a node above which the repositioned start of the haplotype moved
+                    QuasiSpeciesNode currentHaploNewNodeBelowPassed=(QuasiSpeciesNode)findNodeBelowAfterRepositioningHaploStart(qsTree.getNode(moveHaplo),tempqstimespassed[0]);
+                    currentHaploNewNodeBelowPassed.setHaploAboveName(moveHaplo);
+
+                    // check how many haplotypes could be chosen on backward move
+                    ArrayList<Integer> backPossibleHaplo = new ArrayList<>();
+                    QuasiSpeciesNode tempnode = null;
+                    QuasiSpeciesNode tempnodeold = null;
+                    QuasiSpeciesNode tempnodeotherchild = null;
+                    if (currentHaploNewNodeBelowPassed.getNr() != currentHaploNodeBelowPassed.getNr()){
+                        if (currentHaploNewNodeBelowPassed.getHeight()<currentHaploNodeBelowPassed.getHeight()){
+                            tempnode = (QuasiSpeciesNode) currentHaploNewNodeBelowPassed.getParent();
+                            tempnodeold = currentHaploNewNodeBelowPassed;
+                            tempnodeotherchild = (QuasiSpeciesNode) getOtherChild(tempnode,currentHaploNewNodeBelowPassed);
+                            while (tempnode.getNr()!=currentHaploNodeBelowPassed.getNr()){
+                                checkNumberOfPossibleSrcHaplo(tempnodeotherchild,parentHaploArray,backPossibleHaplo);
+                                tempnodeold = tempnode;
+                                tempnode = (QuasiSpeciesNode) tempnode.getParent();
+                                tempnodeotherchild = (QuasiSpeciesNode) getOtherChild(tempnode,tempnodeold);
+                            }
+                            backPossibleHaplo.addAll(forthPossibleHaplo);
+                        }
+                        else {
+                            tempnode = (QuasiSpeciesNode) currentHaploNodeBelowPassed.getParent();
+                            tempnodeold = currentHaploNodeBelowPassed;
+                            tempnodeotherchild = (QuasiSpeciesNode) getOtherChild(tempnode,currentHaploNodeBelowPassed);
+                            if (tempnode.getNr()==currentHaploNewNodeBelowPassed.getNr())
+                                backPossibleHaplo.add(moveHaplo);
+                            while (tempnode.getNr()!=currentHaploNewNodeBelowPassed.getNr()){
+                                checkNumberOfPossibleSrcHaplo(tempnodeotherchild,parentHaploArray,backPossibleHaplo);
+                                tempnodeold = tempnode;
+                                tempnode = (QuasiSpeciesNode) tempnode.getParent();
+                                tempnodeotherchild = (QuasiSpeciesNode) getOtherChild(tempnode,tempnodeold);
+                            }
+
+//                            if (backPossibleHaplo.size() == 0 && currentNodePassed.getHeight()<tempqstimespassed[0])
+//                                backPossibleHaplo.add(moveHaplo);
+//                            else {
+                                ArrayList<Integer> backPossibleHaploTemp = new ArrayList<>(backPossibleHaplo.size());
+                                backPossibleHaploTemp.addAll(backPossibleHaplo);
+                                backPossibleHaplo.clear();
+                                backPossibleHaplo.addAll(forthPossibleHaplo);
+                                backPossibleHaplo.removeAll(backPossibleHaploTemp);
+//                            }
+                        }
+                        // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
+//                        logHastingsRatio += Math.log(tmaxpassednew - tempqstimespassed[1]);
+                        // probability of the backward move also takes into account the fact that we do not choose
+                        // haplotypes to move in random order (random order of passed nodes) but start from the top
+                        // and go down, so the first node has a chance of 1/n to be chosen first -- this always is the case
+                        // furthermore, we take into account the probability that on the back move we chose this exact haplo
+//                        if (tempqstimespassed.length>1){
+//                            logHastingsRatio -= (Math.log(tmaxpassed - tempqstimespassed[1])
+//                                               + Math.log(i+1)
+//                                               + Math.log(backPossibleHaplo.size()));
+//                        }
+//                        else{
+//                            logHastingsRatio -= (Math.log(tmaxpassed - qsTree.getNode(moveHaplo).getHeight()
+//                                               + Math.log(i+1))
+//                                               + Math.log(backPossibleHaplo.size()));
+//                        }
+                    }
+                }
+            }
+        }
+        else{
+            for (int i=nodesPassed.size()-1; i>0 ;i--){
+                QuasiSpeciesNode currentNodePassed = nodesPassed.get(i);
+
+                // adjust the tmaxpassednew
+                tmaxpassednew=currentNodePassed.getHeight();
+
+                QuasiSpeciesNode otherchild = (QuasiSpeciesNode) getOtherChild(currentNodePassed,nodesPassed.get(i-1));
+
+                // move the haplotype's start time
+                ArrayList<Integer> forthPossibleHaplo = new ArrayList<>();
+                if(otherchild.getContinuingHaploName()==-1)
+                    checkNumberOfPossibleSrcHaplo(otherchild, parentHaploArray, forthPossibleHaplo);
+                else
+                    forthPossibleHaplo.add(otherchild.getContinuingHaploName());
+
+                // Incorporate probability of choosing current haplotype to move --- only with Felsenstein
+//                logHastingsRatio += Math.log(forthPossibleHaplo.size());
+
+                // choose one haplo and move its start around
+                int moveHaplo=forthPossibleHaplo.get(Randomizer.nextInt(forthPossibleHaplo.size()));
+                Double[] tempqstimespassed = qsTree.getAttachmentTimesList(moveHaplo).clone();
+                double x = Randomizer.nextDouble();
+                if (tempqstimespassed.length>1){
+                    tempqstimespassed[0] = x*tempqstimespassed[1] + (1-x)*tmaxpassed;
+                }
+                else {
+                    tempqstimespassed[0] = x*qsTree.getNode(moveHaplo).getHeight() + (1-x)*tmaxpassed;
+                }
+                qsTree.setAttachmentTimesList(moveHaplo, tempqstimespassed);
+
+                // get a node above which the current haplotype arises
+                QuasiSpeciesNode currentHaploNodeBelowPassed = findNodeBelowThisHaplo((QuasiSpeciesNode)qsTree.getNode(moveHaplo),moveHaplo);
+                currentHaploNodeBelowPassed.setHaploAboveName(-1);
+                // get a node above which the repositioned start of the haplotype moved
+                QuasiSpeciesNode currentHaploNewNodeBelowPassed=(QuasiSpeciesNode)findNodeBelowAfterRepositioningHaploStart(qsTree.getNode(moveHaplo),tempqstimespassed[0]);
+                currentHaploNewNodeBelowPassed.setHaploAboveName(moveHaplo);
+
+                // check how many haplotypes could be chosen on backward move
+                ArrayList<Integer> backPossibleHaplo = new ArrayList<>();
+                QuasiSpeciesNode tempnode = null;
+                QuasiSpeciesNode tempnodeold = null;
+                QuasiSpeciesNode tempnodeotherchild = null;
+                if (currentHaploNewNodeBelowPassed.getNr() != currentHaploNodeBelowPassed.getNr()){
+                    if (currentHaploNewNodeBelowPassed.getHeight()<currentHaploNodeBelowPassed.getHeight()){
+                        tempnode = (QuasiSpeciesNode) currentHaploNewNodeBelowPassed.getParent();
+                        tempnodeold = currentHaploNewNodeBelowPassed;
+                        tempnodeotherchild = (QuasiSpeciesNode) getOtherChild(tempnode,currentHaploNewNodeBelowPassed);
+                        while (tempnode.getNr()!=currentHaploNodeBelowPassed.getNr()
+                                // not needed to test if we pass the node from the passed nodes, since the new QS start decreased
+                                //&& tempnode.getNr()!=currentNodePassed.getNr()
+                                ){
+                            checkNumberOfPossibleSrcHaplo(tempnodeotherchild,parentHaploArray,backPossibleHaplo);
+                            tempnodeold = tempnode;
+                            tempnode = (QuasiSpeciesNode) tempnode.getParent();
+                            tempnodeotherchild = (QuasiSpeciesNode) getOtherChild(tempnode,tempnodeold);
+                        }
+                        backPossibleHaplo.addAll(forthPossibleHaplo);
+                    }
+                    else {
+                        tempnode = (QuasiSpeciesNode) currentHaploNodeBelowPassed.getParent();
+                        tempnodeold = currentHaploNodeBelowPassed;
+                        tempnodeotherchild = (QuasiSpeciesNode) getOtherChild(tempnode,currentHaploNodeBelowPassed);
+                        if (tempnode.getNr()==currentHaploNewNodeBelowPassed.getNr())
+                            backPossibleHaplo.add(moveHaplo);
+                        while (tempnode.getNr()!=currentHaploNewNodeBelowPassed.getNr()
+                                && tempnode.getNr()!=currentNodePassed.getNr()
+                                ) {
+                            checkNumberOfPossibleSrcHaplo(tempnodeotherchild,parentHaploArray,backPossibleHaplo);
+                            tempnodeold = tempnode;
+                            tempnode = (QuasiSpeciesNode) tempnode.getParent();
+                            tempnodeotherchild = (QuasiSpeciesNode) getOtherChild(tempnode,tempnodeold);
+                        }
+
+                        /// haplo that moved not changed in the array
+//                        if (backPossibleHaplo.size() == 0 && currentNodePassed.getHeight()<tempqstimespassed[0])
+//                            backPossibleHaplo.add(moveHaplo);
+//                        else {
+                            ArrayList<Integer> backPossibleHaploTemp = new ArrayList<>(backPossibleHaplo.size());
+                            backPossibleHaploTemp.addAll(backPossibleHaplo);
+                            backPossibleHaplo.clear();
+                            backPossibleHaplo.addAll(forthPossibleHaplo);
+                            backPossibleHaplo.removeAll(backPossibleHaploTemp);
+//                        }
+                    }
+                    // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
+//                    logHastingsRatio += (Math.log(tmaxpassed - tempqstimespassed[1]);
+                    // probability of the backward move also takes into account the fact that we do not choose
+                    // haplotypes to move in random order (random order of passed nodes) but start from the top
+                    // and go down, so the first node has a chance of 1/n to be chosen first -- this always is the case
+                    // furthermore, we take into account the probability that on the back move we chose this exact haplo
+//                    if (tempqstimespassed.length>1){
+//                        logHastingsRatio -= (Math.log(tmaxpassednew - tempqstimespassed[1])
+//                                           + Math.log(i+1)
+//                                           + Math.log(backPossibleHaplo.size()));
+//                    }
+//                    else{
+//                        logHastingsRatio -= (Math.log(tmaxpassednew - qsTree.getNode(moveHaplo).getHeight()
+//                                           + Math.log(i+1))
+//                                           + Math.log(backPossibleHaplo.size()));
+//                    }
+                }
+
+                if (tempqstimespassed[0]>tmaxpassednew){
+                    // adjust the tmaxpassed when necessary
+                    tmaxpassed=tmaxpassednew;
+                }
+
+            }
+        }
+        return logHastingsRatio;
+    }
+
+
 
 }

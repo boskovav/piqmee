@@ -58,7 +58,7 @@ public class QuasiSpeciesHaplotypeStartRandom extends QuasiSpeciesTreeOperator{
             tmin = tempqstimes[1];
         else
             tmin = node.getHeight();
-        ArrayList haploStartMaxNewArray = getMaxPossibleHaploAttachTime(node, node.getNr(), 0);
+        ArrayList haploStartMaxNewArray = getMaxPossibleHaploAttachTimeForQSStart(node, node.getNr(), 0);
         tmax = (double) haploStartMaxNewArray.get(1);
 //        tmax = getMaxPossibleHaploAttachTime(node.getNr(), node);
         double u = Randomizer.nextDouble();
@@ -81,8 +81,15 @@ public class QuasiSpeciesHaplotypeStartRandom extends QuasiSpeciesTreeOperator{
         oldNodeBelowHaploMoved.setHaploAboveName(-1);
         nodeBelowHaploMoved.setHaploAboveName(node.getNr());
 
-        if (oldNodeBelowHaploMoved.getHeight() > nodeBelowHaploMoved.getHeight())
-            recalculateParentHaploAndCorrectContinuingHaploName((int) haploStartMaxNewArray.get(2), oldNodeBelowHaploMoved);
+        if (oldNodeBelowHaploMoved.getHeight() > nodeBelowHaploMoved.getHeight()){
+            if ((int) haploStartMaxNewArray.get(2) == -1)
+                recalculateParentHaploAndCorrectContinuingHaploName((int) haploStartMaxNewArray.get(2), oldNodeBelowHaploMoved);
+            else {
+                int parenthaplo = qsTree.getParentHaplo((int) haploStartMaxNewArray.get(2));
+                QuasiSpeciesNode oldNode = findNodeBelowThisHaplo(oldNodeBelowHaploMoved,(int) haploStartMaxNewArray.get(2));
+                recalculateParentHaploAndCorrectContinuingHaploName(parenthaplo, oldNode);
+            }
+        }
         else
             recalculateParentHaploAndCorrectContinuingHaploName((int) haploStartMaxNewArray.get(2), nodeBelowHaploMoved);
 

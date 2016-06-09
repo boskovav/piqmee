@@ -573,9 +573,9 @@ public class QuasiSpeciesTreeScale extends QuasiSpeciesTreeOperator{
                 for (int i=0; i<tempqstimes.length; i++) {
                     tempqstimes[i] = tempqstimes[i] * f;
                 }
-//                // reject the move as soon as the QS start exceeds the origin height
-//                if (tempqstimes[0]>origin.getValue())
-//                    return Double.NEGATIVE_INFINITY;
+                // reject the move as soon as the first QS attachment time exceeds the origin height
+                if (tempqstimes.length>1 && tempqstimes[1]>origin.getValue())
+                    return Double.NEGATIVE_INFINITY;
                 // select a new QS start time for QS above the root --- always
                 if (((QuasiSpeciesNode) root).getContinuingHaploName()==leaf.getNr()){
                     double x = Randomizer.nextDouble();
@@ -620,8 +620,8 @@ public class QuasiSpeciesTreeScale extends QuasiSpeciesTreeOperator{
 
                 qsTree.setAttachmentTimesList(leaf.getNr(), tempqstimes);
                 // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
-//                logHastingsRatio += tempqstimes.length * logf;
-                // TODO if only Tree prior use this instead
+//                logHastingsRatio += logf;
+                // contribution from haplotype duplicate attach time scaling
                 if (tempqstimes.length > 1)
                     logHastingsRatio += (tempqstimes.length-1) * logf;
             }
@@ -665,12 +665,12 @@ public class QuasiSpeciesTreeScale extends QuasiSpeciesTreeOperator{
         if (f<1.0) {
             for (Node leaf : qsTree.getExternalNodes()) {
                 Double[] tempqstimes=qsTree.getAttachmentTimesList(leaf.getNr());
-                if (leaf.getParent().getHeight()<leaf.getHeight() || tempqstimes[tempqstimes.length-1]<leaf.getHeight())
-                    return Double.NEGATIVE_INFINITY;
-                if (tempqstimes[0]<leaf.getHeight()){
+                if (tempqstimes.length>1 && tempqstimes[0]<leaf.getHeight()){
                     System.out.println("problem in hereeeeee you did not really scale the QS start apparently");
                     System.exit(0);
                 }
+                if (leaf.getParent().getHeight()<leaf.getHeight() || tempqstimes[tempqstimes.length-1]<leaf.getHeight())
+                    return Double.NEGATIVE_INFINITY;
             }
         }else {
             if (root.getHeight()>origin.getValue())
