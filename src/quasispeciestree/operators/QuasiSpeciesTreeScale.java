@@ -665,12 +665,12 @@ public class QuasiSpeciesTreeScale extends QuasiSpeciesTreeOperator{
         if (f<1.0) {
             for (Node leaf : qsTree.getExternalNodes()) {
                 Double[] tempqstimes=qsTree.getAttachmentTimesList(leaf.getNr());
+                if (leaf.getParent().getHeight()<leaf.getHeight() || tempqstimes[tempqstimes.length-1]<leaf.getHeight())
+                    return Double.NEGATIVE_INFINITY;
                 if (tempqstimes.length>1 && tempqstimes[0]<leaf.getHeight()){
                     System.out.println("problem in hereeeeee you did not really scale the QS start apparently");
                     System.exit(0);
                 }
-                if (leaf.getParent().getHeight()<leaf.getHeight() || tempqstimes[tempqstimes.length-1]<leaf.getHeight())
-                    return Double.NEGATIVE_INFINITY;
             }
         }else {
             if (root.getHeight()>origin.getValue())

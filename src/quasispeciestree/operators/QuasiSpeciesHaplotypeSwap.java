@@ -232,6 +232,7 @@ public class QuasiSpeciesHaplotypeSwap extends QuasiSpeciesTreeOperator{
 // GRANDPARENT
             // otherwise change stuff also for the grandparent
             else{
+                oldNodeBelowHaploParent = findNodeBelowThisHaplo(node,haplotypesParentHaplo);
                 // get a node above which the parent haplotype arises
 //                oldNodeBelowHaploGrandParent = findNodeBelowThisHaplo(node,(int) haploStartMaxNewArrayParent.get(2));
                 oldNodeBelowHaploGrandParent = findNodeBelowThisHaplo(node,haplotypesGrandParentHaplo);
