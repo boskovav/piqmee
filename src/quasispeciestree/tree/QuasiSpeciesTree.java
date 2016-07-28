@@ -261,6 +261,16 @@ public class QuasiSpeciesTree extends Tree {
         return totalTime;
     }
 
+    public Double getTotalBranchLenghts(QuasiSpeciesNode node){
+        Double totalTime=0.0;
+        Double[] timesList=attachmentTimesList.get(node.getNr());
+        Double nodeHeight = node.getHeight();
+        for (int i=0; i<timesList.length; i++){
+            totalTime += timesList[i]-nodeHeight ;
+        }
+        return totalTime;
+    }
+
     public double getHaplotypeCounts(QuasiSpeciesNode node){
         return haplotypeCounts.getValue(node.getID());
     }

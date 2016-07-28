@@ -7,6 +7,8 @@ import beast.core.Input.Validate;
 import beast.evolution.tree.Node;
 import beast.util.*;
 import quasispeciestree.tree.QuasiSpeciesNode;
+import quasispeciestree.tree.QuasiSpeciesTree;
+
 import java.util.ArrayList;
 
 
@@ -572,6 +574,9 @@ public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
             System.out.println("problem in hereeeeee 3");
             System.exit(0);
         }
+
+        // Ensure BEAST knows to recalculate affected likelihood:
+        qsTree.getNode(srcHaplo).makeDirty(QuasiSpeciesTree.IS_FILTHY);
 
         return logHastingsRatio;
     }

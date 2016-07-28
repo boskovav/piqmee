@@ -84,12 +84,17 @@ public class QuasiSpeciesJukesCantor extends QuasiSpeciesSubstitutionModel.Base 
      * @param nochangematrix    an array to store the transition probability (P(no change happens at (fStartTime-fEndTime)*fRate))
      *                          So, nochangematrix must be of size n where n is number of states.
      */
-    public void getQSTransitionProbabilities(QuasiSpeciesNode node, double fTime, double fRate, double[] nochangematrix) {
-        double fDelta = 4.0 / 3.0 * (fTime);
+    public void getTransitionProbabilities(QuasiSpeciesNode node, double fTime, double fRate, double[] nochangematrix) {
+//        double fDelta = 4.0 / 3.0 * (fTime);
+        double fDelta = fTime;
 //        We need the 4/3 to measure branch length in units of substitutions:
 //        When branch length, \nu , is measured in the expected number of changes per site then:
 //        P_{ij}(\nu )=\left\{{\begin{array}{cc}{1 \over 4}+{3 \over 4}e^{-4\nu /3}&{\mbox{ if }}i=j\\{1 \over 4}-{1 \over 4}e^{-4\nu /3}&{\mbox{ if }}i\neq j\end{array}}\right.
 //        It is worth noticing that \nu ={3 \over 4}t\mu =({\mu  \over 4}+{\mu  \over 4}+{\mu  \over 4})t
+// Actually the factor of 4/3 comes from the fact that under JC69 we have 1/4-1/4exp(-4*lambda*t) & 1/4+3/4exp(-4*lambda*t)
+// So to normalize the Q matrix, to have the rate of 1, we divide by -sum_i{i=A,C,G,T}pi*q_ii=-sum_i(1/4*-3lambda)=3*lambda where in P the exp is -4*lambda
+// thus we have 1/4-1/4exp(-4*lambda*t/3*lambda)
+// In my case, I would then have exp(-3*lambda*t/3*lambda) -- I proved this in document "QS_JC69_proof.pdf"
         double fPStay = Math.exp(-fDelta * fRate);
 
         // fill the nochangematrix with move probabilities

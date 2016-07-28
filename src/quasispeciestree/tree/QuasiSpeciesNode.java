@@ -10,6 +10,10 @@ import beast.evolution.tree.Node;
 @Description("A node in a quasi-species phylogenetic tree.")
 public class QuasiSpeciesNode extends Node {
 
+    /**
+     * status of this node after an operation is performed on the state *
+     */
+    int isDirty = QuasiSpeciesTree.IS_CLEAN;
 
     @Override
     public void initAndValidate(){
@@ -55,6 +59,13 @@ public class QuasiSpeciesNode extends Node {
 //    public void setHaploAboveName(String haploName) { this.haploAboveName = haploName; }
     public void setHaploAboveName(int haploName) {
         startEditing();
+        this.isDirty |= QuasiSpeciesTree.IS_DIRTY;
+        if (!isLeaf()) {
+            ((QuasiSpeciesNode)getLeft()).isDirty |= QuasiSpeciesTree.IS_DIRTY;
+            if (getRight() != null) {
+                ((QuasiSpeciesNode)getRight()).isDirty |= QuasiSpeciesTree.IS_DIRTY;
+            }
+        }
         this.haploAboveName = haploName;
     }
 
@@ -75,6 +86,13 @@ public class QuasiSpeciesNode extends Node {
 //    public void setContinuingHaploName(String haploName) { this.continuingHaploName = haploName; }
     public void setContinuingHaploName(int haploName) {
         startEditing();
+        this.isDirty |= QuasiSpeciesTree.IS_DIRTY;
+        if (!isLeaf()) {
+            ((QuasiSpeciesNode)getLeft()).isDirty |= QuasiSpeciesTree.IS_DIRTY;
+            if (getRight() != null) {
+                ((QuasiSpeciesNode)getRight()).isDirty |= QuasiSpeciesTree.IS_DIRTY;
+            }
+        }
         this.continuingHaploName = haploName;
     }
 
@@ -119,6 +137,16 @@ public class QuasiSpeciesNode extends Node {
      * Methods ported from Node *
      ***************************
      */
+
+    /**
+     * methods for accessing the dirtiness state of the Node.
+     * A Node is Tree.IS_DIRTY if its value (like height) has changed
+     * A Node Tree.IS_if FILTHY if its parent or child has changed.
+     * Otherwise the node is Tree.IS_CLEAN *
+     */
+    public int isDirty() {
+        return isDirty;
+    }
 
     /**
      * Sets the parent of this node

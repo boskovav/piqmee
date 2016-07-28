@@ -4,6 +4,8 @@ import beast.core.Description;
 import beast.core.Input;
 import quasispeciestree.tree.QuasiSpeciesNode;
 import beast.util.Randomizer;
+import quasispeciestree.tree.QuasiSpeciesTree;
+
 import java.util.ArrayList;
 
 
@@ -489,6 +491,8 @@ public class QuasiSpeciesHaplotypeSwap extends QuasiSpeciesTreeOperator{
 //                            nodePassed.makeDirty(QuasiSpeciesTree.IS_FILTHY);
 //                    }
                 //}
+                // Ensure BEAST knows to recalculate affected likelihood:
+                qsTree.getNode(haplotypesParentHaplo).makeDirty(QuasiSpeciesTree.IS_FILTHY);
 
             }
             // if the tnew is not above the lastParentCommonAncestorNode, then just reposition the current haplo start
@@ -566,6 +570,10 @@ public class QuasiSpeciesHaplotypeSwap extends QuasiSpeciesTreeOperator{
         // in any case (changed or not the aboveNodeHaplo/parentHaplo array) recalculate countPossibleStartBranches
         int[] startBranchCountsArray = qsTree.countPossibleStartBranches();
         qsTree.setStartBranchCounts(startBranchCountsArray);
+
+        // Ensure BEAST knows to recalculate affected likelihood:
+        node.makeDirty(QuasiSpeciesTree.IS_FILTHY);
+
 
     // RETURN log(HASTINGS RATIO)
     return logHastingsRatio; // proper hastings ratio!!!

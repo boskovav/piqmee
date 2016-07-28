@@ -28,6 +28,8 @@ public class QuasiSpeciesHaplotypeScale extends QuasiSpeciesTreeOperator{
     @Override
     public double proposal() {
 
+//        qsTree.startEditing(this);
+
         if (qsTree.getTotalAttachmentCounts()==0){
             System.out.println("In QuasiSpeciesHaploScale operator --- "
                               +"there are no QS duplicates. The QuasiSpeciesHaplotypeScale "
@@ -152,6 +154,9 @@ public class QuasiSpeciesHaplotypeScale extends QuasiSpeciesTreeOperator{
         // in any case (changed or not the aboveNodeHaplo/parentHaplo array) recalculate countPossibleStartBranches
         int[] startBranchCountsArray = qsTree.countPossibleStartBranches();
         qsTree.setStartBranchCounts(startBranchCountsArray);
+
+        // Ensure BEAST knows to recalculate affected likelihood:
+        node.makeDirty(QuasiSpeciesTree.IS_FILTHY);
 
     // RETURN log(HASTINGS RATIO)
     return logHastingsRatio; // proper hastings ratio!!!

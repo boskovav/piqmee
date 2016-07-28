@@ -87,6 +87,7 @@ public class QuasiSpeciesSequenceAttachmentUniform extends QuasiSpeciesTreeOpera
         tempqstimes[changeIdx]=tnew;
         qsTree.setAttachmentTimesList(node, tempqstimes);
 
+        // Ensure BEAST knows to recalculate affected likelihood:
         node.makeDirty(QuasiSpeciesTree.IS_FILTHY);
 
         return 0.0;

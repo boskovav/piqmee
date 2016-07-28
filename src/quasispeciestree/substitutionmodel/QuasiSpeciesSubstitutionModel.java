@@ -178,6 +178,6 @@ public interface QuasiSpeciesSubstitutionModel{
      * @param nochangematrix    an array to store the transition probability (P(no change happens at (fStartTime-fEndTime)*fRate))
      *                          So, nochangematrix must be of size n where n is number of states.
      */
-    void getQSTransitionProbabilities(QuasiSpeciesNode node, double fTime, double fRate, double[] nochangematrix);
+    void getTransitionProbabilities(QuasiSpeciesNode node, double fTime, double fRate, double[] nochangematrix);
 
 } // class SubstitutionModel

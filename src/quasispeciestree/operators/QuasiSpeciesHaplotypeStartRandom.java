@@ -97,6 +97,7 @@ public class QuasiSpeciesHaplotypeStartRandom extends QuasiSpeciesTreeOperator{
         int[] startBranchCountsArray = qsTree.countPossibleStartBranches();
         qsTree.setStartBranchCounts(startBranchCountsArray);
 
+        // Ensure BEAST knows to recalculate affected likelihood:
         node.makeDirty(QuasiSpeciesTree.IS_FILTHY);
 
 //        if (tnew > told)
