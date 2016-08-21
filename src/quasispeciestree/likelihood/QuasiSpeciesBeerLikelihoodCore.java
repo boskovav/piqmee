@@ -916,72 +916,207 @@ public class QuasiSpeciesBeerLikelihoodCore extends QuasiSpeciesLikelihoodCore {
      */
 
     /**
-     * Calculates partial likelihood at origin if tree has only one tip.
+     * Calculates partial likelihoods at origin when coming from the root.
      *
-     * @param stateIndex        alignment at child 1
+     * @param nodeIndex1       the tip (child 1) node
+     * @param child1QS         QS passing through the tip (child 1)
+     * @param nodeCount        total count of the true nodes in the tree
+     * @param originPartials   probability vector at origin (of length nrOfStates * nrOfPatterns)
      */
-    protected void calculateOriginTipPruning(int[] stateIndex, double[] matricesQS1, double[] matrices1aboveQSstart,
-                                             double[] partialsOrigin, int child1QS){
-
-        Arrays.fill(partialsOrigin, 0);
-
-        int v = 0;
-
-        for (int l = 0; l < nrOfMatrices; l++) {
-
-            for (int k = 0; k < nrOfPatterns; k++) {
-
-                int state = stateIndex[k];
-
-                int w = l * matrixSize;
-
-                if (state < nrOfStates) {
-                    // the alignment at node has a known character
-//                    for (int i = 0; i < nrOfStates; i++) {
-
-                    partialsOrigin[v+state] = matricesQS1[w + state*(nrOfStates+1)];
-
-                    v += nrOfStates;
-                    w += matrixSize;
-//                    }
-                } else {
-                    // the alignment at node has a gap or unknown state so treat it as unknown
-
-//                    for (int j = 0; j < nrOfStates; j++) {
-                    partialsOrigin[v+state] = 1.0;
-                    v += nrOfStates;
-//                    }
-                }
-            }
+    public void calculateOriginTipPartials(int nodeIndex1, int child1QS, int nodeCount, double[] originPartials) {
+        if (states[nodeIndex1] != null){
+            calculateOriginTipPruning(
+                    states[nodeIndex1],matrices[currentMatrixIndex[nodeIndex1]][nodeIndex1],matrices[currentMatrixIndex[nodeCount+nodeIndex1]][nodeCount+nodeIndex1],
+                    originPartials,child1QS);
         }
-
+        else {
+            calculateOriginTipPruning(
+                    states[child1QS],matrices[currentMatrixIndex[nodeIndex1]][nodeIndex1],matrices[currentMatrixIndex[nodeCount+nodeIndex1]][nodeCount+nodeIndex1],
+                    originPartials, child1QS);
+        }
     }
 
 
     /**
-     * Calculates partial likelihood at origin.
+     * Calculates partial likelihood at origin if tree has only one tip.
      *
-
-     * @param partialsRoot      probability vector at root node (of length nrOfStates * nrOfPatterns)
-     * @param matricesRoot      transition probability matrix from origin to root
-     * @param partialsOrigin    probability vector at origin (of length nrOfStates * nrOfPatterns)
+     * @param stateIndex            alignment at the tip (child 1)
+     * @param matricesQS1           transition probability matrix from parent to the tip (child 1) - if the node is a tip, it holds the probability that the sequence does not change from the tip to the start of the haplo
+     * @param matrices1aboveQSstart transition probability matrix from node above QS start to QS start for QS passing through the tip (child 1)
+     * @param originPartials        probability vector at origin (of length nrOfStates * nrOfPatterns)
+     * @param child1QS              QS passing through parent tip (child 1)
      */
-    protected void calculateOriginRootPruning(double[] partialsRoot, double[] matricesRoot, double[] matricesRootaboveQSstart,
-                                              double[] partialsOrigin) {
+    protected void calculateOriginTipPruning(int[] stateIndex, double[] matricesQS1, double[] matrices1aboveQSstart,
+                                             double[] originPartials, int child1QS){
 
+//        Arrays.fill(originPartials, 0);
 
+        double sum, tmp;
 
-        
+        // v keeps track of the pattern we are about to calculate
+        int v = 0;
+
+        for (int l = 0; l < nrOfMatrices; l++) {
+
+            // w keeps track of the state the internal node evolves from
+            int w = l * matrixSize;
+
+            for (int k = 0; k < nrOfPatterns; k++) {
+                // note down the state at the tip
+                int state = stateIndex[k];
+
+                // the child has a state
+                if (state < nrOfStates) {
+                    // note down the transition probabilities (of no change) on the sum of the QS branch lengths
+                    // P(QS start -> QS tip)
+                    tmp = matricesQS1[w + nrOfStates * state + state];
+                    // for each state at the parent node calculate prob. of going to the state of the tip * P(QS start -> QS tip)
+                    for (int i = 0; i < nrOfStates; i++) {
+                        originPartials[v + i] = tmp * matrices1aboveQSstart[w + nrOfStates * i + state];
+                    }
+
+                    v += nrOfStates;
+
+                } else {
+                    // the alignment at node has a gap or unknown state so treat it as unknown
+                    // for each state at the parent node calculate prob. of going to the state of the tip * P(QS start -> QS tip)
+                    for (int i = 0; i < nrOfStates; i++) {
+                        sum = 0.0;
+                        for (int j = 0; j < nrOfStates; j++){
+                            tmp = matricesQS1[w = nrOfStates * j + j];
+                            sum += tmp * matrices1aboveQSstart[w + nrOfStates * i + j];
+                        }
+                        originPartials[v + i] = sum;
+                    }
+
+                    v += nrOfStates;
+
+                }
+            }
+        }
+    }
+
+    /**
+     * Calculates partial likelihoods at origin when coming from the root.
+     *
+     * @param rootNodeIndex     the root node
+     * @param rootQS            QS passing through the root node
+     * @param nodeCount         total count of the true nodes in the tree
+     * @param originPartials    probability vector at origin (of length nrOfStates * nrOfPatterns)
+     */
+    public void calculateOriginRootPartials(int rootNodeIndex, int rootQS, int nodeCount, double[] originPartials) {
+        if (rootQS == -1){
+            calculateOriginRootPruning(null,partials[currentPartialsIndex[rootNodeIndex]][rootNodeIndex],
+                                       matrices[currentMatrixIndex[rootNodeIndex]][rootNodeIndex],
+                                       null,
+                                       originPartials,rootQS);
+        }
+        else {
+            calculateOriginRootPruning(states[rootQS],partials[currentPartialsIndex[rootNodeIndex]][rootNodeIndex],
+                                       matrices[currentMatrixIndex[rootNodeIndex]][rootNodeIndex],
+                                       matrices[currentMatrixIndex[nodeCount+rootQS]][nodeCount+rootQS],
+                                       originPartials,rootQS);
+        }
+    }
+        /**
+         * Calculates partial likelihood at origin.
+         *
+         * @param stateIndexRoot    alignment at node corresponding to the QS passing through the root
+         * @param partialsRoot      probability vector at root node (of length nrOfStates * nrOfPatterns)
+         * @param matricesRoot      transition probability matrix from origin to root
+         * @param originPartials    probability vector at origin (of length nrOfStates * nrOfPatterns)
+         * @param rootQS            QS passing through parent node
+         */
+    protected void calculateOriginRootPruning(int[] stateIndexRoot, double[] partialsRoot, double[] matricesRoot, double[] matricesRootaboveQSstart,
+                                              double[] originPartials, int rootQS) {
+
+//        Arrays.fill(originPartials, 0);
+
+        double sum, tmp;
+
+        // v keeps track of the pattern we are about to calculate
+        int v = 0;
+
+        // there is no QS arising above the root
+        if (rootQS==-1){
+
+            for (int l = 0; l < nrOfMatrices; l++) {
+
+                // w keeps track of the state the internal node evolves from
+                int w = l * matrixSize;
+
+                for (int k = 0; k < nrOfPatterns; k++) {
+
+                    for (int i = 0; i < nrOfStates; i++) {
+                        // since state at root is unknown, take into account all the possibilities
+                        // for each state at the parent node calculate prob. of going to the state of the tip * P(QS start -> QS tip)
+                        sum = 0.0;
+                        for (int j = 0; j < nrOfStates; j++) {
+                            // note down the partial at the root
+                            tmp = partialsRoot[v + j];
+                            sum += tmp * matricesRoot[w + nrOfStates * i + j];
+                        }
+                        originPartials[v + i] = sum;
+                    }
+
+                    v += nrOfStates;
+
+                }
+            }
+        }
+        // there is QS passing through the root node
+        else {
+
+            for (int l = 0; l < nrOfMatrices; l++) {
+
+                // w keeps track of the state the internal node evolves from
+                int w = l * matrixSize;
+
+                for (int k = 0; k < nrOfPatterns; k++) {
+                    // note down the states at the tips belonging to QS passing through root
+                    int rootState = stateIndexRoot[k];
+
+                    // root's QS has a state
+                    if (rootState < nrOfStates){
+                        // note down the partial at the child 1
+                        tmp = partialsRoot[v + rootState];
+                        // for each state at the parent node calculate prob. of going to the state of the tip * P(QS start -> QS tip)
+                        for (int i = 0; i < nrOfStates; i++){
+                            originPartials[v + i] = tmp * matricesRootaboveQSstart[w + nrOfStates * i + rootState];
+                        }
+
+                        v += nrOfStates;
+
+                    // root's QS has a gap or unknown state
+                    } else {
+                        // since states at QS tip is unknown, take into account all the possibilities
+                        // for each state at the parent node calculate prob. of going to the state of the tip * P(QS start -> QS tip)
+                        for (int i = 0; i < nrOfStates; i++){
+                            sum = 0.0;
+                            for (int j = 0; j < nrOfStates; j++) {
+                                // note down the partial at the root
+                                tmp = partialsRoot[v + j];
+                                sum += tmp * matricesRootaboveQSstart[w + nrOfStates * i + j];
+                            }
+                            originPartials[v + i] = sum;
+                        }
+
+                        v += nrOfStates;
+
+                    }
+                }
+            }
+        }
     }
 
     /**
      * Calculates partial likelihoods at a node when both children have states.
      *
      * @param stateIndex1           alignment at child 1
-     * @param matricesQS1           transition probability matrix from parent to child 1 - if the node is at tip, it holds the probability that the sequence does not change from the tip to the start of the haplo
+     * @param matricesQS1           transition probability matrix from parent to child 1 - if the node is a tip, it holds the probability that the sequence does not change from the tip to the start of the haplo
      * @param matrices1aboveQSstart transition probability matrix from node above QS start to QS start for QS passing through child 1
      * @param stateIndex2           alignment at child 2
-     * @param matricesQS2           transition probability matrix from parent to child 2 - if the node is at tip, it holds the probability that the sequence does not change from the tip to the start of the haplo
+     * @param matricesQS2           transition probability matrix from parent to child 2 - if the node is a tip, it holds the probability that the sequence does not change from the tip to the start of the haplo
      * @param matrices2aboveQSstart transition probability matrix from node above QS start to QS start for QS passing through child 2
      * @param partials3             probability vector at parent node (of length nrOfStates * nrOfPatterns)
      * @param child1QS              QS passing through child 1
@@ -1003,7 +1138,7 @@ public class QuasiSpeciesBeerLikelihoodCore extends QuasiSpeciesLikelihoodCore {
 
             for (int l = 0; l < nrOfMatrices; l++) {
 
-                // w keeps track of the site category we are about to calculate
+                // w keeps track of the state the internal node evolves from
                 int w = l * matrixSize;
 
                 for (int k = 0; k < nrOfPatterns; k++) {
@@ -1093,7 +1228,7 @@ public class QuasiSpeciesBeerLikelihoodCore extends QuasiSpeciesLikelihoodCore {
 
                 for (int l = 0; l < nrOfMatrices; l++) {
 
-                    // w keeps track of the site category we are about to calculate
+                    // w keeps track of the state the internal node evolves from
                     int w = l * matrixSize;
 
                     for (int k = 0; k < nrOfPatterns; k++) {
@@ -1175,7 +1310,7 @@ public class QuasiSpeciesBeerLikelihoodCore extends QuasiSpeciesLikelihoodCore {
 
                 for (int l = 0; l < nrOfMatrices; l++) {
 
-                    // w keeps track of the site category we are about to calculate
+                    // w keeps track of the state the internal node evolves from
                     int w = l * matrixSize;
 
                     for (int k = 0; k < nrOfPatterns; k++) {
@@ -1259,7 +1394,7 @@ public class QuasiSpeciesBeerLikelihoodCore extends QuasiSpeciesLikelihoodCore {
      * Calculates partial likelihoods at a node when one child has states and one has partials.
      *
      * @param stateIndex1           alignment at child 1
-     * @param matricesQS1           transition probability matrix from parent to child 1 - if the node is at tip, it holds the probability that the sequence does not change from the tip to the start of the haplo
+     * @param matricesQS1           transition probability matrix from parent to child 1 - if the node is a tip, it holds the probability that the sequence does not change from the tip to the start of the haplo
      * @param matrices1aboveQSstart transition probability matrix from node above QS start to QS start for QS passing through child 1
      * @param stateIndex2           alignment at node corresponding to the QS passing through child 2
      * @param partials2             probability vector at child 2 (of length nrOfStates * nrOfPatterns)
@@ -1286,7 +1421,7 @@ public class QuasiSpeciesBeerLikelihoodCore extends QuasiSpeciesLikelihoodCore {
 
                 for (int l = 0; l < nrOfMatrices; l++) {
 
-                    // w keeps track of the site category we are about to calculate
+                    // w keeps track of the state the internal node evolves from
                     int w = l * matrixSize;
 
                     for (int k = 0; k < nrOfPatterns; k++) {
@@ -1379,7 +1514,7 @@ public class QuasiSpeciesBeerLikelihoodCore extends QuasiSpeciesLikelihoodCore {
 
                 for (int l = 0; l < nrOfMatrices; l++) {
 
-                    // w keeps track of the site category we are about to calculate
+                    // w keeps track of the state the internal node evolves from
                     int w = l * matrixSize;
 
                     for (int k = 0; k < nrOfPatterns; k++) {
@@ -1439,7 +1574,7 @@ public class QuasiSpeciesBeerLikelihoodCore extends QuasiSpeciesLikelihoodCore {
 
                 for (int l = 0; l < nrOfMatrices; l++) {
 
-                    // w keeps track of the site category we are about to calculate
+                    // w keeps track of the state the internal node evolves from
                     int w = l * matrixSize;
 
                     for (int k = 0; k < nrOfPatterns; k++) {
@@ -1528,7 +1663,7 @@ public class QuasiSpeciesBeerLikelihoodCore extends QuasiSpeciesLikelihoodCore {
 
                     for (int l = 0; l < nrOfMatrices; l++) {
 
-                        // w keeps track of the site category we are about to calculate
+                        // w keeps track of the state the internal node evolves from
                         int w = l * matrixSize;
 
                         for (int k = 0; k < nrOfPatterns; k++) {
@@ -1615,7 +1750,7 @@ public class QuasiSpeciesBeerLikelihoodCore extends QuasiSpeciesLikelihoodCore {
 
                     for (int l = 0; l < nrOfMatrices; l++) {
 
-                        // w keeps track of the site category we are about to calculate
+                        // w keeps track of the state the internal node evolves from
                         int w = l * matrixSize;
 
                         for (int k = 0; k < nrOfPatterns; k++) {
@@ -1705,7 +1840,7 @@ public class QuasiSpeciesBeerLikelihoodCore extends QuasiSpeciesLikelihoodCore {
 
                 for (int l = 0; l < nrOfMatrices; l++) {
 
-                    // w keeps track of the site category we are about to calculate
+                    // w keeps track of the state the internal node evolves from
                     int w = l * matrixSize;
 
                     for (int k = 0; k < nrOfPatterns; k++) {
@@ -1792,7 +1927,7 @@ public class QuasiSpeciesBeerLikelihoodCore extends QuasiSpeciesLikelihoodCore {
 
                 for (int l = 0; l < nrOfMatrices; l++) {
 
-                    // w keeps track of the site category we are about to calculate
+                    // w keeps track of the state the internal node evolves from
                     int w = l * matrixSize;
 
                     for (int k = 0; k < nrOfPatterns; k++) {
@@ -1847,7 +1982,7 @@ public class QuasiSpeciesBeerLikelihoodCore extends QuasiSpeciesLikelihoodCore {
 
                 for (int l = 0; l < nrOfMatrices; l++) {
 
-                    // w keeps track of the site category we are about to calculate
+                    // w keeps track of the state the internal node evolves from
                     int w = l * matrixSize;
 
                     for (int k = 0; k < nrOfPatterns; k++) {
@@ -1901,7 +2036,7 @@ public class QuasiSpeciesBeerLikelihoodCore extends QuasiSpeciesLikelihoodCore {
             else {
                 for (int l = 0; l < nrOfMatrices; l++) {
 
-                    // w keeps track of the site category we are about to calculate
+                    // w keeps track of the state the internal node evolves from
                     int w = l * matrixSize;
 
                     for (int k = 0; k < nrOfPatterns; k++) {
@@ -1940,7 +2075,7 @@ public class QuasiSpeciesBeerLikelihoodCore extends QuasiSpeciesLikelihoodCore {
 
                     for (int l = 0; l < nrOfMatrices; l++) {
 
-                        // w keeps track of the site category we are about to calculate
+                        // w keeps track of the state the internal node evolves from
                         int w = l * matrixSize;
 
                         for (int k = 0; k < nrOfPatterns; k++) {
@@ -2022,7 +2157,7 @@ public class QuasiSpeciesBeerLikelihoodCore extends QuasiSpeciesLikelihoodCore {
 
                     for (int l = 0; l < nrOfMatrices; l++) {
 
-                        // w keeps track of the site category we are about to calculate
+                        // w keeps track of the state the internal node evolves from
                         int w = l * matrixSize;
 
                         for (int k = 0; k < nrOfPatterns; k++) {
@@ -2077,7 +2212,7 @@ public class QuasiSpeciesBeerLikelihoodCore extends QuasiSpeciesLikelihoodCore {
 
                     for (int l = 0; l < nrOfMatrices; l++) {
 
-                        // w keeps track of the site category we are about to calculate
+                        // w keeps track of the state the internal node evolves from
                         int w = l * matrixSize;
 
                         for (int k = 0; k < nrOfPatterns; k++) {
@@ -2160,7 +2295,7 @@ public class QuasiSpeciesBeerLikelihoodCore extends QuasiSpeciesLikelihoodCore {
 
                     for (int l = 0; l < nrOfMatrices; l++) {
 
-                        // w keeps track of the site category we are about to calculate
+                        // w keeps track of the state the internal node evolves from
                         int w = l * matrixSize;
 
                         for (int k = 0; k < nrOfPatterns; k++) {
@@ -2226,6 +2361,7 @@ public class QuasiSpeciesBeerLikelihoodCore extends QuasiSpeciesLikelihoodCore {
      * @param child1QS   QS passing through child 1 - if none this is -1
      * @param child2QS   QS passing through child 2 - if none this is -1
      * @param parentQS   QS passing through the parent node - if none this is -1
+     * @param nodeCount  total count of the true nodes in the tree
      */
     public void calculateQSPartials(int nodeIndex1, int nodeIndex2, int nodeIndex3, int child1QS, int child2QS, int parentQS, int nodeCount) {
         if (states[nodeIndex1] != null) {

@@ -160,4 +160,25 @@ abstract public class QuasiSpeciesLikelihoodCore extends LikelihoodCore{
 
     abstract public void calculateQSPartials(int nodeIndex1, int nodeIndex2, int nodeIndex3, int child1QS, int child2QS, int child1parentQS, int nodeCount);
 
+    /**
+     * Calculates partial likelihoods at a node.
+     *
+     * @param rootNodeIndex     the root node
+     * @param rootQS            QS passing through the root node
+     * @param nodeCount         QS passing through child 2 - if none this is -1
+     * @param originPartials   probability vector at origin (of length nrOfStates * nrOfPatterns)
+     */
+    abstract public void calculateOriginRootPartials(int rootNodeIndex, int rootQS, int nodeCount, double[] originPartials);
+
+
+    /**
+     * Calculates partial likelihoods at origin when coming from the root.
+     *
+     * @param nodeIndex1       the tip (child 1) node
+     * @param child1QS         QS passing through the tip (child 1)
+     * @param nodeCount        total count of the true nodes in the tree
+     * @param originPartials   probability vector at origin (of length nrOfStates * nrOfPatterns)
+     */
+    abstract public void calculateOriginTipPartials(int nodeIndex1, int child1QS, int nodeCount, double[] originPartials);
+
 }

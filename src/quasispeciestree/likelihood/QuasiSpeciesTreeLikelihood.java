@@ -695,27 +695,81 @@ public class QuasiSpeciesTreeLikelihood extends QuasiSpeciesGenericTreeLikelihoo
                 }
 
                 if (node.isRoot()) {
-                    // TODO include the root-orig branch!!!
-                    // TODO originPartials ==???;
-                    // No parent this is the root of the beast.tree -
-                    // calculate the pattern likelihoods
-                    final double[] frequencies = //m_pFreqs.get().
-                            substitutionModel.getFrequencies();
+                    // This is the root of the beast.tree - there can be a root-origin branch
 
-                    final double[] proportions = m_siteModel.getCategoryProportions(node);
-                    likelihoodCore.integratePartials(node.getNr(), proportions, m_fRootPartials);
+//                    // if NO root-origin branch do the old likelihood calculation
+//                    if (Tree.originInput.get().getValue()==null){
+//                        // integrate over all possible site categories the sites can be in
+//                        final double[] proportions = m_siteModel.getCategoryProportions(node);
+//                        likelihoodCore.integratePartials(node.getNr(), proportions, m_fRootPartials);
+//
+//                        if (constantPattern != null) { // && !SiteModel.g_bUseOriginal) {
+//                            double proportionInvariant = m_siteModel.getProportionInvariant();
+//                            // some portion of sites is invariant, so adjust root partials for this
+//                            for (final int i : constantPattern) {
+//                                m_fRootPartials[i] += proportionInvariant;
+//                            }
+//                        }
+//
+//                        // calculate the pattern likelihoods
+//                        // integrate over all possible starting state
+//                        final double[] frequencies = //m_pFreqs.get().
+//                                substitutionModel.getFrequencies();
+//                        likelihoodCore.calculateLogLikelihoods(m_fRootPartials, frequencies, patternLogLikelihoods);
+//                    }
+//                    // else continue the likelihood calculation up to the origin
+//                    else {
+                        // include the root-orig branch!!!
 
-                    if (constantPattern != null) { // && !SiteModel.g_bUseOriginal) {
-                        double proportionInvariant = m_siteModel.getProportionInvariant();
-                        // some portion of sites is invariant, so adjust root partials for this
-                        for (final int i : constantPattern) {
-                            m_fRootPartials[i] += proportionInvariant;
+                        likelihoodCore.calculateOriginRootPartials(nodeIndex, child1parentQS, nodeCount, originPartials);
+
+                        // integrate over all possible site categories the sites can be in
+                        final double[] proportions = m_siteModel.getCategoryProportions(node);
+                        likelihoodCore.integratePartials(node.getNr(), proportions, originPartials);
+
+                        if (constantPattern != null) { // && !SiteModel.g_bUseOriginal) {
+                            double proportionInvariant = m_siteModel.getProportionInvariant();
+                            // some portion of sites is invariant, so adjust root partials for this
+                            for (final int i : constantPattern) {
+                                originPartials[i] += proportionInvariant;
+                            }
                         }
-                    }
 
-                    likelihoodCore.calculateLogLikelihoods(m_fRootPartials, frequencies, patternLogLikelihoods);
+                        // calculate the pattern likelihoods
+                        // integrate over all possible starting state
+                        final double[] frequencies = //m_pFreqs.get().
+                                substitutionModel.getFrequencies();
+                        likelihoodCore.calculateLogLikelihoods(originPartials, frequencies, patternLogLikelihoods);
+//                    }
                 }
 
+            }
+        }
+        // if the tree has only one child
+        else {
+            if (Tree.getLeafNodeCount()==1){
+
+                final int child1parentQS = ((QuasiSpeciesNode) node).getContinuingHaploName();
+
+                likelihoodCore.calculateOriginTipPartials(nodeIndex, child1parentQS, nodeCount, originPartials);
+
+                // integrate over all possible site categories the sites can be in
+                final double[] proportions = m_siteModel.getCategoryProportions(node);
+                likelihoodCore.integratePartials(node.getNr(), proportions, originPartials);
+
+                if (constantPattern != null) { // && !SiteModel.g_bUseOriginal) {
+                    double proportionInvariant = m_siteModel.getProportionInvariant();
+                    // some portion of sites is invariant, so adjust root partials for this
+                    for (final int i : constantPattern) {
+                        originPartials[i] += proportionInvariant;
+                    }
+                }
+
+                // calculate the pattern likelihoods
+                // integrate over all possible starting state
+                final double[] frequencies = //m_pFreqs.get().
+                        substitutionModel.getFrequencies();
+                likelihoodCore.calculateLogLikelihoods(originPartials, frequencies, patternLogLikelihoods);
             }
         }
         return update;
