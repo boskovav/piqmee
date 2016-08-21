@@ -580,47 +580,50 @@ public class QuasiSpeciesTreeScale extends QuasiSpeciesTreeOperator{
                 if (((QuasiSpeciesNode) root).getContinuingHaploName()==leaf.getNr()){
                     double x = Randomizer.nextDouble();
                     if (tempqstimes.length>1){
+                        // this should never happen
                         if (root.getHeight()>tempqstimes[1]){
                             tempqstimes[0] = x*root.getHeight() + (1-x)*origin.getValue();
-                        // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
-//                      logHastingsRatio -= Math.log(origin.getValue() - root.getHeight()/f);
-//                      logHastingsRatio += Math.log(origin.getValue() - root.getHeight());
+                            // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
+                            logHastingsRatio -= Math.log(origin.getValue() - root.getHeight()/f);
+                            logHastingsRatio += Math.log(origin.getValue() - root.getHeight());
                         }
                         else {
                             tempqstimes[0] = x*tempqstimes[1] + (1-x)*origin.getValue();
-                        // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
-//                      logHastingsRatio -= Math.log(origin.getValue() - tempqstimes[1]/f);
-//                      logHastingsRatio += Math.log(origin.getValue() - tempqstimes[1]);
+                            // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
+                            logHastingsRatio -= Math.log(origin.getValue() - tempqstimes[1]/f);
+                            logHastingsRatio += Math.log(origin.getValue() - tempqstimes[1]);
                         }
                     }
                     else {
                         tempqstimes[0] = x*root.getHeight() + (1-x)*origin.getValue();
                         // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
-//                      logHastingsRatio -= Math.log(origin.getValue() - root.getHeight()/f);
-//                      logHastingsRatio += Math.log(origin.getValue() - root.getHeight());
+                        logHastingsRatio -= Math.log(origin.getValue() - root.getHeight()/f);
+                        logHastingsRatio += Math.log(origin.getValue() - root.getHeight());
                     }
                 }
-
                 // make sure the QS haplo start does not interfere with the probability of acceptance of the move
-                if (((QuasiSpeciesNode) leaf).getHaploAboveName()==leaf.getNr()){
+                else if (((QuasiSpeciesNode) leaf).getHaploAboveName()==leaf.getNr()){
                     double y = Randomizer.nextDouble();
                     if (tempqstimes.length>1){
                         tempqstimes[0] = y*tempqstimes[1] + (1-y)*leaf.getParent().getHeight();
                         // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
-//                      logHastingsRatio -= Math.log(leaf.getParent().getHeight() - tempqstimes[1]/f);
-//                      logHastingsRatio += Math.log(leaf.getParent().getHeight() - tempqstimes[1]);
+                        logHastingsRatio -= Math.log(leaf.getParent().getHeight()/f - tempqstimes[1]/f);
+                        logHastingsRatio += Math.log(leaf.getParent().getHeight() - tempqstimes[1]);
                     }
                     else {
                         tempqstimes[0] = y*leaf.getHeight() + (1-y)*leaf.getParent().getHeight();
                         // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
-//                      logHastingsRatio -= Math.log(leaf.getParent().getHeight() - leaf.getHeight()/f);
-//                      logHastingsRatio += Math.log(leaf.getParent().getHeight() - leaf.getHeight());
+                        logHastingsRatio -= Math.log(leaf.getParent().getHeight()/f - leaf.getHeight());
+                        logHastingsRatio += Math.log(leaf.getParent().getHeight() - leaf.getHeight());
                     }
+                }
+                // if we do not scale the haplo start above the root/leaf manually, it is scaled through f
+                else {
+                    // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
+                    logHastingsRatio += logf;
                 }
 
                 qsTree.setAttachmentTimesList(leaf.getNr(), tempqstimes);
-                // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
-//                logHastingsRatio += logf;
                 // contribution from haplotype duplicate attach time scaling
                 if (tempqstimes.length > 1)
                     logHastingsRatio += (tempqstimes.length-1) * logf;

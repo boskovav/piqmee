@@ -118,14 +118,14 @@ public class QuasiSpeciesSequenceAttachmentRandom extends QuasiSpeciesTreeOperat
             if (tmaxIdx == 0){
                 tnewQSstart = (v * tnew) + ((1 - v) * (double) haploStartMaxNewArray.get(1));
                 // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
-//                logHastingsRatio -= Math.log((double) haploStartMaxNewArray.get(1) - tempqstimes[1]);
-//                logHastingsRatio += Math.log((double) haploStartMaxNewArray.get(1) - tnew);
+                logHastingsRatio -= Math.log((double) haploStartMaxNewArray.get(1) - tempqstimes[1]);
+                logHastingsRatio += Math.log((double) haploStartMaxNewArray.get(1) - tnew);
             }
             else{
                 tnewQSstart = (v * tempqstimes[2]) + ((1 - v) * (double) haploStartMaxNewArray.get(1));
                 // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
-//                logHastingsRatio -= Math.log((double) haploStartMaxNewArray.get(1) - tempqstimes[1]);
-//                logHastingsRatio += Math.log((double) haploStartMaxNewArray.get(1) - tempqstimes[2]);
+                logHastingsRatio -= Math.log((double) haploStartMaxNewArray.get(1) - tempqstimes[1]);
+                logHastingsRatio += Math.log((double) haploStartMaxNewArray.get(1) - tempqstimes[2]);
             }
             tempqstimes[0] = tnewQSstart;
         }
@@ -135,8 +135,8 @@ public class QuasiSpeciesSequenceAttachmentRandom extends QuasiSpeciesTreeOperat
             tnewQSstart = v*tnew + (1-v)*tmax;
             tempqstimes[0] = tnewQSstart;
             // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
-//            logHastingsRatio -= Math.log(tmax - tempqstimes[1]);
-//            logHastingsRatio += Math.log(tmax - tnew);
+            logHastingsRatio -= Math.log(tmax - tempqstimes[1]);
+            logHastingsRatio += Math.log(tmax - tnew);
         }
 
         tempqstimes[changeIdx]=tnew;
