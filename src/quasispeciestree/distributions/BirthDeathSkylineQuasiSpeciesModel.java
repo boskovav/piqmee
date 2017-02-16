@@ -688,7 +688,14 @@ public class BirthDeathSkylineQuasiSpeciesModel extends QuasiSpeciesTreeDistribu
     // start change6
     public Double preCalculation(QuasiSpeciesTree tree) {
     // end change6
-        if (!originIsRootEdge.get() && tree.getRoot().getHeight() >= origin.get().getValue()) {
+        double maxheight= tree.getRoot().getHeight();
+        for (Node node : tree.getExternalNodes()){
+            Double[] attachmentTimes = tree.getAttachmentTimesList((QuasiSpeciesNode) node);
+            if (attachmentTimes.length > 1 && attachmentTimes[1] > maxheight){
+                maxheight = attachmentTimes[1];
+            }
+        }
+        if (!originIsRootEdge.get() && maxheight >= origin.get().getValue()) {
             return Double.NEGATIVE_INFINITY;
         }
 
@@ -892,8 +899,8 @@ public class BirthDeathSkylineQuasiSpeciesModel extends QuasiSpeciesTreeDistribu
         // start change8
         for (Node node : tree.getExternalNodes()){
             Double[] QSTimesTemp = tree.getAttachmentTimesList((QuasiSpeciesNode) node);
-            if (QSTimesTemp[0] > time){
-                for (int j=1; j<=QSTimesTemp.length; j++){
+            if (QSTimesTemp[0] > time && node.getHeight() < time){
+                for (int j=1; j<QSTimesTemp.length; j++){
                     if (QSTimesTemp[j] > time) count += 1;
                 }
             }
@@ -934,8 +941,8 @@ public class BirthDeathSkylineQuasiSpeciesModel extends QuasiSpeciesTreeDistribu
         // start change10
         for (Node node : tree.getExternalNodes()){
             Double[] QSTimesTemp = tree.getAttachmentTimesList((QuasiSpeciesNode) node);
-            if (QSTimesTemp[0] > time){
-                for (int j=1; j<=QSTimesTemp.length; j++){
+            if (QSTimesTemp[0] > time && node.getHeight() < time){
+                for (int j=1; j<QSTimesTemp.length; j++){
                     if (QSTimesTemp[j] > time) count += 1;
                 }
             }
@@ -1093,6 +1100,7 @@ public class BirthDeathSkylineQuasiSpeciesModel extends QuasiSpeciesTreeDistribu
                 int gamma=startBranchCountArray[i];
                 temp = gamma;
                 logP += Math.log(temp);
+//                logP += Math.log(startBranchCountArray[i]) - Math.log(lineageCountAtTime(tree.getNode(nTips + i).getHeight(),tree));
 // testing
 //                System.out.println("1st pwd" +
 //                        " = " + Math.log(temp) + "; QS start branches = " + tree.getNode(nTips + i).getID());
@@ -1117,8 +1125,8 @@ public class BirthDeathSkylineQuasiSpeciesModel extends QuasiSpeciesTreeDistribu
 //            if (Double.isInfinite(logP))
 //                return logP;
             int nQSTemp = (int) tree.getHaplotypeCounts((QuasiSpeciesNode) node);
+            Double[] QSTimesTemp = tree.getAttachmentTimesList((QuasiSpeciesNode) node);
             for (int j = 1; j <= nQSTemp; j++ ){
-                Double[] QSTimesTemp = tree.getAttachmentTimesList((QuasiSpeciesNode) node);
                 double x = times[totalIntervals - 1] - QSTimesTemp[j];
                 index = index(x);
                 // term for the Quasi-Species tree likelihood calculation counting possible attachment branches
@@ -1127,6 +1135,7 @@ public class BirthDeathSkylineQuasiSpeciesModel extends QuasiSpeciesTreeDistribu
                 //temp = Math.log(gammaj * birth[index] * g(index, times[index], x));
                 //      times 2 for left OR right -- constant factor also not taken into account
                 // temp = Math.log(2 * gammaj * birth[index] * g(index, times[index], x));
+//                logP += Math.log(lineageCountAtTime(QSTimesTemp[j], tree)- j) - Math.log(lineageCountAtTime(QSTimesTemp[j], tree));
                 temp = Math.log(birth[index] * g(index, times[index], x));
 // testing
 //                System.out.println(tree.getAttachmentTimesList((QuasiSpeciesNode) node)[j]);

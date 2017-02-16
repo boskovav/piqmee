@@ -174,7 +174,7 @@ public class QuasiSpeciesTree extends Tree {
             // assigns to each unique haplotype an array of size haplotypeCount
             Double[] tempqstimes = new Double[(int) haplotypeCounts.getValue(node.getID()) + 1];
             // start with the star tree, and define start of haplotype at the multi-furcating node time
-            for (int i=0; i<=getHaplotypeCounts((QuasiSpeciesNode)node); i++) {
+            for (int i=1; i<=getHaplotypeCounts((QuasiSpeciesNode)node); i++) {
                 if (this.getLeafNodeCount()>1){
                     // TODO write a function that proposes RANDOM attachment times within given interval
                     // TODO also to be used by the operators -- > is this really needed?
@@ -214,6 +214,13 @@ public class QuasiSpeciesTree extends Tree {
                 }
 
             }
+            // todo testing haloptype start
+            if (getHaplotypeCounts((QuasiSpeciesNode)node) > 0)
+                tempqstimes[0]=tempqstimes[1];
+            else
+                tempqstimes[0]=node.getHeight();
+            // todo testing haloptype start
+
             ((QuasiSpeciesNode) node).setHaploAboveName(node.getNr());
             ((QuasiSpeciesNode) node).setContinuingHaploName(node.getNr());
 // testing function countPossibleStartBranches()

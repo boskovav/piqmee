@@ -102,6 +102,9 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
         // keep track of where does the haplotype arise
         QuasiSpeciesNode nodeBelowHaploMoved = null;
 
+        //Check if the haplo to be moved is different from -1
+        if (haplotype!=-1){
+
         // Disconnect the haplotype chosen to be moved when disconnecting the node
         // if the haplotype to be moved is already present at node, then it must have arisen above in the tree
         if (haplotype == node.getContinuingHaploName()){
@@ -139,6 +142,10 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
             nodeBelow.setHaploAboveName(-1);
             if (!nodeBelow.isLeaf())
                 nodeBelow.setContinuingHaploName(-1);
+            nodeBelowHaploMoved = null;
+        }
+        }
+        else{
             nodeBelowHaploMoved = null;
         }
 
@@ -336,6 +343,7 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
 
         // set the aboveNodeHaplo for the node above which the haplotype moved arises to haplotypeNumber
         QuasiSpeciesNode nodeBelowHaploMoved = null;
+        if(haplotype!=-1){
         if (haploAttachTime >= destTime){
             nodeBelowHaploMoved = parent;
             while (nodeBelowHaploMoved != qsTree.getRoot() && haploAttachTime > nodeBelowHaploMoved.getParent().getHeight()){
@@ -351,7 +359,7 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
             nodeBelowHaploMoved.setHaploAboveName(haplotype);
             nodeBelowHaploMoved = parent;
         }
-
+        }
         // return the node for which the haploAboveName changed
         return nodeBelowHaploMoved;
     }

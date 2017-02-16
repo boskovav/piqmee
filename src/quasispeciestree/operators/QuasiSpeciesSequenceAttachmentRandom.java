@@ -106,37 +106,48 @@ public class QuasiSpeciesSequenceAttachmentRandom extends QuasiSpeciesTreeOperat
             logHastingsRatio -= Math.log(tempqstimes[changeIdx-1] - tempqstimes[changeIdx+1]);
 
         double u = Randomizer.nextDouble();
-        double tnew = u*tmin + (1-u)*tmax; // = u*(tmin-tmax)+tmax =u*(tmin-(tmin+tmax-tmin))+tmin+tmax-tmin
+        double tnew = u*(tmax-tmin) + tmin; // = u*(tmin-tmax)+tmax =u*(tmin-(tmin+tmax-tmin))+tmin+tmax-tmin
         // invert u and 1-u and have the same as u(tmax-tmin)+tmin
         // (1-u)*tmin + u*tmax-u*(tmax-tmin)-tmin=0 ???
         // indeed tmin-u*tmin+u*tmax-u*tmax+u*tmin-tmin=0
 
+        //it could happen, that the moved QS coincided with a real internal node --- AVOID THESE SITUATIONS
+        QuasiSpeciesNode nodeonaway = node;
+        while (nodeonaway.getContinuingHaploName()==node.getNr() && nodeonaway.getNr()!=qsTree.getRoot().getNr()){
+            if (nodeonaway.getHeight()==tnew || nodeonaway.getHeight()==tempqstimes[changeIdx]){
+                return Double.NEGATIVE_INFINITY;
+            }
+            nodeonaway=(QuasiSpeciesNode)nodeonaway.getParent();
+        }
         // if we moved the first attachment time, then move also the QS start appropriately
         // generic move of the 1st attachment time
         if (changeIdx==1){
-            double v = Randomizer.nextDouble();
+//            double v = Randomizer.nextDouble();
             if (tmaxIdx == 0){
-                tnewQSstart = (v * tnew) + ((1 - v) * (double) haploStartMaxNewArray.get(1));
+                tnewQSstart = tnew;
+//                tnewQSstart = (v * tnew) + ((1 - v) * (double) haploStartMaxNewArray.get(1));
                 // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
-                logHastingsRatio -= Math.log((double) haploStartMaxNewArray.get(1) - tempqstimes[1]);
-                logHastingsRatio += Math.log((double) haploStartMaxNewArray.get(1) - tnew);
+//                logHastingsRatio -= Math.log((double) haploStartMaxNewArray.get(1) - tempqstimes[1]);
+//                logHastingsRatio += Math.log((double) haploStartMaxNewArray.get(1) - tnew);
             }
             else{
-                tnewQSstart = (v * tempqstimes[2]) + ((1 - v) * (double) haploStartMaxNewArray.get(1));
+//                tnewQSstart = (v * tempqstimes[2]) + ((1 - v) * (double) haploStartMaxNewArray.get(1));
+                tnewQSstart = tempqstimes[2];
                 // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
-                logHastingsRatio -= Math.log((double) haploStartMaxNewArray.get(1) - tempqstimes[1]);
-                logHastingsRatio += Math.log((double) haploStartMaxNewArray.get(1) - tempqstimes[2]);
+//                logHastingsRatio -= Math.log((double) haploStartMaxNewArray.get(1) - tempqstimes[1]);
+//                logHastingsRatio += Math.log((double) haploStartMaxNewArray.get(1) - tempqstimes[2]);
             }
             tempqstimes[0] = tnewQSstart;
         }
         // creation of new 1st attachment time
         else if (tmaxIdx==0){
-            double v = Randomizer.nextDouble();
-            tnewQSstart = v*tnew + (1-v)*tmax;
+//            double v = Randomizer.nextDouble();
+//            tnewQSstart = v*tnew + (1-v)*tmax;
+            tnewQSstart = tnew;
             tempqstimes[0] = tnewQSstart;
             // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
-            logHastingsRatio -= Math.log(tmax - tempqstimes[1]);
-            logHastingsRatio += Math.log(tmax - tnew);
+//            logHastingsRatio -= Math.log(tmax - tempqstimes[1]);
+//            logHastingsRatio += Math.log(tmax - tnew);
         }
 
         tempqstimes[changeIdx]=tnew;

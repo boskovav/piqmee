@@ -117,10 +117,10 @@ abstract public class QuasiSpeciesLikelihoodCore extends LikelihoodCore{
 //    abstract public void calculatePartials(int node1, int node2Index, int node3);
 //    //abstract public void calculatePartials(int node1, int node2Index, int node3, int[] matrixMap);
 //
-//    /**
-//     * integrate partials over categories (if any). *
-//     */
-//    abstract public void integratePartials(int nodeIndex, double[] proportions, double[] outPartials);
+    /**
+     * integrate partials over categories at the origin (if any). *
+     */
+    abstract public void integratePartials(double[] inPartials, double[] proportions, double[] outPartials);
 //
 //    /**
 //     * calculate log likelihoods at the root of the tree,

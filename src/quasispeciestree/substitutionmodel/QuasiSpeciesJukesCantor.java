@@ -97,8 +97,11 @@ public class QuasiSpeciesJukesCantor extends QuasiSpeciesSubstitutionModel.Base 
 // In my case, I would then have exp(-3*lambda*t/3*lambda) -- I proved this in document "QS_JC69_proof.pdf"
         double fPStay = Math.exp(-fDelta * fRate);
 
+//        double fPStay = (1.0 + 3.0 * Math.exp(-fDelta * fRate)) / 4.0;
+//        double fPMove = (1.0 - Math.exp(-fDelta * fRate)) / 4.0;
+
         // fill the nochangematrix with move probabilities
-        Arrays.fill(nochangematrix, -1);
+        Arrays.fill(nochangematrix, 0);
         for (int i = 0; i < 4; i++) {
             nochangematrix[i * 5] = fPStay;
         }

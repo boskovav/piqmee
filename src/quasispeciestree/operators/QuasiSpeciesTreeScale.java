@@ -7,13 +7,14 @@ import beast.core.parameter.RealParameter;
 import beast.evolution.tree.Node;
 import beast.util.Randomizer;
 import quasispeciestree.tree.QuasiSpeciesNode;
+import quasispeciestree.tree.QuasiSpeciesTree;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 /**
- *  @author Veronika Boskova created on 21/04/2016 finished on 24/04/2016
+ *  @author Veronika Boskova created on 21/04/2016 finished on (24/04/2016) 13/01/2017
  */
 @Description("Scale operator for quasispecies trees. Also allows additional "
         + "scalar parameters to be rescaled (either forward or inversely) "
@@ -107,29 +108,59 @@ public class QuasiSpeciesTreeScale extends QuasiSpeciesTreeOperator{
 
         final Node root = qsTree.getRoot();
 
-        // scaling only the root
-//        if (rootOnlyInput.get()) {
-//            final Node root = qsTree.getRoot();
-//            double oldHeight = root.getHeight();
-//            final double newHeight = oldHeight * f;
-//            logHastingsRatio -= logf;
+            // scaling only the root
+//            if (rootOnlyInput.get()) {
+////            final Node root = qsTree.getRoot();
+//                double oldHeight = root.getHeight();
+//                final double newHeight = oldHeight * f;
+//                logHastingsRatio -= logf;
+//
+//                if (newHeight < Math.max(root.getLeft().getHeight(), root.getRight().getHeight())) {
+//                    return Double.NEGATIVE_INFINITY;
+//                }
+//                root.setHeight(newHeight);
+//
+//                // There are in total 5 possibilities when moving root down and 3 possibilities when moving it up
+//                //  down:   1) no haplo passing the root before, nor after the move
+//                //          2) no haplo passing the root before, but one passing it after
+//                //          3) no haplo passing the root before, but 2 passing it after
+//                //          4) one haplo passing the root before, the same single haplo passing it after
+//                //          5) one haplo passing the root before, but 2 passing it after
+//                //          in cases 3 and 5 we need to move one or both of the haplotypes below the root
+//                //  up:     1) no haplo passing the root before, nor after the move
+//                //          2) one haplo passing the root before, none after
+//                //          3) one haplo passing the root before, the same single haplo passing it after
+//                //          in theory, none of the up moves need extra modifications BUT
+//                //
+//                //          NO FURTHER MOVES: case "down 2" is a reciprocal of "up 2"
+//                //          NEED FURTHRE MOVES: case "down 1" and "down 3" are a reciprocal of "up 1"
+//                //                              case "down 4" and "down 5" are a reciprocal of "up 3"
+//                //
+//
+//                // check whether there is a haplotype arising above the root at the time of moving
+//                //      if so,
+//                //           1) check whether there at least one "above" root, when root height changed
+//                //              if so,
+//                //                     scale the second haplo below the newHeight of the root
+//                //           2) else
+//                //                     change the aboveNodeHaplo tag of the root & corresponding child (left or right)
+//                //      else
+//                //           1) check whether there exactly one "above" root, when root height changed
+//                //              if so,
+//                //                     change the aboveNodeHaplo tag of the root & corresponding child (left or right)
+//                //              else A) if the root scaled up
+//                //                          scale both haplo below the newHeight of the root
+//                //                   B) if the root scaled down and 2 haplo are "above" root, when root height changed
+//                //                          scale both haplo below the newHeight of the root
+//                //
+//                int haplo = ((QuasiSpeciesNode) root).getHaploAboveName();
+//
 //
 //            if (newHeight < Math.max(root.getLeft().getHeight(), root.getRight().getHeight())) {
 //                return Double.NEGATIVE_INFINITY;
 //            }
 //            root.setHeight(newHeight);
 //
-//            // check whether there is a haplotype arising above the root at the time of moving
-//            //      if so,
-//            //           1) check whether there is a second one arising "above" root, when root height changed (to lower)
-//            //              if so, scale the second haplo below the newHeight of the root
-//            //           2) check whether there is still one arising "above" the root, when root height changed (to higher)
-//            //              if so, assign the haplo the left/right child --- depending on which subtree the haplo belongs to
-//            //      else check whether there is haplotype arising "above" root, when root height changed (to lower)
-//            //          if so, change the aboveNodeHaplo tag of the root & corresponding child (left or right)
-//            // P(data|tree) and P(tree|eta) change only because of moved root (not because of moved haplo -- no haplo moving here)
-//            // TODO but the operator move has to be reversible -- so at every move of the root height re-scale one left and one right haplo
-//            int haplo = ((QuasiSpeciesNode) root).getHaploAboveName();
 //
 //            QuasiSpeciesNode left = (QuasiSpeciesNode)root.getLeft();
 //            int haploleft = ((QuasiSpeciesNode)root.getLeft()).getHaploAboveName();
@@ -548,86 +579,178 @@ public class QuasiSpeciesTreeScale extends QuasiSpeciesTreeOperator{
 //            // Return Hastings ratio:
 //            return logHastingsRatio;
 //
+                // if both left and right have no haplo passing through, just return logHastingsRatio
+                // if left node has a haplo passing through check if it changed to be above the root
+//                if (left.getContinuingHaploName()!=-1 && right.getContinuingHaploName()==-1){
+//                    Double[] tempqstimesleft=qsTree.getAttachmentTimesList(haploleft);
+//                    if (tempqstimesleft[0]<oldHeight && tempqstimesleft[0]>newHeight){
+//                        // assign new haplo above the root and clear the haplo above left node; correct parent haplo array
+//                        ((QuasiSpeciesNode) root).setHaploAboveName(haploleft);
+//                        left.setHaploAboveName(-1);
+//                        // recalculate parentHaplo array
+//                        recalculateParentHaploAndCorrectContinuingHaploName(-1, (QuasiSpeciesNode) root);
+//                        // recalculate countPossibleStartBranches (at least for root this may have changed)
+//                        int[] startBranchCountsArray = qsTree.countPossibleStartBranches();
+//                        qsTree.setStartBranchCounts(startBranchCountsArray);
+//                    }
+//                }
+//                // if right node has a haplo passing through check if it changed to be above the root
+//                else if (left.getContinuingHaploName()==-1 && right.getContinuingHaploName()!=-1){
+//                    Double[] tempqstimesright=qsTree.getAttachmentTimesList(haploright);
+//                    if (tempqstimesright[0]<oldHeight && tempqstimesright[0]>newHeight){
+//                        // assign new haplo above the root and clear the haplo above right node; correct parent haplo array
+//                        ((QuasiSpeciesNode) root).setHaploAboveName(haploright);
+//                        right.setHaploAboveName(-1);
+//                        // recalculate parentHaplo array
+//                        recalculateParentHaploAndCorrectContinuingHaploName(-1, (QuasiSpeciesNode) root);
+//                        // recalculate countPossibleStartBranches (at least for root this may have changed)
+//                        int[] startBranchCountsArray = qsTree.countPossibleStartBranches();
+//                        qsTree.setStartBranchCounts(startBranchCountsArray);
+//                    }
+//                }
+//                // if both nodes have a haplo passing through --- follow what is written 143-158
+//                else if (left.getContinuingHaploName()!=-1 && right.getContinuingHaploName()!=-1){
+//                    // check whether there is a haplotype arising above the root at the time of moving
+//                    if (haplo!=-1){
+//                        Double[] tempqstimes=qsTree.getAttachmentTimesList(haplo);
+//                        double toldQSstart = tempqstimes[0];
+//                        double tnewQSstart = 0;
+//                        double fnew =0;
+//                        //1) check whether there at least one "above" root, when root height changed
+//                        if (toldQSstart>newHeight){
+//                            if (haplo==left.getContinuingHaploName()){
+//                                // Choose scale factor:
+//                                double v = Randomizer.nextDouble();
+//                                tnewQSstart = (v*right.getHeight()+(1.0-v)*newHeight);
+//                                fnew = tnewQSstart/   qsTree.getNode(srcHaplo).getHeight();
+//                                logHastingsRatio += Math.log(newHeight-right.getHeight());
+//                                logHastingsRatio -= Math.log(oldHeight-right.getHeight());
+//                            }
+//                            else{
+//
+//                            }
+//                        }
+//                        //2) else
+//                        //        change the aboveNodeHaplo tag of the root & corresponding child (left or right)
+//                        else {
+//                            // assign new haplo above the root and clear the haplo above right node; correct parent haplo array
+//                            ((QuasiSpeciesNode) root).setHaploAboveName(-1);
+//                            if(haplo==left.getContinuingHaploName())
+//                                left.setHaploAboveName(-1);
+//                            else
+//                                right.setHaploAboveName(-1);
+//                            // recalculate parentHaplo array
+//                            recalculateParentHaploAndCorrectContinuingHaploName(-1, (QuasiSpeciesNode) root);
+//                            // recalculate countPossibleStartBranches (at least for root this may have changed)
+//                            int[] startBranchCountsArray = qsTree.countPossibleStartBranches();
+//                            qsTree.setStartBranchCounts(startBranchCountsArray);
+//                        }
+//
+//                    }
+//                    else{
+//
+//                    }
+//                }
+//
+//
+//                // check whether there is a haplotype arising above the root at the time of moving
+//                //      if so,
+//                //           1) check whether there at least one "above" root, when root height changed
+//                //              if so,
+//                //                     scale the second haplo below the newHeight of the root
+//                //           2) else
+//                //                     change the aboveNodeHaplo tag of the root & corresponding child (left or right)
+//                //      else
+//                //           1) check whether there exactly one "above" root, when root height changed
+//                //              if so,
+//                //                     change the aboveNodeHaplo tag of the root & corresponding child (left or right)
+//                //              else A) if the root scaled up
+//                //                          scale both haplo below the newHeight of the root
+//                //                   B) if the root scaled down and 2 haplo are "above" root, when root height changed
+//                //                          scale both haplo below the newHeight of the root
+//                //
+//
+//                // Return Hastings ratio:
+//                return logHastingsRatio;
+//
+//
+//
+//
+//            // scaling the entire tree
+//            } else {
+                logHastingsRatio -= 2 * logf;
 
-
-
-
-
-
-
-
-
-        // scaling the entire tree
-//        } else {
-            logHastingsRatio -= 2 * logf;
-
-            // Scale internal node heights
-            for (Node node : qsTree.getInternalNodes()) {
-                node.setHeight(node.getHeight()*f);
-                logHastingsRatio += logf;
-            }
-
-            // Scale haplotype attachment times
-            for (Node leaf : qsTree.getExternalNodes()) {
-                Double[] tempqstimes=qsTree.getAttachmentTimesList((QuasiSpeciesNode)leaf).clone();
-                for (int i=0; i<tempqstimes.length; i++) {
-                    tempqstimes[i] = tempqstimes[i] * f;
-                }
-                // reject the move as soon as the first QS attachment time exceeds the origin height
-                if (tempqstimes.length>1 && tempqstimes[1]>origin.getValue())
-                    return Double.NEGATIVE_INFINITY;
-                // select a new QS start time for QS above the root --- always
-                if (((QuasiSpeciesNode) root).getContinuingHaploName()==leaf.getNr()){
-                    double x = Randomizer.nextDouble();
-                    if (tempqstimes.length>1){
-                        // this should never happen
-                        if (root.getHeight()>tempqstimes[1]){
-                            tempqstimes[0] = x*root.getHeight() + (1-x)*origin.getValue();
-                            // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
-                            logHastingsRatio -= Math.log(origin.getValue() - root.getHeight()/f);
-                            logHastingsRatio += Math.log(origin.getValue() - root.getHeight());
-                        }
-                        else {
-                            tempqstimes[0] = x*tempqstimes[1] + (1-x)*origin.getValue();
-                            // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
-                            logHastingsRatio -= Math.log(origin.getValue() - tempqstimes[1]/f);
-                            logHastingsRatio += Math.log(origin.getValue() - tempqstimes[1]);
-                        }
-                    }
-                    else {
-                        tempqstimes[0] = x*root.getHeight() + (1-x)*origin.getValue();
-                        // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
-                        logHastingsRatio -= Math.log(origin.getValue() - root.getHeight()/f);
-                        logHastingsRatio += Math.log(origin.getValue() - root.getHeight());
-                    }
-                }
-                // make sure the QS haplo start does not interfere with the probability of acceptance of the move
-                else if (((QuasiSpeciesNode) leaf).getHaploAboveName()==leaf.getNr()){
-                    double y = Randomizer.nextDouble();
-                    if (tempqstimes.length>1){
-                        tempqstimes[0] = y*tempqstimes[1] + (1-y)*leaf.getParent().getHeight();
-                        // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
-                        logHastingsRatio -= Math.log(leaf.getParent().getHeight()/f - tempqstimes[1]/f);
-                        logHastingsRatio += Math.log(leaf.getParent().getHeight() - tempqstimes[1]);
-                    }
-                    else {
-                        tempqstimes[0] = y*leaf.getHeight() + (1-y)*leaf.getParent().getHeight();
-                        // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
-                        logHastingsRatio -= Math.log(leaf.getParent().getHeight()/f - leaf.getHeight());
-                        logHastingsRatio += Math.log(leaf.getParent().getHeight() - leaf.getHeight());
-                    }
-                }
-                // if we do not scale the haplo start above the root/leaf manually, it is scaled through f
-                else {
-                    // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
+                // Scale internal node heights
+                for (Node node : qsTree.getInternalNodes()) {
+                    node.setHeight(node.getHeight()*f);
                     logHastingsRatio += logf;
                 }
 
-                qsTree.setAttachmentTimesList(leaf.getNr(), tempqstimes);
-                // contribution from haplotype duplicate attach time scaling
-                if (tempqstimes.length > 1)
-                    logHastingsRatio += (tempqstimes.length-1) * logf;
-            }
+                // Scale haplotype attachment times
+                for (Node leaf : qsTree.getExternalNodes()) {
+                    Double[] tempqstimes=qsTree.getAttachmentTimesList((QuasiSpeciesNode)leaf).clone();
+                    for (int i=0; i<tempqstimes.length; i++) {
+                        tempqstimes[i] = tempqstimes[i] * f;
+                    }
+                    if (tempqstimes.length>1)
+                        tempqstimes[0]=tempqstimes[1];
+                    else
+                        tempqstimes[0]=leaf.getHeight();
+                    // reject the move as soon as the first QS attachment time exceeds the origin height
+                    if (tempqstimes.length>1 && tempqstimes[1]>origin.getValue())
+                        return Double.NEGATIVE_INFINITY;
+                    // select a new QS start time for QS above the root --- always
+//                if (((QuasiSpeciesNode) root).getContinuingHaploName()==leaf.getNr()){
+//                    double x = Randomizer.nextDouble();
+//                    if (tempqstimes.length>1){
+//                        // this should never happen
+//                        if (root.getHeight()>tempqstimes[1]){
+//                            tempqstimes[0] = x*root.getHeight() + (1-x)*origin.getValue();
+//                            // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
+//                            logHastingsRatio -= Math.log(origin.getValue() - root.getHeight()/f);
+//                            logHastingsRatio += Math.log(origin.getValue() - root.getHeight());
+//                        }
+//                        else {
+//                            tempqstimes[0] = x*tempqstimes[1] + (1-x)*origin.getValue();
+//                            // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
+//                            logHastingsRatio -= Math.log(origin.getValue() - tempqstimes[1]/f);
+//                            logHastingsRatio += Math.log(origin.getValue() - tempqstimes[1]);
+//                        }
+//                    }
+//                    else {
+//                        tempqstimes[0] = x*root.getHeight() + (1-x)*origin.getValue();
+//                        // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
+//                        logHastingsRatio -= Math.log(origin.getValue() - root.getHeight()/f);
+//                        logHastingsRatio += Math.log(origin.getValue() - root.getHeight());
+//                    }
+//                }
+//                // make sure the QS haplo start does not interfere with the probability of acceptance of the move
+//                else if (((QuasiSpeciesNode) leaf).getHaploAboveName()==leaf.getNr()){
+//                    double y = Randomizer.nextDouble();
+//                    if (tempqstimes.length>1){
+//                        tempqstimes[0] = y*tempqstimes[1] + (1-y)*leaf.getParent().getHeight();
+//                        // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
+//                        logHastingsRatio -= Math.log(leaf.getParent().getHeight()/f - tempqstimes[1]/f);
+//                        logHastingsRatio += Math.log(leaf.getParent().getHeight() - tempqstimes[1]);
+//                    }
+//                    else {
+//                        tempqstimes[0] = y*leaf.getHeight() + (1-y)*leaf.getParent().getHeight();
+//                        // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
+//                        logHastingsRatio -= Math.log(leaf.getParent().getHeight()/f - leaf.getHeight());
+//                        logHastingsRatio += Math.log(leaf.getParent().getHeight() - leaf.getHeight());
+//                    }
+//                }
+//                // if we do not scale the haplo start above the root/leaf manually, it is scaled through f
+//                else {
+//                    // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
+//                    logHastingsRatio += logf;
+//                }
+
+                    qsTree.setAttachmentTimesList(leaf.getNr(), tempqstimes);
+                    // contribution from haplotype duplicate attach time scaling
+                    if (tempqstimes.length > 1)
+                        logHastingsRatio += (tempqstimes.length-1) * logf;
+                }
 //        }
 
         // Scale parameters:
