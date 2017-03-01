@@ -36,7 +36,7 @@ public class AbsoluteTreeHeight extends CalculationNode implements Function, Log
     public double getArrayValue() {
         double absoluteHeight = qsTree.getRoot().getHeight();
         for (Node node : qsTree.getExternalNodes()){
-            Double[] attachmentTimes = qsTree.getAttachmentTimesList((QuasiSpeciesNode) node);
+            double[] attachmentTimes = qsTree.getAttachmentTimesList((QuasiSpeciesNode) node);
             if (attachmentTimes.length > 1 && attachmentTimes[1] > absoluteHeight){
                 absoluteHeight = attachmentTimes[1];
             }
@@ -48,7 +48,7 @@ public class AbsoluteTreeHeight extends CalculationNode implements Function, Log
     public double getArrayValue(int iDim) {
         double absoluteHeight = qsTree.getRoot().getHeight();
         for (Node node : qsTree.getExternalNodes()){
-            Double[] attachmentTimes = qsTree.getAttachmentTimesList((QuasiSpeciesNode) node);
+            double[] attachmentTimes = qsTree.getAttachmentTimesList((QuasiSpeciesNode) node);
             if (attachmentTimes.length > 1 && attachmentTimes[1] > absoluteHeight){
                 absoluteHeight = attachmentTimes[1];
             }
@@ -69,7 +69,7 @@ public class AbsoluteTreeHeight extends CalculationNode implements Function, Log
     public void log(int nSample, PrintStream out) {
         double absoluteHeight = qsTree.getRoot().getHeight();
         for (Node node : qsTree.getExternalNodes()){
-            Double[] attachmentTimes = qsTree.getAttachmentTimesList((QuasiSpeciesNode) node);
+            double[] attachmentTimes = qsTree.getAttachmentTimesList((QuasiSpeciesNode) node);
             if (attachmentTimes.length > 1 && attachmentTimes[1] > absoluteHeight){
                 absoluteHeight = attachmentTimes[1];
             }

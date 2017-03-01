@@ -34,8 +34,6 @@ import beast.evolution.alignment.Alignment;
 import beast.evolution.branchratemodel.BranchRateModel;
 import beast.evolution.branchratemodel.StrictClockModel;
 import beast.evolution.likelihood.*;
-import beast.evolution.sitemodel.SiteModel;
-import beast.evolution.substitutionmodel.SubstitutionModel;
 import beast.evolution.tree.Node;
 //import beast.evolution.tree.Tree;
 import beast.evolution.tree.TreeInterface;
@@ -589,7 +587,7 @@ public class QuasiSpeciesTreeLikelihood extends QuasiSpeciesGenericTreeLikelihoo
         // branch lengths from the origin/attachment time to tip
         final double totalBranchTime;
         if (node.isLeaf())
-            totalBranchTime = Tree.getTotalBranchLenghts(node);
+            totalBranchTime = Tree.getTotalBranchLengths(node);
         else if (node.isRoot())
             totalBranchTime = originHeight - node.getHeight();
 //        else if (node.getContinuingHaploName() != -1)

@@ -104,7 +104,7 @@ public class QuasiSpeciesWilsonBaldingEasy extends QuasiSpeciesTreeOperator{
 //        double tnew = u*haploStartMin + (1-u)*haploStartMaxNew;
             double tnew = 0;
             // reposition attachment times: attach ((time - haploStartMin) * (tHaploNew/told)) + haploStartMin
-            Double[] tempqstimes=qsTree.getAttachmentTimesList(srcHaplo).clone();
+            double[] tempqstimes=qsTree.getAttachmentTimesList(srcHaplo).clone();
             // get the haplotype's starting time
             toldQSstart = tempqstimes[0];
             double told=0;

@@ -20,7 +20,7 @@ import java.util.logging.Logger;
 
 public class QuasiSpeciesTree extends Tree {
 
-// TODO: the haplotype count can be input as Integer counts or as percentage (in case of percentage check it sums to 100)
+// TODO the haplotype count can be input as Integer counts only -- implement uncertainty? A:100-120 reads, B: 3200-3700reads, etc
 //    public Input<TraitSet> QuasiSpeciesAttachmentTimesInput =
 //            new Input<TraitSet>("HaploAttachmentTimes","Attachment times for each haplotype (excluding the one representative of each haplotype in the tree input)");
     // not necessary, when not input -- only at init, then we set all values to the time of the parent (median of the tree length)
@@ -31,8 +31,8 @@ public class QuasiSpeciesTree extends Tree {
             "origin", "The time from origin to last sample (must be larger than tree height)",
             Input.Validate.REQUIRED);
 
-    protected ArrayList<Double[]> attachmentTimesList;
-    protected ArrayList<Double[]> storedAttachmentTimesList;
+    protected ArrayList<double[]> attachmentTimesList;
+    protected ArrayList<double[]> storedAttachmentTimesList;
     protected TraitSet haplotypeCounts;
     protected String qsLabel;
     private int[] startBranchCounts;
@@ -159,8 +159,8 @@ public class QuasiSpeciesTree extends Tree {
      */
     public void initAttachmentTimes(){
         // reserves space for array list of size LeafNodeCount
-        attachmentTimesList = new ArrayList<Double[]>(this.getLeafNodeCount());
-        storedAttachmentTimesList = new ArrayList<Double[]>(this.getLeafNodeCount());
+        attachmentTimesList = new ArrayList<double[]>(this.getLeafNodeCount());
+        storedAttachmentTimesList = new ArrayList<double[]>(this.getLeafNodeCount());
         // set all haploAboveNames to -1 and all continuingHaploNames to -1
         for(Node node : this.getNodesAsArray()){
             ((QuasiSpeciesNode) node).setHaploAboveName(-1);
@@ -172,7 +172,7 @@ public class QuasiSpeciesTree extends Tree {
             // check if getNr() always returns the same >>> Node number is guaranteed not to change during an MCMC run.
             //      written in the Node class)
             // assigns to each unique haplotype an array of size haplotypeCount
-            Double[] tempqstimes = new Double[(int) haplotypeCounts.getValue(node.getID()) + 1];
+            double[] tempqstimes = new double[(int) haplotypeCounts.getValue(node.getID()) + 1];
             // start with the star tree, and define start of haplotype at the multi-furcating node time
             for (int i=1; i<=getHaplotypeCounts((QuasiSpeciesNode)node); i++) {
                 if (this.getLeafNodeCount()>1){
@@ -241,37 +241,37 @@ public class QuasiSpeciesTree extends Tree {
         }
     }
 
-    public void setAttachmentTimesList(QuasiSpeciesNode node, Double[] tempqstimes){
+    public void setAttachmentTimesList(QuasiSpeciesNode node, double[] tempqstimes){
         node.setAttachmentTimesList();
         attachmentTimesList.set(node.getNr(),tempqstimes);
     }
 
-    public Double[] getAttachmentTimesList(QuasiSpeciesNode node){
+    public double[] getAttachmentTimesList(QuasiSpeciesNode node){
         return attachmentTimesList.get(node.getNr());
     }
 
-    public void setAttachmentTimesList(int position, Double[] tempqstimes){
+    public void setAttachmentTimesList(int position, double[] tempqstimes){
         ((QuasiSpeciesNode) this.getNode(position)).setAttachmentTimesList();
         attachmentTimesList.set(position,tempqstimes);
     }
 
-    public Double[] getAttachmentTimesList(int position){
+    public double[] getAttachmentTimesList(int position){
         return attachmentTimesList.get(position);
     }
 
     public Double getTotalAttachmentTimes(QuasiSpeciesNode node){
         Double totalTime=0.0;
-        Double[] timesList=attachmentTimesList.get(node.getNr());
+        double[] timesList=attachmentTimesList.get(node.getNr());
         for (int i=0; i<timesList.length; i++){
             totalTime += timesList[i] ;
         }
         return totalTime;
     }
 
-    public Double getTotalBranchLenghts(QuasiSpeciesNode node){
-        Double totalTime=0.0;
-        Double[] timesList=attachmentTimesList.get(node.getNr());
-        Double nodeHeight = node.getHeight();
+    public Double getTotalBranchLengths(QuasiSpeciesNode node){
+        double totalTime=0.0;
+        double[] timesList=attachmentTimesList.get(node.getNr());
+        double nodeHeight = node.getHeight();
         for (int i=0; i<timesList.length; i++){
             totalTime += timesList[i]-nodeHeight ;
         }
@@ -367,7 +367,7 @@ public class QuasiSpeciesTree extends Tree {
         int abcount = 1;
         // if node's haplotype is older than haploseqage, count how many sequences of node's haplotype are there
         // if node's haplotype is not older than haploseqage --- throw error
-        Double[] AttachmentTimesTemp=getAttachmentTimesList(node);
+        double[] AttachmentTimesTemp=getAttachmentTimesList(node);
         double nodehaplorootage = AttachmentTimesTemp[0];
 
         // we allow also testing of other times than the ones belonging to the node's haplotype
@@ -854,7 +854,7 @@ public class QuasiSpeciesTree extends Tree {
     @Override
     public void restore() {
         super.restore();
-        final ArrayList<Double[]> tmp = storedAttachmentTimesList;
+        final ArrayList<double[]> tmp = storedAttachmentTimesList;
         storedAttachmentTimesList = attachmentTimesList;
         attachmentTimesList = tmp;
         final int[] tmpparent = storedParentHaplo;

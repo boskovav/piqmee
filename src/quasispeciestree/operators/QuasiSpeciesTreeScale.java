@@ -688,7 +688,7 @@ public class QuasiSpeciesTreeScale extends QuasiSpeciesTreeOperator{
 
                 // Scale haplotype attachment times
                 for (Node leaf : qsTree.getExternalNodes()) {
-                    Double[] tempqstimes=qsTree.getAttachmentTimesList((QuasiSpeciesNode)leaf).clone();
+                    double[] tempqstimes=qsTree.getAttachmentTimesList((QuasiSpeciesNode)leaf).clone();
                     for (int i=0; i<tempqstimes.length; i++) {
                         tempqstimes[i] = tempqstimes[i] * f;
                     }
@@ -790,7 +790,7 @@ public class QuasiSpeciesTreeScale extends QuasiSpeciesTreeOperator{
         // Reject invalid tree scalings:
         if (f<1.0) {
             for (Node leaf : qsTree.getExternalNodes()) {
-                Double[] tempqstimes=qsTree.getAttachmentTimesList(leaf.getNr());
+                double[] tempqstimes=qsTree.getAttachmentTimesList(leaf.getNr());
                 if (leaf.getParent().getHeight()<leaf.getHeight() || tempqstimes[tempqstimes.length-1]<leaf.getHeight())
                     return Double.NEGATIVE_INFINITY;
                 if (tempqstimes.length>1 && tempqstimes[0]<leaf.getHeight()){

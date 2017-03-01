@@ -57,7 +57,7 @@ public class QuasiSpeciesHaplotypeSwap extends QuasiSpeciesTreeOperator{
 
         // get the parentHaploArray and the attachment times array to be changed
         int[] parentHaploArray = qsTree.getParentHaplo();
-        Double[] tempqstimes=qsTree.getAttachmentTimesList(node).clone();
+        double[] tempqstimes=qsTree.getAttachmentTimesList(node).clone();
 
         // get a node above which the current haplotype arises
         QuasiSpeciesNode oldNodeBelowHaploMoved = findNodeBelowThisHaplo(node,haplo);
@@ -336,7 +336,7 @@ public class QuasiSpeciesHaplotypeSwap extends QuasiSpeciesTreeOperator{
 //                logHastingsRatio += Math.log(tmax/told - tmaxparent/told);
 //                logHastingsRatio -= Math.log(tmaxparent/tnew - tmin/tnew);
 
-                Double[] tempqstimesparent=qsTree.getAttachmentTimesList(haplotypesParentHaplo).clone();
+                double[] tempqstimesparent=qsTree.getAttachmentTimesList(haplotypesParentHaplo).clone();
 
 
                 // choose new time to attach for the moved parent node and scale all attachment times of this haplo

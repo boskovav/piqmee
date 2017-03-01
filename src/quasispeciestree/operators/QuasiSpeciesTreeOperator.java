@@ -823,7 +823,7 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
                         moveHaplo=currentNodePassed.getHaploAboveName();
                     else
                         moveHaplo=currentNodePassed.getContinuingHaploName();
-                    Double[] tempqstimespassed = qsTree.getAttachmentTimesList(moveHaplo).clone();
+                    double[] tempqstimespassed = qsTree.getAttachmentTimesList(moveHaplo).clone();
                     double x = Randomizer.nextDouble();
                     if (tempqstimespassed.length>1){
                         tempqstimespassed[0] = x*tempqstimespassed[1] + (1-x)*tmaxpassednew;
@@ -885,7 +885,7 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
 
                     // choose one haplo and move its start around
                     int moveHaplo=forthPossibleHaplo.get(Randomizer.nextInt(forthPossibleHaplo.size()));
-                    Double[] tempqstimespassed = qsTree.getAttachmentTimesList(moveHaplo).clone();
+                    double[] tempqstimespassed = qsTree.getAttachmentTimesList(moveHaplo).clone();
                     double x = Randomizer.nextDouble();
                     if (tempqstimespassed.length>1){
                         tempqstimespassed[0] = x*tempqstimespassed[1] + (1-x)*tmaxpassednew;
@@ -984,7 +984,7 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
 
                 // choose one haplo and move its start around
                 int moveHaplo=forthPossibleHaplo.get(Randomizer.nextInt(forthPossibleHaplo.size()));
-                Double[] tempqstimespassed = qsTree.getAttachmentTimesList(moveHaplo).clone();
+                double[] tempqstimespassed = qsTree.getAttachmentTimesList(moveHaplo).clone();
                 double x = Randomizer.nextDouble();
                 if (tempqstimespassed.length>1){
                     tempqstimespassed[0] = x*tempqstimespassed[1] + (1-x)*tmaxpassed;

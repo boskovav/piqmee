@@ -54,7 +54,7 @@ public class QuasiSpeciesHaplotypeScale extends QuasiSpeciesTreeOperator{
             throw new IllegalStateException("Event selection loop fell through!");
 
         // get the attachment times array to be changed
-        Double[] tempqstimes=qsTree.getAttachmentTimesList(node).clone();
+        double[] tempqstimes=qsTree.getAttachmentTimesList(node).clone();
 
         // get a node above which the current haplotype arises
         QuasiSpeciesNode oldNodeBelowHaploMoved = findNodeBelowThisHaplo(node,haplo);

@@ -51,7 +51,7 @@ public class QuasiSpeciesHaplotypeStartRandom extends QuasiSpeciesTreeOperator{
 
         // reposition the event (i.e. haplotype sequence changeIdx attachment time)
         double tmin, tmax;
-        Double[] tempqstimes=qsTree.getAttachmentTimesList(node).clone();
+        double[] tempqstimes=qsTree.getAttachmentTimesList(node).clone();
 
         // choose new max index between 0 - #sequences of this haplotype
         if (qsTree.getHaplotypeCounts(node)>0)

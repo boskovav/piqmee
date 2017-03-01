@@ -61,7 +61,7 @@ public class QuasiSpeciesSequenceAttachmentUniform extends QuasiSpeciesTreeOpera
 
         // reposition the event (i.e. haplotype sequence changeIdx attachment time)
         double tmin, tmax;
-        Double[] tempqstimes=qsTree.getAttachmentTimesList(node).clone();
+        double[] tempqstimes=qsTree.getAttachmentTimesList(node).clone();
 
         // as we choose index changeIdx between 1 - #sequences of this haplotype then changeIdx-1=0 at minimum
         // TODO change to only tmax = tempqstimes[changeIdx-1]; when testing is done

@@ -80,7 +80,7 @@ public class QuasiSpeciesUniform extends QuasiSpeciesTreeOperator {
         // find if there is QS passing through the node
         int haplo = node.getContinuingHaploName();
         if (haplo != -1 && qsTree.getAttachmentTimesList(haplo).length > 1){
-            Double[] tempqstimes = qsTree.getAttachmentTimesList(haplo).clone();
+            double[] tempqstimes = qsTree.getAttachmentTimesList(haplo).clone();
 
             for (int i=1; i<=tempqstimes.length-1; i++){
                 if (tempqstimes[i]>oldValue)

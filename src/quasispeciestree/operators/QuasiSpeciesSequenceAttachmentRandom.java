@@ -67,7 +67,7 @@ public class QuasiSpeciesSequenceAttachmentRandom extends QuasiSpeciesTreeOperat
         // reposition the event (i.e. haplotype sequence changeIdx attachment time)
         double tmin, tmax;
         int tminIdx, tmaxIdx;
-        Double[] tempqstimes=qsTree.getAttachmentTimesList(node).clone();
+        double[] tempqstimes=qsTree.getAttachmentTimesList(node).clone();
         double toldQSstart = tempqstimes[0];
         double tnewQSstart = -1;
 
