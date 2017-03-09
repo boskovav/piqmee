@@ -717,6 +717,8 @@ public class QuasiSpeciesTree extends Tree {
         assignFromWithoutID(new QuasiSpeciesTree(newRoot));
         initArrays();
 
+        setHaploCounts(haplotypeCountsInput.get());
+
         initAttachmentTimes();
 
         fillParentHaplo();
@@ -726,6 +728,17 @@ public class QuasiSpeciesTree extends Tree {
         startBranchCounts = countPossibleStartBranches();
         storedStartBranchCounts = new int[startBranchCounts.length];
         System.arraycopy(startBranchCounts,0,storedStartBranchCounts,0,startBranchCounts.length);
+
+        tipTimesList = new ArrayList<double[]>(this.getLeafNodeCount());
+        storedTipTimesList = new ArrayList<double[]>(this.getLeafNodeCount());
+        for (Node node : this.getExternalNodes()){
+            tipTimesList.add(new double[attachmentTimesList.get(node.getNr()).length]);
+            for (int j = 0; j < attachmentTimesList.get(node.getNr()).length; j++){
+                tipTimesList.get(node.getNr())[j]=node.getHeight();
+            }
+            storedTipTimesList.add(node.getNr(),tipTimesList.get(node.getNr()).clone());
+        }
+
     }
 
     /**
@@ -737,7 +750,7 @@ public class QuasiSpeciesTree extends Tree {
      * @throws java.lang.Exception
      */
     //TODO fixme
-    public void initFromRegularTree(TreeParser regularTree, Alignment data){
+    public void initFromRegularTree(Tree regularTree, Alignment data){
 
         // Get the distances for the sequences:
         Distance distance = new DifferenceCount();

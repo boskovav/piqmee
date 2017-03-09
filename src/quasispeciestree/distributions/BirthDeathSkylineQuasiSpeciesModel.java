@@ -369,8 +369,8 @@ public class BirthDeathSkylineQuasiSpeciesModel extends BirthDeathSkylineModel{
 //            logP +=  Math.log(2)*internalNodeCount;
 //        }
 
-        if (logP > 0)
-            return Double.NEGATIVE_INFINITY;
+//        if (logP > 0)
+//            return Double.NEGATIVE_INFINITY;
         return logP;
     }
 
