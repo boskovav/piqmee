@@ -125,12 +125,18 @@ public class QuasiSpeciesTreeLikelihood extends QuasiSpeciesGenericTreeLikelihoo
     int nodeCount;
     int leafNodeCount;
 
+    Alignment alignment;
+
     @Override
     public void initAndValidate(){
-        // sanity check: alignment should have same #taxa as tree
+        // sanity check: alignment should have same #taxa as tree -- not the case for QS trees
         if (dataInput.get().getTaxonCount() != treeInput.get().getLeafNodeCount()) {
-            throw new IllegalArgumentException("The number of nodes in the tree does not match the number of sequences");
+//            throw new IllegalArgumentException("The number of nodes in the tree does not match the number of sequences");
+            // subset the alignment to match the taxa in the tree
+            alignment = subset(dataInput,treeInput.get().getExternalNodes());
         }
+        else
+            alignment = dataInput.get();
 //        beagle = null;
 //        beagle = new BeagleTreeLikelihood();
 //        try {
@@ -150,11 +156,12 @@ public class QuasiSpeciesTreeLikelihood extends QuasiSpeciesGenericTreeLikelihoo
 
         nodeCount = treeInput.get().getNodeCount();
         leafNodeCount = treeInput.get().getLeafNodeCount();
+
         if (!(siteModelInput.get() instanceof QuasiSpeciesSiteModel.Base)) {
             throw new IllegalArgumentException("siteModel input should be of type SiteModel.Base");
         }
         m_siteModel = (QuasiSpeciesSiteModel.Base) siteModelInput.get();
-        m_siteModel.setDataType(dataInput.get().getDataType());
+        m_siteModel.setDataType(alignment.getDataType());
         substitutionModel = m_siteModel.substModelInput.get();
 
         if (branchRateModelInput.get() != null) {
@@ -167,8 +174,8 @@ public class QuasiSpeciesTreeLikelihood extends QuasiSpeciesGenericTreeLikelihoo
         m_branchLengths = new double[nodeCount+leafNodeCount];
         storedBranchLengths = new double[nodeCount+leafNodeCount];
 
-        int stateCount = dataInput.get().getMaxStateCount();
-        int patterns = dataInput.get().getPatternCount();
+        int stateCount = alignment.getMaxStateCount();
+        int patterns = alignment.getPatternCount();
 //        if (stateCount == 4) {
 //            likelihoodCore = new BeerLikelihoodCore4();
 //        } else {
@@ -176,8 +183,6 @@ public class QuasiSpeciesTreeLikelihood extends QuasiSpeciesGenericTreeLikelihoo
 //        }
 
         String className = getClass().getSimpleName();
-
-        Alignment alignment = dataInput.get();
 
         Log.info.println(className + "(" + getID() + ") uses " + likelihoodCore.getClass().getSimpleName());
         Log.info.println("  " + alignment.toString(true));
@@ -198,7 +203,7 @@ public class QuasiSpeciesTreeLikelihood extends QuasiSpeciesGenericTreeLikelihoo
         probabilities = new double[(stateCount + 1) * (stateCount + 1)];
         Arrays.fill(probabilities, 1.0);
 
-        if (dataInput.get().isAscertained) {
+        if (alignment.isAscertained) {
             useAscertainedSitePatterns = true;
         }
     }
@@ -214,12 +219,12 @@ public class QuasiSpeciesTreeLikelihood extends QuasiSpeciesGenericTreeLikelihoo
     void calcConstantPatternIndices(final int patterns, final int stateCount) {
         constantPattern = new ArrayList<>();
         for (int i = 0; i < patterns; i++) {
-            final int[] pattern = dataInput.get().getPattern(i);
+            final int[] pattern = alignment.getPattern(i);
             final boolean[] isInvariant = new boolean[stateCount];
             Arrays.fill(isInvariant, true);
             for (final int state : pattern) {
-                final boolean[] isStateSet = dataInput.get().getStateSet(state);
-                if (m_useAmbiguities.get() || !dataInput.get().getDataType().isAmbiguousState(state)) {
+                final boolean[] isStateSet = alignment.getStateSet(state);
+                if (m_useAmbiguities.get() || !alignment.getDataType().isAmbiguousState(state)) {
                     for (int k = 0; k < stateCount; k++) {
                         isInvariant[k] &= isStateSet[k];
                     }
@@ -237,7 +242,7 @@ public class QuasiSpeciesTreeLikelihood extends QuasiSpeciesGenericTreeLikelihoo
         final int nodeCount = treeInput.get().getNodeCount();
         likelihoodCore.initialize(
                 nodeCount+leafNodeCount,
-                dataInput.get().getPatternCount(),
+                alignment.getPatternCount(),
                 m_siteModel.getCategoryCount(),
                 true, m_useAmbiguities.get()
         );
@@ -248,9 +253,9 @@ public class QuasiSpeciesTreeLikelihood extends QuasiSpeciesGenericTreeLikelihoo
         final int intNodeCount = nodeCount / 2 + extNodeCount;
 
         if (m_useAmbiguities.get() || m_useTipLikelihoods.get()) {
-            setPartials(treeInput.get().getRoot(), dataInput.get().getPatternCount());
+            setPartials(treeInput.get().getRoot(), alignment.getPatternCount());
         } else {
-            setStates(treeInput.get().getRoot(), dataInput.get().getPatternCount());
+            setStates(treeInput.get().getRoot(), alignment.getPatternCount());
         }
         hasDirt = QuasiSpeciesTree.IS_FILTHY;
         for (int i = 0; i < intNodeCount; i++) {
@@ -271,7 +276,7 @@ public class QuasiSpeciesTreeLikelihood extends QuasiSpeciesGenericTreeLikelihoo
      */
     protected void setStates(Node node, int patternCount) {
         if (node.isLeaf()) {
-            Alignment data = dataInput.get();
+            Alignment data = alignment;
             int i;
             int[] states = new int[patternCount];
             int taxonIndex = getTaxonIndex(node.getID(), data);
@@ -316,7 +321,7 @@ public class QuasiSpeciesTreeLikelihood extends QuasiSpeciesGenericTreeLikelihoo
      */
     protected void setPartials(Node node, int patternCount) {
         if (node.isLeaf()) {
-            Alignment data = dataInput.get();
+            Alignment data = alignment;
             int states = data.getDataType().getStateCount();
             double[] partials = new double[patternCount * states];
             int k = 0;
@@ -395,13 +400,13 @@ public class QuasiSpeciesTreeLikelihood extends QuasiSpeciesGenericTreeLikelihoo
     void calcLogP() {
         logP = 0.0;
         if (useAscertainedSitePatterns) {
-            final double ascertainmentCorrection = dataInput.get().getAscertainmentCorrection(patternLogLikelihoods);
-            for (int i = 0; i < dataInput.get().getPatternCount(); i++) {
-                logP += (patternLogLikelihoods[i] - ascertainmentCorrection) * dataInput.get().getPatternWeight(i);
+            final double ascertainmentCorrection = alignment.getAscertainmentCorrection(patternLogLikelihoods);
+            for (int i = 0; i < alignment.getPatternCount(); i++) {
+                logP += (patternLogLikelihoods[i] - ascertainmentCorrection) * alignment.getPatternWeight(i);
             }
         } else {
-            for (int i = 0; i < dataInput.get().getPatternCount(); i++) {
-                logP += patternLogLikelihoods[i] * dataInput.get().getPatternWeight(i);
+            for (int i = 0; i < alignment.getPatternCount(); i++) {
+                logP += patternLogLikelihoods[i] * alignment.getPatternWeight(i);
             }
         }
     }
@@ -498,7 +503,7 @@ public class QuasiSpeciesTreeLikelihood extends QuasiSpeciesGenericTreeLikelihoo
 //        }
         hasDirt = QuasiSpeciesTree.IS_CLEAN;
 
-        if (dataInput.get().isDirtyCalculation()) {
+        if (alignment.isDirtyCalculation()) {
             hasDirt = QuasiSpeciesTree.IS_FILTHY;
             return true;
         }
@@ -548,7 +553,7 @@ public class QuasiSpeciesTreeLikelihood extends QuasiSpeciesGenericTreeLikelihoo
      */
     @Override
     public List<String> getArguments() {
-        return Collections.singletonList(dataInput.get().getID());
+        return Collections.singletonList(alignment.getID());
     }
 
     /**
@@ -783,5 +788,17 @@ public class QuasiSpeciesTreeLikelihood extends QuasiSpeciesGenericTreeLikelihoo
         }
         return update;
     } // traverseWithBRM
+
+    public Alignment subset(Input<Alignment> data, List<Node> leafs){
+        Alignment fullData = data.get();
+        int tipCount = leafs.size();
+        ArrayList sequences = new ArrayList(tipCount);
+        for (int i = 0; i < tipCount; i++){
+            sequences.add(leafs.get(i).getNr(),fullData.sequenceInput.get().get(fullData.getTaxonIndex(leafs.get(i).getID())));
+        }
+
+        Alignment subsetData = new Alignment(sequences, fullData.dataTypeInput.get());
+        return subsetData;
+    }
 
 } // class TreeLikelihood
