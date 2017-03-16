@@ -24,11 +24,15 @@ public class QuasiSpeciesNode extends Node {
 
 //    protected String haploAboveName;
 //    protected String continuingHaploName;
-    protected int haploAboveName;
-    protected int continuingHaploName;
+    protected int haploAboveName = -1;
+    protected int continuingHaploName = -1;
 
 
     public void setAttachmentTimesList(){
+        startEditing();
+    }
+
+    public void setTipTimesList(){
         startEditing();
     }
 
