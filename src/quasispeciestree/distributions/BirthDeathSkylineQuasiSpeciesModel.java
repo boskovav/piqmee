@@ -2,15 +2,15 @@ package quasispeciestree.distributions;
 
 import beast.core.Citation;
 import beast.core.Description;
-import beast.core.Input;
 import beast.evolution.speciation.BirthDeathSkylineModel;
 
 import beast.evolution.tree.Node;
-import beast.evolution.tree.Tree;
 import beast.evolution.tree.TreeInterface;
-import quasispeciestree.operators.*;
 import quasispeciestree.tree.QuasiSpeciesNode;
+import quasispeciestree.tree.QuasiSpeciesTip;
 import quasispeciestree.tree.QuasiSpeciesTree;
+
+import java.util.ArrayList;
 
 /**
  *  @author Veronika Boskova created on 26/06/2015
@@ -37,6 +37,8 @@ public class BirthDeathSkylineQuasiSpeciesModel extends BirthDeathSkylineModel{
         }
     }
 
+    ArrayList isRhoTip;
+
     /*
      * Adds the number of qs duplicates to the count of tips at each of the contemporaneous sampling times ("rho" sampling time)
      * @return negative infinity if tips are found at a time when rho is zero, zero otherwise.
@@ -44,40 +46,40 @@ public class BirthDeathSkylineQuasiSpeciesModel extends BirthDeathSkylineModel{
     @Override
     public double computeN(TreeInterface tree) {
 
-        double superReturn = super.computeN(tree);
+//        double superReturn = super.computeN(tree);
 
-        QuasiSpeciesTree qsTree = (QuasiSpeciesTree) tree;
+        isRhoTip = new ArrayList<Boolean>(tree.getLeafNodeCount());
 
-        int nQS = qsTree.getTotalAttachmentCounts();
+        N = new int[totalIntervals];
+
         int tipCount = tree.getLeafNodeCount();
-
-        double[] dates = new double[nQS];
-
-        int nCount = 0;
-        for (Node node : tree.getExternalNodes()){
-            double QSTimesLength = qsTree.getHaplotypeCounts((QuasiSpeciesNode)node);
-            for (int j=0; j<QSTimesLength; j++){
-                // TODO rewrite this to make sure all the tip sampling points are correctly assigned for qs tips
-                dates[nCount+j] = node.getHeight();
-            }
-            nCount += QSTimesLength;
-        }
 
         for (int k = 0; k < totalIntervals; k++) {
 
+            for (int i = 0; i < tipCount; i++) {
 
-            for (int i = 0; i < nQS; i++) {
-                if (Math.abs((times[totalIntervals - 1] - times[k]) - dates[i]) < 1e-10) {
-                    if (rho[k] == 0 && psi[k] == 0) {
-                        return Double.NEGATIVE_INFINITY;
-                    }
-                    if (rho[k] > 0) {
-                        N[k] += 1;
+                QuasiSpeciesTip node = (QuasiSpeciesTip) tree.getNode(i);
+                double[] tipTimes = node.getTipTimesList();
+                int[] tipTimeCounts = node.getTipTimesCountList();
+
+                boolean[] isRhoTipArray = new boolean[tipTimes.length];
+
+                for (int index = 0; index < tipTimes.length; index++) {
+
+                    if (Math.abs((times[totalIntervals - 1] - times[k]) - tipTimes[index]) < 1e-10) {
+                        if (rho[k] == 0 && psi[k] == 0) {
+                            return Double.NEGATIVE_INFINITY;
+                        }
+                        if (rho[k] > 0) {
+                            N[k] += tipTimeCounts[index];
+                            isRhoTipArray[index] = true;
+                        }
                     }
                 }
+                isRhoTip.add(i,isRhoTipArray);
             }
         }
-        return superReturn;
+        return 0.;
     }
 
 
@@ -85,11 +87,9 @@ public class BirthDeathSkylineQuasiSpeciesModel extends BirthDeathSkylineModel{
     @Override
     public Double preCalculation(TreeInterface tree) {
 
-        QuasiSpeciesTree qsTree = (QuasiSpeciesTree) tree;
-
         double maxheight= tree.getRoot().getHeight();
         for (Node node : tree.getExternalNodes()){
-            double[] attachmentTimes = qsTree.getAttachmentTimesList((QuasiSpeciesNode) node);
+            double[] attachmentTimes = ((QuasiSpeciesTip) node).getAttachmentTimesList();
             if (attachmentTimes.length > 1 && attachmentTimes[1] > maxheight){
                 maxheight = attachmentTimes[1];
             }
@@ -110,15 +110,30 @@ public class BirthDeathSkylineQuasiSpeciesModel extends BirthDeathSkylineModel{
     @Override
     public int lineageCountAtTime(double time, TreeInterface tree) {
 
-        QuasiSpeciesTree qsTree = (QuasiSpeciesTree) tree;
+        int count = 1;
+        int tipCount = tree.getLeafNodeCount();
+        for (int i = tipCount; i < tipCount + tree.getInternalNodeCount(); i++) {
+            if (tree.getNode(i).getHeight() > time) count += 1;
+        }
 
-        int count = super.lineageCountAtTime(time, tree);
+        for (int i = 0; i < tipCount; i++) {
+            QuasiSpeciesTip node = (QuasiSpeciesTip) tree.getNode(i);
+            double[] attachTimes = node.getAttachmentTimesList();
+            double[] tipTimes = node.getTipTimesList();
+            int[] tipTimeCounts = node.getTipTimesCountList();
 
-        for (Node node : tree.getExternalNodes()){
-            double[] QSTimesTemp = qsTree.getAttachmentTimesList((QuasiSpeciesNode) node);
-            if (QSTimesTemp[0] > time && node.getHeight() < time){
-                for (int j=1; j<QSTimesTemp.length; j++){
-                    if (QSTimesTemp[j] > time) count += 1;
+            if (node.getHeight() >= time) count -= 1;
+            // node.getHeight() should be the same as the tipTimes[0]
+            else {
+                // start at position 1, since position 0 is the "fake" start of the haplo
+                int position = 1;
+                for (int j = 0; j < tipTimes.length; j++) {
+                    if (tipTimes[j] < time){
+                        for (int l = position; l < position + tipTimeCounts[j]; l++){
+                            if (attachTimes[l] > time) count += 1;
+                        }
+                    }
+                    position += tipTimeCounts[j];
                 }
             }
         }
@@ -131,17 +146,41 @@ public class BirthDeathSkylineQuasiSpeciesModel extends BirthDeathSkylineModel{
      * @param k count the number of sampled ancestors at the given time
      * @return the number of lineages that exist at the given time in the given tree.
      */
-    public int lineageCountAtTime(double time, QuasiSpeciesTree tree, int[] k) {
+    @Override
+    public int lineageCountAtTime(double time, TreeInterface tree, int[] k) {
 
-        QuasiSpeciesTree qsTree = (QuasiSpeciesTree) tree;
+        k[0]=0;
+        int count = 1;
+        int tipCount = tree.getLeafNodeCount();
+        for (int i = tipCount; i < tipCount + tree.getInternalNodeCount(); i++) {
+            if (tree.getNode(i).getHeight() > time) count += 1;
+        }
 
-        int count = super.lineageCountAtTime(time, tree, k);
+        for (int i = 0; i < tipCount; i++) {
+            QuasiSpeciesTip node = (QuasiSpeciesTip) tree.getNode(i);
+            double[] attachTimes = node.getAttachmentTimesList();
+            double[] tipTimes = node.getTipTimesList();
+            int[] tipTimeCounts = node.getTipTimesCountList();
 
-        for (Node node : tree.getExternalNodes()){
-            double[] QSTimesTemp = tree.getAttachmentTimesList((QuasiSpeciesNode) node);
-            if (QSTimesTemp[0] > time && node.getHeight() < time){
-                for (int j=1; j<QSTimesTemp.length; j++){
-                    if (QSTimesTemp[j] > time) count += 1;
+            if (node.getHeight() >= time) count -= 1;
+                // node.getHeight() should be the same as the tipTimes[0]
+            else {
+                // start at position 1, since position 0 is the "fake" start of the haplo
+                int position = 1;
+                for (int j = 0; j < tipTimes.length; j++) {
+                    if (tipTimes[j] < time){
+                        for (int l = position; l < position + tipTimeCounts[j]; l++){
+                            if (attachTimes[l] > time) count += 1;
+                        }
+                    }
+                    position += tipTimeCounts[j];
+                }
+            }
+            if (Math.abs(tree.getNode(i).getHeight() - time) < 1e-10) {
+                count -= 1;
+                if (tree.getNode(i).isDirectAncestor()) {
+                    count -= 1;
+                    k[0]++;
                 }
             }
         }
@@ -218,29 +257,26 @@ public class BirthDeathSkylineQuasiSpeciesModel extends BirthDeathSkylineModel{
 
         // first product term in f[T] over all non-QS transmission times (for the tips sampled through time and at times of parameter change)
         // to start with, get array containing possible number branches the haplotype can start from
-//        int[] startBranchCountArray= tree.countPossibleStartBranches();
-        int[] startBranchCountArray = qsTree.getStartBranchCounts();
         for (int i = 0; i < tree.getInternalNodeCount(); i++) {
-
-            double x = times[totalIntervals - 1] - tree.getNode(nTips + i).getHeight();
+            QuasiSpeciesNode node = (QuasiSpeciesNode) tree.getNode(nTips + i);
+            double x = times[totalIntervals - 1] - node.getHeight();
             index = index(x);
-            if (!(tree.getNode(nTips + i)).isFake()) {
+            if (!node.isFake()) {
                 temp = Math.log(birth[index]) + log_q(index, times[index], x);
                 logP += temp;
                 if (printTempResults) System.out.println("1st pwd" +
                         " = " + temp + "; interval = " + i);
                 if (Double.isInfinite(logP))
                     return logP;
-                // term for the Quasi-Species tree likelihood calculation counting possible QS start branches
-                int gamma=startBranchCountArray[i];
-                temp = gamma;
+                // term for the Quasi-Species tree likelihood calculation counting possible QS start branches (gamma)
+                temp = node.getStartBranchCounts();
                 logP += Math.log(temp);
 //                logP += Math.log(startBranchCountArray[i]) - Math.log(lineageCountAtTime(tree.getNode(nTips + i).getHeight(),tree));
 // testing
 //                System.out.println("1st pwd" +
 //                        " = " + Math.log(temp) + "; QS start branches = " + tree.getNode(nTips + i).getID());
                 if (printTempResults) System.out.println("1st pwd" +
-                        " = " + temp + "; QS start branches = " + tree.getNode(nTips + i).getID());
+                        " = " + temp + "; QS start branches = " + node.getID());
                 if (Double.isInfinite(logP))
                     return logP;
             }
@@ -260,7 +296,7 @@ public class BirthDeathSkylineQuasiSpeciesModel extends BirthDeathSkylineModel{
 //            if (Double.isInfinite(logP))
 //                return logP;
             int nQSTemp = (int) qsTree.getHaplotypeCounts((QuasiSpeciesNode) node);
-            double[] QSTimesTemp = qsTree.getAttachmentTimesList((QuasiSpeciesNode) node);
+            double[] QSTimesTemp = ((QuasiSpeciesTip) node).getAttachmentTimesList();
             for (int j = 1; j <= nQSTemp; j++ ){
                 double x = times[totalIntervals - 1] - QSTimesTemp[j];
                 index = index(x);
@@ -287,23 +323,28 @@ public class BirthDeathSkylineQuasiSpeciesModel extends BirthDeathSkylineModel{
         // middle product term in f[T]
         for (int i = 0; i < nTips; i++) {
             // TODO what happens if not all tips have QS counts specified in XML --- we get warning, is this enough?
-            if (!isRhoTip[i] || m_rho.get() == null) {
+
+            QuasiSpeciesTip node = (QuasiSpeciesTip) tree.getNode(i);
+            boolean[] isRhoTipArray = (boolean[]) isRhoTip.get(i);
+
+            for (int j = 0; j < isRhoTipArray.length; j++) {
+                if (!isRhoTipArray[j] || m_rho.get() == null) {
 //            || tree.getHaplotypeCounts((QuasiSpeciesNode) tree.getNode(i))>0) {
-                int nQSTemp = (int) qsTree.getHaplotypeCounts((QuasiSpeciesNode) tree.getNode(i));
-                double y = times[totalIntervals - 1] - tree.getNode(i).getHeight();
-                index = index(y);
+                    int nQSTemp = node.getTipTimesCountList()[j];
+                    double y = times[totalIntervals - 1] - node.getTipTimesList()[j];
+                    index = index(y);
 // testing
 //                System.out.println("2nd factor included");
 //                if (!(tree.getNode(i)).isDirectAncestor()) {
 //                    if (!SAModel) {
-                        temp = (nQSTemp+1)*(Math.log(psi[index]) - log_q(index, times[index], y));
+                    temp = (nQSTemp + 1) * (Math.log(psi[index]) - log_q(index, times[index], y));
 //                    } else {
 //                        temp = Math.log(psi[index] * (r[index] + (1 - r[index]) * p0(index, times[index], y))) - log_q(index, times[index], y);
 //                    }
-                logP += temp;
-                if (printTempResults) System.out.println("2nd PI = " + temp);
-                if (psi[index] == 0 || Double.isInfinite(logP))
-                    return logP;
+                    logP += temp;
+                    if (printTempResults) System.out.println("2nd PI = " + temp);
+                    if (psi[index] == 0 || Double.isInfinite(logP))
+                        return logP;
 //                } else {
 //                    if (r[index] != 1) {
 //                        logP += Math.log((1 - r[index])*psi[index]);
@@ -316,6 +357,7 @@ public class BirthDeathSkylineQuasiSpeciesModel extends BirthDeathSkylineModel{
 //                        System.exit(0);
 //                    }
 //                }
+                }
             }
         }
 
@@ -323,7 +365,7 @@ public class BirthDeathSkylineQuasiSpeciesModel extends BirthDeathSkylineModel{
         double time;
         for (int j = 0; j < totalIntervals; j++) {
             time = j < 1 ? 0 : times[j - 1];
-            int[] k = {0};
+//            int[] k = {0};
 //            if (!SAModel) {
             // changed the number of lineages surviving the next parameter change period done in function lineageCountAtTime
             //  to account for the QS lineages that could be also surviving the parameter change time

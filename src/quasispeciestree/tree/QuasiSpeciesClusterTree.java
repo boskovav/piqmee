@@ -31,6 +31,7 @@ public class QuasiSpeciesClusterTree extends QuasiSpeciesTree implements StateNo
         super.initAndValidate();
 
         ClusterTree inputTree = new ClusterTree();
+        inputTree.setDateTrait(timeTraitSet);
         inputTree.initByName(
                 "clusterType", "upgma",
                 "taxa", dataInput.get());
@@ -39,9 +40,9 @@ public class QuasiSpeciesClusterTree extends QuasiSpeciesTree implements StateNo
             throw new RuntimeException("The data input needs to be specified");
 
         if (haplotypeCountsInput.get() != null)
-            initFromUniqueHaploTree(inputTree);
+            initFromUniqueHaploTree(inputTree, dataInput.get());
         else
-            initFromRegularTree(inputTree, dataInput.get());
+            initFromFullTree(inputTree, dataInput.get());
     }
 
     @Override

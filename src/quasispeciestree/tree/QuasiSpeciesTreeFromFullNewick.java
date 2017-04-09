@@ -39,11 +39,10 @@ public class QuasiSpeciesTreeFromFullNewick extends QuasiSpeciesTree implements 
                 "adjustTipHeights", adjustTipHeightsInput.get(),
                 "newick", newickStringInput.get());
 
-        List<String> taxaNames;
         if (dataInput.get() == null)
             throw new RuntimeException("The data input needs to be specified");
 
-        initFromRegularTree(inputTree,dataInput.get());
+        initFromFullTree(inputTree,dataInput.get());
 
     }
 

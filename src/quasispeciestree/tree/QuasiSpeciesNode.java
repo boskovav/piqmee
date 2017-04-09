@@ -10,11 +10,6 @@ import beast.evolution.tree.Node;
 @Description("A node in a quasi-species phylogenetic tree.")
 public class QuasiSpeciesNode extends Node {
 
-    /**
-     * status of this node after an operation is performed on the state *
-     */
-    int isDirty = QuasiSpeciesTree.IS_CLEAN;
-
     @Override
     public void initAndValidate(){
 
@@ -22,35 +17,15 @@ public class QuasiSpeciesNode extends Node {
 
     }
 
-//    protected String haploAboveName;
-//    protected String continuingHaploName;
     protected int haploAboveName = -1;
     protected int continuingHaploName = -1;
-
-
-    public void setAttachmentTimesList(){
-        startEditing();
-    }
-
-    public void setTipTimesList(){
-        startEditing();
-    }
-
-    public void  setStartBranchCounts(){
-        startEditing();
-    }
-
-    public void setParentHaplo() {
-        startEditing();
-    }
-
+    private int startBranchCounts = 1;
 
     /**
      * Obtain the quasi-species type/name, if any, starting on the branch above this node.
      *
      * @return quasi-species name
      */
-//    public String getHaploAboveName() {return this.haploAboveName; }
     public int getHaploAboveName() {
         return this.haploAboveName;
     }
@@ -60,16 +35,8 @@ public class QuasiSpeciesNode extends Node {
      *
      * @param haploName New quasi-species name
      */
-//    public void setHaploAboveName(String haploName) { this.haploAboveName = haploName; }
     public void setHaploAboveName(int haploName) {
         startEditing();
-        this.isDirty |= QuasiSpeciesTree.IS_DIRTY;
-        if (!isLeaf()) {
-            ((QuasiSpeciesNode)getLeft()).isDirty |= QuasiSpeciesTree.IS_DIRTY;
-            if (getRight() != null) {
-                ((QuasiSpeciesNode)getRight()).isDirty |= QuasiSpeciesTree.IS_DIRTY;
-            }
-        }
         this.haploAboveName = haploName;
     }
 
@@ -79,61 +46,45 @@ public class QuasiSpeciesNode extends Node {
      *
      * @return quasi-species name
      */
-//    public String getContinuingHaploName() { return this.continuingHaploName; }
-    public int getContinuingHaploName() { return this.continuingHaploName; }
+    public int getContinuingHaploName() {
+        return this.continuingHaploName;
+    }
 
     /**
      * Sets the quasi-species haplotype as a continuing haplotype below this node
      *
      * @param haploName New quasi-species name
      */
-//    public void setContinuingHaploName(String haploName) { this.continuingHaploName = haploName; }
     public void setContinuingHaploName(int haploName) {
         startEditing();
-        this.isDirty |= QuasiSpeciesTree.IS_DIRTY;
-        if (!isLeaf()) {
-            ((QuasiSpeciesNode)getLeft()).isDirty |= QuasiSpeciesTree.IS_DIRTY;
-            if (getRight() != null) {
-                ((QuasiSpeciesNode)getRight()).isDirty |= QuasiSpeciesTree.IS_DIRTY;
-            }
-        }
         this.continuingHaploName = haploName;
     }
 
+    /**
+     * Obtain the number of "branches" this node can attach to in the QS tree
+     *
+     * @return start branch count
+     */
+    public int getStartBranchCounts() {
+        return this.startBranchCounts;
+    }
+
+    /**
+     * Sets the number of branches the node can be attached to
+     *
+     * @param startBranchCount New quasi-species name
+     */
+    public void setStartBranchCounts(int startBranchCount) {
+        startEditing();
+        this.startBranchCounts = startBranchCount;
+    }
 
     /**
      * Set quasi-species tree for a copied node
      */
-
     public void setqsTree(QuasiSpeciesTree tree) {
         startEditing();
         this.m_tree = tree;
-    }
-
-    /**
-     * @return shallow copy of node
-     */
-    public QuasiSpeciesNode shallowCopy() {
-        QuasiSpeciesNode node = new QuasiSpeciesNode();
-        node.height = height;
-        node.setParent(this.getParent());
-        if (getLeft()!=null) {
-            node.setLeft(getLeft().copy());
-            node.getLeft().setParent(node);
-            if (getRight()!=null) {
-                node.setRight(getRight().copy());
-                node.getRight().setParent(node);
-            }
-        }
-
-        node.haploAboveName = haploAboveName;
-        node.continuingHaploName = continuingHaploName;
-
-        node.labelNr = labelNr;
-        node.metaDataString = metaDataString;
-        node.ID = ID;
-
-        return node;
     }
 
     /**
@@ -142,30 +93,6 @@ public class QuasiSpeciesNode extends Node {
      ***************************
      */
 
-    /**
-     * methods for accessing the dirtiness state of the Node.
-     * A Node is Tree.IS_DIRTY if its value (like height) has changed
-     * A Node Tree.IS_if FILTHY if its parent or child has changed.
-     * Otherwise the node is Tree.IS_CLEAN *
-     */
-    public int isDirty() {
-        return isDirty;
-    }
-
-    /**
-     * Sets the parent of this node
-     *
-     * @param parent     the node to become parent
-     * @param inOperator if true, then startEditing() is called and setting the parent will make tree "filthy"
-     */
-    public void setParent(final Node parent, final boolean inOperator) {
-        // start editing set in operator itself
-        if (inOperator) startEditing();
-        if (this.getParent() != parent) {
-            this.setParent(parent);
-            if (inOperator) this.makeDirty(QuasiSpeciesTree.IS_FILTHY);
-        }
-    }
 
     /**
      * @return (deep) copy of node
@@ -183,9 +110,14 @@ public class QuasiSpeciesNode extends Node {
         node.continuingHaploName = continuingHaploName;
 
         if (getLeft()!=null) {
-            node.setLeft(getLeft().copy());
+            if (getLeft().getAllChildNodes().size() == 0)
+                node.setLeft(((QuasiSpeciesTip)getLeft()).copyTip());
+            else
+                node.setLeft(getLeft().copy());
             node.getLeft().setParent(node);
             if (getRight()!=null) {
+                if (getRight().getAllChildNodes().size() == 0)
+                    node.setRight(((QuasiSpeciesTip)getRight()).copyTip());
                 node.setRight(getRight().copy());
                 node.getRight().setParent(node);
             }
@@ -212,26 +144,16 @@ public class QuasiSpeciesNode extends Node {
 
         if (node.getLeft()!=null) {
             setLeft(nodes[node.getLeft().getNr()]);
-            getLeft().assignFrom(nodes, node.getLeft());
+            if (getLeft().getAllChildNodes().size() == 0)
+                ((QuasiSpeciesTip) getLeft()).assignFromTip(node.getLeft());
             getLeft().setParent(this);
             if (node.getRight()!=null) {
                 setRight(nodes[node.getRight().getNr()]);
-                getRight().assignFrom(nodes, node.getRight());
+                if (getRight().getAllChildNodes().size() == 0)
+                    ((QuasiSpeciesTip) getRight()).assignFromTip(node.getRight());
                 getRight().setParent(this);
             }
         }
     }
-    public void setHeight(final double height, boolean inOperator) {
-        if (inOperator){
-            this.startEditing();
-        }
-        this.height = height;
-        this.makeDirty(QuasiSpeciesTree.IS_DIRTY);
-        if (!isLeaf()) {
-            getLeft().makeDirty(QuasiSpeciesTree.IS_DIRTY);
-            if (getRight() != null) {
-                getRight().makeDirty(QuasiSpeciesTree.IS_DIRTY);
-            }
-        }
-    }
+
 }
