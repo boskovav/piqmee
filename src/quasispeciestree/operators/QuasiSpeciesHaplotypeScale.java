@@ -42,26 +42,26 @@ public class QuasiSpeciesHaplotypeScale extends QuasiSpeciesTreeOperator{
         // Randomly select event on tree:
         // weighted by the number of events (i.e. count of each haplotype??)
         // for now do random uniform from just the haplotype count (disregarding the counts)
-        QuasiSpeciesTip tip = null;
+        QuasiSpeciesTip node = null;
         do {
-            tip = (QuasiSpeciesTip) qsTree.getNode(Randomizer.nextInt(qsTree.getLeafNodeCount()));
+            node = (QuasiSpeciesTip) qsTree.getNode(Randomizer.nextInt(qsTree.getLeafNodeCount()));
 
-        } while (tip.getAttachmentTimesList().length < 2);
+        } while (node.getAttachmentTimesList().length < 2);
 
         // if we did not assign the node at this stage, throw exception
-        if (tip == null)
+        if (node == null)
             throw new IllegalStateException("Event selection loop fell through!");
 
-        int haplo = tip.getNr();
+        int haplo = node.getNr();
 
         // get the attachment times array to be changed
-        double[] tempqstimes = tip.getAttachmentTimesList().clone();
+        double[] tempqstimes = node.getAttachmentTimesList().clone();
         // get also tip times to help define max/min scalings
-        double[] temptiptimes = tip.getTipTimesList();
-        int[] temptiptimescount = tip.getTipTimesCountList();
+        double[] temptiptimes = node.getTipTimesList();
+        int[] temptiptimescount = node.getTipTimesCountList();
 
         // get a node above which the current haplotype arises
-        QuasiSpeciesNode oldNodeBelowHaploMoved = findNodeBelowThisHaplo(tip,haplo);
+        QuasiSpeciesNode oldNodeBelowHaploMoved = findNodeBelowThisHaplo(node,haplo);
 
         // reposition the event (i.e. haplotype's first attachment time) uniformly at random between tmin and tmax
         // what is the parent first attachment time?
@@ -79,8 +79,8 @@ public class QuasiSpeciesHaplotypeScale extends QuasiSpeciesTreeOperator{
 
         // find out tmin/tmax/told
         double tmax = (double)haploStartMaxNewArray.get(1);
-        double tminold = tip.getHeight();
-        double tminnew = tip.getHeight();
+        double tminold = node.getHeight();
+        double tminnew = node.getHeight();
         double toldtop = tempqstimes[1];
         double tnewtop = 0;
         double toldbottom = tempqstimes[tempqstimes.length-1];
@@ -135,10 +135,10 @@ public class QuasiSpeciesHaplotypeScale extends QuasiSpeciesTreeOperator{
 
         // Reject invalid haplotype scalings:
         if (scalefactor<1.0){
-            if (tnewQSstart < tip.getHeight()){
+            if (tnewQSstart < node.getHeight()){
                 throw new IllegalStateException("problem in hereeeeee you did not really scale the QS start apparently");
             }
-            else if (tempqstimes[tempqstimes.length-1] < tip.getHeight())
+            else if (tempqstimes[tempqstimes.length-1] < node.getHeight())
                 return Double.NEGATIVE_INFINITY;
         }
 
@@ -152,7 +152,7 @@ public class QuasiSpeciesHaplotypeScale extends QuasiSpeciesTreeOperator{
         // assign contribution of each scaled attachment time
         logHastingsRatio += (tempqstimes.length - 3) * Math.log(scalefactor);
 
-        tip.setAttachmentTimesList(tempqstimes);
+        node.setAttachmentTimesList(tempqstimes);
 
         // scale all QS start points for all haplotypes on a way from toldQSstart to tnewQSstart
         // find the new node above which the haplo arises
@@ -161,14 +161,14 @@ public class QuasiSpeciesHaplotypeScale extends QuasiSpeciesTreeOperator{
             nodeBelowHaploMoved=(QuasiSpeciesNode)findNodeBelowAfterRepositioningHaploStart(oldNodeBelowHaploMoved,tnewQSstart);
         }
         else {
-            nodeBelowHaploMoved=(QuasiSpeciesNode)findNodeBelowAfterRepositioningHaploStart(tip,tnewQSstart);
+            nodeBelowHaploMoved=(QuasiSpeciesNode)findNodeBelowAfterRepositioningHaploStart(node,tnewQSstart);
         }
 
         if (oldNodeBelowHaploMoved.getNr()!=nodeBelowHaploMoved.getNr()){
             // change internal node haploName - both remove and add if necessary
             // change the internal nodes' haploName, where necessary
             oldNodeBelowHaploMoved.setHaploAboveName(-1);
-            nodeBelowHaploMoved.setHaploAboveName(tip.getNr());
+            nodeBelowHaploMoved.setHaploAboveName(node.getNr());
             //recalculateParentHaploAndCorrectContinuingHaploName(-1, (QuasiSpeciesNode)qsTree.getRoot());
 
             if (oldNodeBelowHaploMoved.getHeight() > nodeBelowHaploMoved.getHeight()){
@@ -188,7 +188,7 @@ public class QuasiSpeciesHaplotypeScale extends QuasiSpeciesTreeOperator{
         qsTree.countAndSetPossibleStartBranches();
 
         // Ensure BEAST knows to recalculate affected likelihood:
-        tip.makeDirty(QuasiSpeciesTree.IS_FILTHY);
+        node.makeDirty(QuasiSpeciesTree.IS_FILTHY);
 
     // RETURN log(HASTINGS RATIO)
     return logHastingsRatio; // proper hastings ratio!!!

@@ -60,28 +60,28 @@ public class QuasiSpeciesHaplotypeSwap extends QuasiSpeciesTreeOperator{
         double logHastingsRatio = 0.0;
         // Randomly select event on tree:
         // for now choose uniformly at random from just the unique haplotype count (disregarding the counts)
-        QuasiSpeciesTip tip = null;
+        QuasiSpeciesTip node = null;
         do {
-            tip = (QuasiSpeciesTip) qsTree.getNode(Randomizer.nextInt(qsTree.getLeafNodeCount()));
-        } while (tip.getAttachmentTimesList().length < 2 || tip.getParentHaplo() == -1);
+            node = (QuasiSpeciesTip) qsTree.getNode(Randomizer.nextInt(qsTree.getLeafNodeCount()));
+        } while (node.getAttachmentTimesList().length < 2 || node.getParentHaplo() == -1);
 
         // if we did not assign the node at this stage, throw exception
-        if (tip == null)
+        if (node == null)
             throw new IllegalStateException("Event selection loop fell through!");
 
-        int haplo = tip.getNr();
+        int haplo = node.getNr();
 
         // get the parentHaploArray and the attachment times array to be changed
-        QuasiSpeciesTip parentHaplo = (QuasiSpeciesTip) qsTree.getNode(tip.getParentHaplo());
+        QuasiSpeciesTip parentHaplo = (QuasiSpeciesTip) qsTree.getNode(node.getParentHaplo());
         QuasiSpeciesTip grandParentHaplo = null;
         if (parentHaplo.getParentHaplo() != -1)
             grandParentHaplo = (QuasiSpeciesTip) qsTree.getNode(parentHaplo.getParentHaplo());;
 
         // get the attachment times for tip
-        double[] tempqstimes = tip.getAttachmentTimesList().clone();
+        double[] tempqstimes = node.getAttachmentTimesList().clone();
         // get also tip times to help define max/min scalings
-        double[] temptiptimes = tip.getTipTimesList();
-        int[] temptiptimescount = tip.getTipTimesCountList();
+        double[] temptiptimes = node.getTipTimesList();
+        int[] temptiptimescount = node.getTipTimesCountList();
 
         // get the attachment times for tip's parent
         double[] tempqstimesparent = parentHaplo.getAttachmentTimesList().clone();
@@ -90,8 +90,8 @@ public class QuasiSpeciesHaplotypeSwap extends QuasiSpeciesTreeOperator{
         int[] temptiptimescountparent = parentHaplo.getTipTimesCountList();
 
         // get a node above which the current/parent/grand parent haplotype arises
-        QuasiSpeciesNode oldNodeBelowCurrentHaplo = findNodeBelowThisHaplo(tip,haplo);
-        QuasiSpeciesNode oldNodeBelowParentHaplo = findNodeBelowThisHaplo(tip,parentHaplo.getNr());
+        QuasiSpeciesNode oldNodeBelowCurrentHaplo = findNodeBelowThisHaplo(node,haplo);
+        QuasiSpeciesNode oldNodeBelowParentHaplo = findNodeBelowThisHaplo(node,parentHaplo.getNr());
 
         // reposition the event (i.e. haplotype's first attachment time) uniformly at random between tmin and tmax
         // what is the parent haplo start time?
@@ -105,8 +105,8 @@ public class QuasiSpeciesHaplotypeSwap extends QuasiSpeciesTreeOperator{
         double toldQSstart = tempqstimes[0];
         double tnewQSstart = 0;
         double tmax;
-        double tminold = tip.getHeight();
-        double tminnew = tip.getHeight();
+        double tminold = node.getHeight();
+        double tminnew = node.getHeight();
         double toldtop = tempqstimes[1];
         double tnewtop = 0;
         double toldbottom = tempqstimes[tempqstimes.length-1];
@@ -203,10 +203,10 @@ public class QuasiSpeciesHaplotypeSwap extends QuasiSpeciesTreeOperator{
         }
         // Reject invalid haplotype scalings:
         if (scalefactor < 1.0){
-            if (tnewQSstart < tip.getHeight()){
+            if (tnewQSstart < node.getHeight()){
                 throw new IllegalStateException("problem in hereeeeee you did not really scale the QS start apparently");
             }
-            else if (tempqstimes[tempqstimes.length-1] < tip.getHeight())
+            else if (tempqstimes[tempqstimes.length-1] < node.getHeight())
                 return Double.NEGATIVE_INFINITY;
         }
 
@@ -285,7 +285,7 @@ public class QuasiSpeciesHaplotypeSwap extends QuasiSpeciesTreeOperator{
         logHastingsRatio -= Math.log(tmax/tnewparenttop - tminparentnew/tnewparentbottom);
 
         // rewrite the attachment times array
-        tip.setAttachmentTimesList(tempqstimes);
+        node.setAttachmentTimesList(tempqstimes);
 
          // rewrite the attachment times array
         parentHaplo.setAttachmentTimesList(tempqstimesparent);
@@ -333,7 +333,7 @@ public class QuasiSpeciesHaplotypeSwap extends QuasiSpeciesTreeOperator{
         qsTree.countAndSetPossibleStartBranches();
 
         // Ensure BEAST knows to recalculate affected likelihood:
-        tip.makeDirty(QuasiSpeciesTree.IS_FILTHY);
+        node.makeDirty(QuasiSpeciesTree.IS_FILTHY);
         parentHaplo.makeDirty(QuasiSpeciesTree.IS_FILTHY);
 
     // RETURN log(HASTINGS RATIO)
