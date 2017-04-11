@@ -130,7 +130,7 @@ public class QuasiSpeciesTip extends QuasiSpeciesNode {
      *
      * @param newAttachmentTimesList New attachment times list of haplotype associated with this tip
      */
-    protected void setAttachmentTimesList(double[] newAttachmentTimesList) {
+    public void setAttachmentTimesList(double[] newAttachmentTimesList) {
         startEditing();
         this.attachmentTimesList = newAttachmentTimesList;
     }
@@ -230,7 +230,7 @@ public class QuasiSpeciesTip extends QuasiSpeciesNode {
      *
      * @return parent haplo of haplotype associated with this tip
      */
-    protected int getParentHaplo() {
+    public int getParentHaplo() {
         return this.parentHaplo;
     }
 
