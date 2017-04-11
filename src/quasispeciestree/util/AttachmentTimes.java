@@ -3,7 +3,7 @@ package quasispeciestree.util;
 import beast.core.*;
 import beast.evolution.tree.Node;
 import quasispeciestree.tree.QuasiSpeciesTree;
-import quasispeciestree.tree.QuasiSpeciesNode;
+import quasispeciestree.tree.QuasiSpeciesTip;
 
 import java.io.PrintStream;
 
@@ -27,8 +27,7 @@ public class AttachmentTimes extends CalculationNode implements Function, Loggab
 
     private String haplotype;
 
-    private QuasiSpeciesNode haploNode;
-
+    private QuasiSpeciesTip haploNode;
 
     public AttachmentTimes() { };
 
@@ -38,25 +37,25 @@ public class AttachmentTimes extends CalculationNode implements Function, Loggab
         haplotype = haplotypeInput.get();
         for (Node node : qsTree.getExternalNodes()){
             if (haplotype.equals(node.getID().toString())){
-                haploNode = (QuasiSpeciesNode) node;
+                haploNode = (QuasiSpeciesTip) node;
             }
         }
     }
 
     @Override
     public int getDimension() {
-        return qsTree.getAttachmentTimesList(haploNode).length;
+        return haploNode.getAttachmentTimesList().length;
     }
 
     @Override
     public double getArrayValue() {
-        return qsTree.getAttachmentTimesList(haploNode)[0];
+        return haploNode.getAttachmentTimesList()[0];
     }
 
     @Override
     public double getArrayValue(int iDim) {
-        if (iDim<getDimension()) {
-            return qsTree.getAttachmentTimesList(haploNode)[iDim];
+        if (iDim < getDimension()) {
+            return haploNode.getAttachmentTimesList()[iDim];
         } else
             return Double.NaN;
     }
@@ -65,17 +64,16 @@ public class AttachmentTimes extends CalculationNode implements Function, Loggab
     public void init(PrintStream out){
 
         String idString = qsTree.getID();
-        int maxtime=qsTree.getAttachmentTimesList(haploNode).length;
+        int maxtime = haploNode.getAttachmentTimesList().length;
         for (int time = 0; time < maxtime; time++) {
             String haploname = haploNode.getID();
-            // TODO this is not printing
             out.print(idString + "." + haploname + "." + time + "\t");
         }
     }
 
     @Override
     public void log(int nSample, PrintStream out) {
-        double[] attachmentTimes=qsTree.getAttachmentTimesList(haploNode);
+        double[] attachmentTimes = haploNode.getAttachmentTimesList();
         for (int time = 0; time < attachmentTimes.length; time++) {
             out.print(attachmentTimes[time] + "\t");
         }
@@ -83,6 +81,4 @@ public class AttachmentTimes extends CalculationNode implements Function, Loggab
 
     @Override
     public void close(PrintStream out) { }
-
-
 }

@@ -3,6 +3,7 @@ package quasispeciestree.util;
 import beast.core.*;
 import beast.evolution.tree.Node;
 import quasispeciestree.tree.QuasiSpeciesNode;
+import quasispeciestree.tree.QuasiSpeciesTip;
 import quasispeciestree.tree.QuasiSpeciesTree;
 
 import java.io.PrintStream;
@@ -36,7 +37,7 @@ public class AbsoluteTreeHeight extends CalculationNode implements Function, Log
     public double getArrayValue() {
         double absoluteHeight = qsTree.getRoot().getHeight();
         for (Node node : qsTree.getExternalNodes()){
-            double[] attachmentTimes = qsTree.getAttachmentTimesList((QuasiSpeciesNode) node);
+            double[] attachmentTimes = ((QuasiSpeciesTip) node).getAttachmentTimesList();
             if (attachmentTimes.length > 1 && attachmentTimes[1] > absoluteHeight){
                 absoluteHeight = attachmentTimes[1];
             }
@@ -48,7 +49,7 @@ public class AbsoluteTreeHeight extends CalculationNode implements Function, Log
     public double getArrayValue(int iDim) {
         double absoluteHeight = qsTree.getRoot().getHeight();
         for (Node node : qsTree.getExternalNodes()){
-            double[] attachmentTimes = qsTree.getAttachmentTimesList((QuasiSpeciesNode) node);
+            double[] attachmentTimes = ((QuasiSpeciesTip) node).getAttachmentTimesList();
             if (attachmentTimes.length > 1 && attachmentTimes[1] > absoluteHeight){
                 absoluteHeight = attachmentTimes[1];
             }
@@ -69,7 +70,7 @@ public class AbsoluteTreeHeight extends CalculationNode implements Function, Log
     public void log(int nSample, PrintStream out) {
         double absoluteHeight = qsTree.getRoot().getHeight();
         for (Node node : qsTree.getExternalNodes()){
-            double[] attachmentTimes = qsTree.getAttachmentTimesList((QuasiSpeciesNode) node);
+            double[] attachmentTimes = ((QuasiSpeciesTip) node).getAttachmentTimesList();
             if (attachmentTimes.length > 1 && attachmentTimes[1] > absoluteHeight){
                 absoluteHeight = attachmentTimes[1];
             }
