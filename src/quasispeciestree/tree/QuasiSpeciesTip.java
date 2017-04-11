@@ -2,6 +2,7 @@ package quasispeciestree.tree;
 
 import beast.core.Description;
 import beast.evolution.tree.Node;
+import java.util.Arrays;
 
 /**
  * @author Veronika Boskova created on 06/04/2017.
@@ -135,6 +136,34 @@ public class QuasiSpeciesTip extends QuasiSpeciesNode {
     }
 
     /**
+     * Sorts the attachment times of the haplotype associated with this tip in descending order
+     *  and sets the first (fake) attachment time to the max attachment time
+     *
+     */
+    protected void setFirstEntryAndsortAttachTimeList() {
+        Arrays.sort(attachmentTimesList);
+        // copy the largest bifurcation time, to indicate the haplo start time
+        attachmentTimesList[0] = attachmentTimesList[attachmentTimesList.length - 1];
+        // reverse the array to start with the largest value
+        sortAttachTimeList();
+    }
+
+    /**
+     * Sorts the attachment times of the haplotype associated with this tip in descending order
+     *
+     */
+    protected void sortAttachTimeList() {
+        Arrays.sort(attachmentTimesList);
+        // reverse the array to start with the largest value
+        int totalLength = attachmentTimesList.length;
+        for (int j = 0; j < totalLength/2; j++){
+            double tmp = attachmentTimesList[j];
+            attachmentTimesList[j] = attachmentTimesList[totalLength-1-j];
+            attachmentTimesList[totalLength-1-j] = tmp;
+        }
+    }
+
+    /**
      * Obtain the tip times of the haplotype associated with this tip
      *
      * @return tip times list of haplotype associated with this tip
@@ -172,6 +201,28 @@ public class QuasiSpeciesTip extends QuasiSpeciesNode {
     protected void setTipTimesCountList(int[] newTipTimesCountList) {
         startEditing();
         this.tipTimesCountList = newTipTimesCountList;
+    }
+
+    /**
+     * Sorts the tip times/counts of the haplotype associated with this tip
+     *
+     */
+    protected void sortTipTimeAndCountList() {
+        //Manually sort tipTimes, since we in the same way need to sort the tip counts
+        double tmp;
+        int tmpint;
+        for (int j = 1; j < tipTimesList.length; j++) {
+            int k = j - 1;
+            while (k >= 0 && tipTimesList[k] > tipTimesList[j]) {
+                tmp = tipTimesList[j];
+                tipTimesList[j] = tipTimesList[k];
+                tipTimesList[k] = tmp;
+                tmpint = tipTimesCountList[j];
+                tipTimesCountList[j] = tipTimesCountList[k];
+                tipTimesCountList[k] = tmpint;
+                k--;
+            }
+        }
     }
 
     /**
@@ -236,8 +287,5 @@ public class QuasiSpeciesTip extends QuasiSpeciesNode {
         QuasiSpeciesTip qsNode = (QuasiSpeciesTip)node;
         haploAboveName = qsNode.haploAboveName;
         continuingHaploName = qsNode.continuingHaploName;
-
-
     }
-
 }

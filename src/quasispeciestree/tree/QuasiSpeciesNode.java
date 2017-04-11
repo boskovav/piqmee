@@ -19,7 +19,7 @@ public class QuasiSpeciesNode extends Node {
 
     protected int haploAboveName = -1;
     protected int continuingHaploName = -1;
-    private int startBranchCounts = 1;
+    protected int startBranchCounts = 1;
 
     /**
      * Obtain the quasi-species type/name, if any, starting on the branch above this node.
