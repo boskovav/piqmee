@@ -108,6 +108,7 @@ public class QuasiSpeciesNode extends Node {
 
         node.haploAboveName = haploAboveName;
         node.continuingHaploName = continuingHaploName;
+        node.startBranchCounts = startBranchCounts;
 
         if (getLeft()!=null) {
             if (getLeft().getAllChildNodes().size() == 0)
@@ -130,8 +131,7 @@ public class QuasiSpeciesNode extends Node {
      * @param nodes
      * @param node
      */
-    @Override
-    public void assignFrom(Node[] nodes, Node node) {
+    public void assignFrom(Node[] nodes, Node[] tips, Node node, int leafNodeCount) {
         height = node.getHeight();
         labelNr = node.getNr();
         metaDataString = node.metaDataString;
@@ -141,16 +141,27 @@ public class QuasiSpeciesNode extends Node {
         QuasiSpeciesNode qsNode = (QuasiSpeciesNode)node;
         haploAboveName = qsNode.haploAboveName;
         continuingHaploName = qsNode.continuingHaploName;
+        startBranchCounts = qsNode.startBranchCounts;
 
         if (node.getLeft()!=null) {
-            setLeft(nodes[node.getLeft().getNr()]);
-            if (getLeft().getAllChildNodes().size() == 0)
+            if (getLeft().getAllChildNodes().size() == 0) {
+                setLeft(tips[node.getLeft().getNr()]);
                 ((QuasiSpeciesTip) getLeft()).assignFromTip(node.getLeft());
+            }
+            else {
+                setLeft(nodes[node.getLeft().getNr()-leafNodeCount]);
+                ((QuasiSpeciesNode) getLeft()).assignFrom(nodes, tips, node.getLeft(), leafNodeCount);
+            }
             getLeft().setParent(this);
             if (node.getRight()!=null) {
-                setRight(nodes[node.getRight().getNr()]);
-                if (getRight().getAllChildNodes().size() == 0)
+                if (getRight().getAllChildNodes().size() == 0) {
+                    setRight(tips[node.getRight().getNr()]);
                     ((QuasiSpeciesTip) getRight()).assignFromTip(node.getRight());
+                }
+                else {
+                    setRight(nodes[node.getRight().getNr()-leafNodeCount]);
+                    ((QuasiSpeciesNode)getRight()).assignFrom(nodes, tips, node.getRight(),leafNodeCount);
+                }
                 getRight().setParent(this);
             }
         }

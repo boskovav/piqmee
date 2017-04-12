@@ -12,7 +12,7 @@ import java.util.Arrays;
 public class QuasiSpeciesTip extends QuasiSpeciesNode {
 
     @Override
-    public void initAndValidate(){
+    public void initAndValidate() {
 
         super.initAndValidate();
         setContinuingHaploName(this.getNr());
@@ -49,7 +49,7 @@ public class QuasiSpeciesTip extends QuasiSpeciesNode {
      * @return Number of possible attachment branches, at position determined by node.getNr()
      *
      */
-    protected int countPossibleAttachmentBranches(int ihaploseq, double haploseqage){
+    protected int countPossibleAttachmentBranches(int ihaploseq, double haploseqage) {
         // there is always one possible attachment --- the original haplotype
         int abcount = 1;
         // if node's haplotype is older than haploseqage, count how many sequences of node's haplotype are there
@@ -87,7 +87,7 @@ public class QuasiSpeciesTip extends QuasiSpeciesNode {
      *
      * @return the total number of haplotype duplicates
      */
-    public int getHaplotypeCountsFromTips(){
+    public int getHaplotypeCountsFromTips() {
         int totalHaploCount = 0;
         for (int i = 0; i < tipTimesCountList.length; i++){
             totalHaploCount += tipTimesCountList[i];
@@ -101,12 +101,12 @@ public class QuasiSpeciesTip extends QuasiSpeciesNode {
      * @return the sum of branch lengths defined by the attachment times list
      *          and the tip times/counts of haplotype associated with this tip
      */
-    protected double getTotalBranchLengths(){
+    public double getTotalBranchLengths() {
         double totalTime=0.0;
         int currentTipTimePosition = 0;
         int currentTipArrayPosition = 0;
         for (int i=0; i<attachmentTimesList.length; i++){
-            totalTime += attachmentTimesList[i]-tipTimesList[currentTipTimePosition];
+            totalTime += attachmentTimesList[i] - tipTimesList[currentTipTimePosition];
             currentTipArrayPosition++;
             if (currentTipArrayPosition == tipTimesCountList[currentTipTimePosition]) {
                 currentTipArrayPosition = 0;
@@ -140,7 +140,7 @@ public class QuasiSpeciesTip extends QuasiSpeciesNode {
      *  and sets the first (fake) attachment time to the max attachment time
      *
      */
-    protected void setFirstEntryAndsortAttachTimeList() {
+    protected void setFirstEntryAndSortAttachTimeList() {
         Arrays.sort(attachmentTimesList);
         // copy the largest bifurcation time, to indicate the haplo start time
         attachmentTimesList[0] = attachmentTimesList[attachmentTimesList.length - 1];
@@ -264,6 +264,7 @@ public class QuasiSpeciesTip extends QuasiSpeciesNode {
 
         node.haploAboveName = haploAboveName;
         node.continuingHaploName = continuingHaploName;
+        node.startBranchCounts = startBranchCounts;
 
         node.attachmentTimesList = attachmentTimesList;
         node.tipTimesList = tipTimesList;
@@ -287,5 +288,11 @@ public class QuasiSpeciesTip extends QuasiSpeciesNode {
         QuasiSpeciesTip qsNode = (QuasiSpeciesTip)node;
         haploAboveName = qsNode.haploAboveName;
         continuingHaploName = qsNode.continuingHaploName;
+        startBranchCounts = qsNode.startBranchCounts;
+
+        attachmentTimesList = qsNode.attachmentTimesList;
+        tipTimesCountList = qsNode.tipTimesCountList;
+        tipTimesCountList = qsNode.tipTimesCountList;
+        parentHaplo = qsNode.parentHaplo;
     }
 }
