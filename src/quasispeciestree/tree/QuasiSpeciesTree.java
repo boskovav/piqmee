@@ -36,6 +36,9 @@ public class QuasiSpeciesTree extends Tree {
     private Map<String,Integer> haplotypeCounts;
     private String qsLabel;
 
+    QuasiSpeciesTip[] m_tips = null;
+    QuasiSpeciesTip[] m_storedTips = null;
+
 
     public QuasiSpeciesTree() { }
 
@@ -98,7 +101,7 @@ public class QuasiSpeciesTree extends Tree {
 
             } else {
                 // make dummy tree with a single root node
-                root = new QuasiSpeciesNode();
+                root = new QuasiSpeciesTip();
                 root.setNr(0);
                 ((QuasiSpeciesNode) root).setqsTree(this);
                 nodeCount = 1;
@@ -244,8 +247,8 @@ public class QuasiSpeciesTree extends Tree {
         }
     }
 
-    public int getHaplotypeCounts(QuasiSpeciesNode node){
-        return haplotypeCounts.get(node.getNr());
+    public int getHaplotypeCounts(Node node){
+        return haplotypeCounts.get(node.getID());
     }
 
     /**
@@ -255,9 +258,7 @@ public class QuasiSpeciesTree extends Tree {
     public int getTotalAttachmentCounts(){
         int totalCount=0;
         for (Node node : this.getExternalNodes()){
-
-            //TODO is this working properly.. just transformed the haplotypeCounts to the trait set from the hashmap
-            totalCount += haplotypeCounts.get(node.getID()) - 1;
+            totalCount += getHaplotypeCounts(node) - 1;
         }
         return totalCount;
     }
@@ -300,10 +301,11 @@ public class QuasiSpeciesTree extends Tree {
      */
     private void setHaploCounts(TraitSet haploCounts){
         for (Node node : this.getExternalNodes()) {
-            if (((QuasiSpeciesTip) node).getAttachmentTimesList().length != (int) haploCounts.getValue(node.getID()))
-                throw new RuntimeException("QuasiSpeciesTree class: The new to be set haploCount is not " +
-                                           "equal the the number of attachment times. Why?");
-            haplotypeCounts.put(node.getID(), (int) haploCounts.getValue(node.getID()));
+//            if (((QuasiSpeciesTip) node).getAttachmentTimesList().length != (int) haploCounts.getValue(node.getID()))
+//                throw new RuntimeException("QuasiSpeciesTree class: The new to be set haploCount is not " +
+//                                           "equal the the number of attachment times. Why?");
+           if (node.getID() != null)
+               haplotypeCounts.put(node.getID(), (int) haploCounts.getValue(node.getID()));
         }
     }
 
@@ -438,30 +440,55 @@ public class QuasiSpeciesTree extends Tree {
     @Override
     protected final void initArrays() {
         // initialise tree-as-array representation + its stored variant
-        m_nodes = new QuasiSpeciesTip[nodeCount];
-        listNodes((QuasiSpeciesNode)root, (QuasiSpeciesNode[])m_nodes);
-        m_storedNodes = new QuasiSpeciesTip[nodeCount];
-        Node copy = root.copy();
-        listNodes((QuasiSpeciesNode)copy, (QuasiSpeciesNode[])m_storedNodes);
-
-        // todo DOES IS MATTER HERE THAT WE HAVE ARRAY OF QSnodes and not QStips?????
+        m_nodes = new QuasiSpeciesNode[internalNodeCount];
+        m_tips = new QuasiSpeciesTip[leafNodeCount];
+        listNodes((QuasiSpeciesNode)root, (QuasiSpeciesNode[]) m_nodes, m_tips);
+        m_storedNodes = new QuasiSpeciesNode[internalNodeCount];
+        m_storedTips = new QuasiSpeciesTip[leafNodeCount];
+        Node copy;
+        if ( root.isLeaf())
+            copy = ((QuasiSpeciesTip)root).copyTip();
+        else
+            copy = root.copy();
+        listNodes((QuasiSpeciesNode)copy, (QuasiSpeciesNode[])m_storedNodes, m_tips);
     }
+
     /**
      * Convert quasi-species tree to array representation.
      *
      * @param node Root of sub-tree to convert.
      * @param nodes Array to populate with tree nodes.
      */
-    private void listNodes(QuasiSpeciesNode node, QuasiSpeciesNode[] nodes) {
-        nodes[node.getNr()] = node;
+    private void listNodes(QuasiSpeciesNode node, QuasiSpeciesNode[] nodes, QuasiSpeciesTip[] tips) {
         node.setqsTree(this);
         if (!node.isLeaf()) {
-            listNodes((QuasiSpeciesNode) node.getLeft(), nodes);
-            if (node.getRight()!=null)
-                listNodes((QuasiSpeciesNode) node.getRight(), nodes);
+            nodes[node.getNr()-leafNodeCount] = node;
+            listNodes((QuasiSpeciesNode) node.getLeft(), nodes, tips);
+            if (node.getRight() != null)
+                listNodes((QuasiSpeciesNode) node.getRight(), nodes, tips);
         }
+        else
+            tips[node.getNr()] = (QuasiSpeciesTip) node;
+    }
 
-        // todo DOES IS MATTER HERE THAT WE HAVE ARRAY OF QSnodes and not QStips?????
+    /**
+     * @return list of tips in array format.
+     *
+     */
+    public QuasiSpeciesTip[] getTipsAsArray() {
+        return m_tips;
+    }
+
+    /**
+     * @return node with the desired node number.
+     *
+     */
+    @Override
+    public Node getNode(final int nodeNr) {
+        if (nodeNr < leafNodeCount)
+            return m_tips[nodeNr];
+        else
+            return m_nodes[nodeNr];
     }
 
     /**
@@ -492,15 +519,16 @@ public class QuasiSpeciesTree extends Tree {
     public void assignFrom(StateNode other) {
         QuasiSpeciesTree qsTree = (QuasiSpeciesTree) other;
 
-        QuasiSpeciesNode[] qsNodes = new QuasiSpeciesNode[qsTree.getNodeCount()];
+        QuasiSpeciesNode[] qsNodes = new QuasiSpeciesNode[qsTree.getInternalNodeCount()];
+        QuasiSpeciesTip[] qsTips = new QuasiSpeciesTip[qsTree.getLeafNodeCount()];
         for (int i = 0; i<qsTree.getExternalNodes().size(); i++)
-            qsNodes[i] = new QuasiSpeciesTip();
+            qsTips[i] = new QuasiSpeciesTip();
         for (int i = qsTree.getExternalNodes().size(); i < qsTree.getNodeCount(); i++)
-            qsNodes[i] = new QuasiSpeciesNode();
+            qsNodes[i-leafNodeCount] = new QuasiSpeciesNode();
 
         ID = qsTree.ID;
-        root = qsNodes[qsTree.root.getNr()];
-        root.assignFrom(qsNodes, qsTree.root);
+        root = qsNodes[qsTree.root.getNr()-leafNodeCount];
+        ((QuasiSpeciesNode) root).assignFrom(qsNodes, qsTips, qsTree.root, leafNodeCount);
         root.setParent(null);
 
         nodeCount = qsTree.nodeCount;
@@ -522,13 +550,14 @@ public class QuasiSpeciesTree extends Tree {
 
         haplotypeCounts = qsTree.haplotypeCounts;
 
-        if (m_nodes == null) {
+        if (m_nodes == null || m_tips == null) {
             initArrays();
         }
-        root = m_nodes[qsTree.root.getNr()];
+        root = m_nodes[qsTree.root.getNr()-leafNodeCount];
         Node[] otherNodes = qsTree.m_nodes;
-        int iRoot = root.getNr();
-        assignFromFragileHelper(0, iRoot, otherNodes);
+        Node[] otherTips = qsTree.m_tips;
+        int iRoot = root.getNr() - leafNodeCount;
+        assignFromFragileHelper(0, iRoot, otherNodes, otherTips);
         root.setHeight(otherNodes[iRoot].getHeight());
         root.setParent(null);
 
@@ -538,46 +567,65 @@ public class QuasiSpeciesTree extends Tree {
         qsRoot.startBranchCounts = ((QuasiSpeciesNode)(otherNodes[iRoot])).startBranchCounts;
 
         if (otherNodes[iRoot].getLeft() != null) {
-            root.setLeft(m_nodes[otherNodes[iRoot].getLeft().getNr()]);
+            if (otherNodes[iRoot].getLeft().isLeaf())
+                root.setLeft(m_tips[otherNodes[iRoot].getLeft().getNr()]);
+            else
+                root.setLeft(m_nodes[otherNodes[iRoot].getLeft().getNr()-leafNodeCount]);
         } else {
             root.setLeft(null);
         }
         if (otherNodes[iRoot].getRight() != null) {
-            root.setRight(m_nodes[otherNodes[iRoot].getRight().getNr()]);
+            if (otherNodes[iRoot].getRight().isLeaf())
+                root.setRight(m_tips[otherNodes[iRoot].getRight().getNr()]);
+            else
+                root.setRight(m_nodes[otherNodes[iRoot].getRight().getNr()-leafNodeCount]);
         } else {
             root.setRight(null);
         }
-        assignFromFragileHelper(iRoot + 1, nodeCount, otherNodes);
-
-        //TODO Why is there twice assignFromFragile helper? ANd why is the second loop from iRoot+1 only?
+        // the secong assignFromFragile Helper is called because root may not be the node with
+        //  the highest number but needs special treatment as opposed to the rest of the nodes
+        assignFromFragileHelper(iRoot + 1, nodeCount, otherNodes, otherTips);
     }
 
     /**
      * helper to assignFromFragile *
      */
-    private void assignFromFragileHelper(int iStart, int iEnd, Node[] otherNodes) {
+    private void assignFromFragileHelper(int iStart, int iEnd, Node[] otherNodes, Node[] otherTips) {
         for (int i = iStart; i < iEnd; i++) {
-            QuasiSpeciesNode sink = (QuasiSpeciesNode)m_nodes[i];
-            QuasiSpeciesNode src = (QuasiSpeciesNode)otherNodes[i];
-            sink.setHeight(src.getHeight());
-            sink.setParent(m_nodes[src.getParent().getNr()]);
-
-            sink.haploAboveName = src.haploAboveName;
-            sink.continuingHaploName = src.continuingHaploName;
-            sink.startBranchCounts = src.startBranchCounts;
-            if (src.getAllChildNodes().size() == 0){
-                ((QuasiSpeciesTip) sink).setAttachmentTimesList(((QuasiSpeciesTip) src).getAttachmentTimesList());
-                ((QuasiSpeciesTip) sink).setTipTimesList(((QuasiSpeciesTip) src).getTipTimesList());
-                ((QuasiSpeciesTip) sink).setTipTimesCountList(((QuasiSpeciesTip) src).getTipTimesCountList());
-                ((QuasiSpeciesTip) sink).setParentHaplo(((QuasiSpeciesTip) src).getParentHaplo());
+            if ( i < leafNodeCount) {
+                QuasiSpeciesTip sink = m_tips[i];
+                QuasiSpeciesTip src = (QuasiSpeciesTip) otherTips[i];
+                sink.setHeight(src.getHeight());
+                sink.setParent(m_nodes[src.getParent().getNr() - leafNodeCount]);
+                sink.haploAboveName = src.haploAboveName;
+                sink.continuingHaploName = src.continuingHaploName;
+                sink.startBranchCounts = src.startBranchCounts;
+                sink.setAttachmentTimesList(src.getAttachmentTimesList());
+                sink.setTipTimesList(src.getTipTimesList());
+                sink.setTipTimesCountList(src.getTipTimesCountList());
+                sink.setParentHaplo(src.getParentHaplo());
             }
-
-            if (src.getLeft() != null) {
-                sink.setLeft(m_nodes[src.getLeft().getNr()]);
-                if (src.getRight() != null) {
-                    sink.setRight(m_nodes[src.getRight().getNr()]);
-                } else {
-                    sink.setRight(null);
+            else {
+                QuasiSpeciesNode sink = (QuasiSpeciesNode) m_nodes[i-leafNodeCount];
+                QuasiSpeciesNode src = (QuasiSpeciesNode) otherNodes[i-leafNodeCount];
+                sink.setHeight(src.getHeight());
+                sink.setParent(m_nodes[src.getParent().getNr() - leafNodeCount]);
+                sink.haploAboveName = src.haploAboveName;
+                sink.continuingHaploName = src.continuingHaploName;
+                sink.startBranchCounts = src.startBranchCounts;
+                if (src.getLeft() != null) {
+                    if (src.getLeft().isLeaf())
+                        sink.setLeft(m_tips[src.getLeft().getNr()]);
+                    else
+                        sink.setLeft(m_nodes[src.getLeft().getNr() - leafNodeCount]);
+                    if (src.getRight() != null) {
+                        if (src.getLeft().isLeaf())
+                            sink.setLeft(m_tips[src.getRight().getNr()]);
+                        else
+                            sink.setRight(m_nodes[src.getRight().getNr() - leafNodeCount]);
+                    } else {
+                        sink.setRight(null);
+                    }
                 }
             }
         }
@@ -605,13 +653,21 @@ public class QuasiSpeciesTree extends Tree {
         regularTree.nodeCount = regularTree.getNodeCount()+(additionalNodes*2);
         regularTree.leafNodeCount = (regularTree.nodeCount+1)/2;
         regularTree.internalNodeCount = regularTree.nodeCount/2-1;
+
         Node[] nodestemp = regularTree.m_nodes.clone();
-        regularTree.m_nodes = new Node[regularTree.nodeCount];
+        Node[] tipstemp = regularTree.m_tips.clone();
+        regularTree.m_nodes = new Node[regularTree.internalNodeCount];
+        regularTree.m_tips = new QuasiSpeciesTip[regularTree.leafNodeCount];
         for (Node node : nodestemp){
-            regularTree.m_nodes[node.getNr()] = node;
+            regularTree.m_nodes[node.getNr()-leafNodeCount] = node;
         }
 
-        int nextNodeNr = getNodeCount();
+        for (Node node : tipstemp){
+            regularTree.m_tips[node.getNr()] = (QuasiSpeciesTip) node;
+        }
+
+        int nextNodeNr = getTotalAttachmentCounts() + getNodeCount();
+        int nextTipNr = getLeafNodeCount();
         Node nextNode;
         Node nextTip;
         Node maxNode = regularTree.getRoot();
@@ -665,10 +721,10 @@ public class QuasiSpeciesTree extends Tree {
 
                 // Create and label new tip:
                 nextTip = new QuasiSpeciesTip();
-                nextTip.setNr(nextNodeNr);
-                nextTip.setID(String.valueOf(nextNodeNr));
-                regularTree.m_nodes[nextNodeNr] = nextTip;
-                nextNodeNr += 1;
+                nextTip.setNr(nextTipNr);
+                nextTip.setID(String.valueOf(nextTipNr));
+                regularTree.m_tips[nextTipNr] = (QuasiSpeciesTip) nextTip;
+                nextTipNr += 1;
 
                 // Connect to parent:
                 nextNode.addChild(nextTip);
@@ -689,6 +745,9 @@ public class QuasiSpeciesTree extends Tree {
             }
         }
         regularTree.setRoot((QuasiSpeciesNode) maxNode);
+        // Number internal nodes:
+        numberInternalNodes(maxNode, maxNode.getLeafNodeCount());
+
         return regularTree;
     }
 
@@ -739,15 +798,16 @@ public class QuasiSpeciesTree extends Tree {
     private void initFromFlatHaploTree(Tree flatHaploTree) {
 
         // Create quasispecies tree
-        QuasiSpeciesNode[] quasiSpeciesNodes = new QuasiSpeciesNode[flatHaploTree.getNodeCount()];
+        QuasiSpeciesNode[] quasiSpeciesNodes = new QuasiSpeciesNode[flatHaploTree.getInternalNodeCount()];
+        QuasiSpeciesTip[] quasiSpeciesTips = new QuasiSpeciesTip[flatHaploTree.getLeafNodeCount()];
 
         List<Node> nodesToAssignNext = new ArrayList<>();
         List<Node> nodesToAssign = new ArrayList<>();
         nodesToAssign.add(flatHaploTree.getRoot());
-        quasiSpeciesNodes[flatHaploTree.getRoot().getNr()] = new QuasiSpeciesNode();
-        quasiSpeciesNodes[flatHaploTree.getRoot().getNr()].setHeight(flatHaploTree.getRoot().getHeight());
+        quasiSpeciesNodes[flatHaploTree.getRoot().getNr() - flatHaploTree.getLeafNodeCount()] = new QuasiSpeciesNode();
+        quasiSpeciesNodes[flatHaploTree.getRoot().getNr() - flatHaploTree.getLeafNodeCount()].setHeight(flatHaploTree.getRoot().getHeight());
 
-        QuasiSpeciesNode newRoot = quasiSpeciesNodes[flatHaploTree.getRoot().getNr()];
+        QuasiSpeciesNode newRoot = quasiSpeciesNodes[flatHaploTree.getRoot().getNr() - flatHaploTree.getLeafNodeCount()];
 
         while (!nodesToAssign.isEmpty()) {
 
@@ -755,12 +815,10 @@ public class QuasiSpeciesTree extends Tree {
 
             for (Node node : nodesToAssign) {
 
-                QuasiSpeciesNode thisQuasiSpeciesNode = quasiSpeciesNodes[node.getNr()];
-
                 switch (node.getChildCount()) {
                     case 0:
                         // Leaf at base of branch
-                        QuasiSpeciesTip thisQuasiSpeciesTip = (QuasiSpeciesTip) thisQuasiSpeciesNode;
+                        QuasiSpeciesTip thisQuasiSpeciesTip = quasiSpeciesTips[node.getNr()];
                         thisQuasiSpeciesTip.setNr(node.getNr());
                         thisQuasiSpeciesTip.setID(String.valueOf(node.getID()));
 
@@ -832,20 +890,29 @@ public class QuasiSpeciesTree extends Tree {
 
                     case 2:
                         // Non-leaf at base of branch
-                        if (node.getChild(0).getAllChildNodes().size() == 0)
-                            quasiSpeciesNodes[node.getChild(0).getNr()] = new QuasiSpeciesTip();
-                        else
-                        quasiSpeciesNodes[node.getChild(0).getNr()] = new QuasiSpeciesNode();
-                        quasiSpeciesNodes[node.getChild(0).getNr()].setHeight(node.getChild(0).getHeight());
+                        QuasiSpeciesNode thisQuasiSpeciesNode = quasiSpeciesNodes[node.getNr() - flatHaploTree.getLeafNodeCount()];
 
-                        if (node.getChild(1).getAllChildNodes().size() == 0)
-                            quasiSpeciesNodes[node.getChild(1).getNr()] = new QuasiSpeciesTip();
-                        else
-                        quasiSpeciesNodes[node.getChild(1).getNr()] = new QuasiSpeciesNode();
-                        quasiSpeciesNodes[node.getChild(1).getNr()].setHeight(node.getChild(1).getHeight());
+                        if (node.getChild(0).getLeafNodeCount() == 0) {
+                            quasiSpeciesTips[node.getChild(0).getNr()] = new QuasiSpeciesTip();
+                            quasiSpeciesTips[node.getChild(0).getNr()].setHeight(node.getChild(0).getHeight());
+                            thisQuasiSpeciesNode.addChild(quasiSpeciesTips[node.getChild(0).getNr()]);
+                        }
+                        else {
+                            quasiSpeciesNodes[node.getChild(0).getNr() - flatHaploTree.getLeafNodeCount()] = new QuasiSpeciesNode();
+                            quasiSpeciesNodes[node.getChild(0).getNr() - flatHaploTree.getLeafNodeCount()].setHeight(node.getChild(0).getHeight());
+                            thisQuasiSpeciesNode.addChild(quasiSpeciesNodes[node.getChild(0).getNr() - flatHaploTree.getLeafNodeCount()]);
+                        }
 
-                        thisQuasiSpeciesNode.addChild(quasiSpeciesNodes[node.getChild(0).getNr()]);
-                        thisQuasiSpeciesNode.addChild(quasiSpeciesNodes[node.getChild(1).getNr()]);
+                        if (node.getChild(1).getLeafNodeCount() == 0) {
+                            quasiSpeciesTips[node.getChild(1).getNr()] = new QuasiSpeciesTip();
+                            quasiSpeciesTips[node.getChild(1).getNr()].setHeight(node.getChild(1).getHeight());
+                            thisQuasiSpeciesNode.addChild(quasiSpeciesTips[node.getChild(1).getNr()]);
+                        }
+                        else {
+                            quasiSpeciesNodes[node.getChild(1).getNr() - flatHaploTree.getLeafNodeCount()] = new QuasiSpeciesNode();
+                            quasiSpeciesNodes[node.getChild(1).getNr() - flatHaploTree.getLeafNodeCount()].setHeight(node.getChild(1).getHeight());
+                            thisQuasiSpeciesNode.addChild(quasiSpeciesNodes[node.getChild(1).getNr() - flatHaploTree.getLeafNodeCount()]);
+                        }
 
                         nodesToAssignNext.add(node.getLeft());
                         nodesToAssignNext.add(node.getRight());
@@ -859,7 +926,7 @@ public class QuasiSpeciesTree extends Tree {
         }
 
         // Number internal nodes:
-        numberInternalNodes(newRoot, newRoot.getAllLeafNodes().size());
+        numberInternalNodes(newRoot, newRoot.getLeafNodeCount());
 
         // Assign tree topology:
         assignFromWithoutID(new QuasiSpeciesTree(newRoot));
@@ -907,7 +974,7 @@ public class QuasiSpeciesTree extends Tree {
         }
         QuasiSpeciesNode newRoot = (QuasiSpeciesNode) result.get(0);
         // Number internal nodes:
-        numberInternalNodes(newRoot, newRoot.getAllLeafNodes().size());
+        numberInternalNodes(newRoot, newRoot.getLeafNodeCount());
 
         // Assign tree topology:
         assignFromWithoutID(new QuasiSpeciesTree(newRoot));
@@ -971,7 +1038,7 @@ public class QuasiSpeciesTree extends Tree {
         }
         QuasiSpeciesNode newRoot = (QuasiSpeciesNode) result.get(0);
         // Number internal nodes:
-        numberInternalNodes(newRoot, newRoot.getAllLeafNodes().size());
+        numberInternalNodes(newRoot, newRoot.getLeafNodeCount());
 
         // Assign tree topology:
         assignFromWithoutID(new QuasiSpeciesTree(newRoot));
@@ -982,7 +1049,7 @@ public class QuasiSpeciesTree extends Tree {
         for (Node node : getExternalNodes()){
             QuasiSpeciesTip thisQuasiSpeciesTip = (QuasiSpeciesTip) node;
             // sort and reverse the rest of the array to start with the largest value
-            thisQuasiSpeciesTip.setFirstEntryAndsortAttachTimeList();
+            thisQuasiSpeciesTip.setFirstEntryAndSortAttachTimeList();
             // sort tip times
             thisQuasiSpeciesTip.sortTipTimeAndCountList();
         }
@@ -1066,7 +1133,7 @@ public class QuasiSpeciesTree extends Tree {
                         }
                         // if with different time, add to tip times and counts
                         // expand the TipTimesList and add a new value
-                        addNewTimesAndCountEntry(seenNode, tipTimesListTmp, tipTimesCountListTmp, node.getHeight(), haplotypeCounts.get(node));
+                        addNewTimesAndCountEntry(seenNode, tipTimesListTmp, tipTimesCountListTmp, node.getHeight(), getHaplotypeCounts(node));
                     }
                     else {
                         // since we are assigning from the full tree, we need to check if we have
@@ -1117,7 +1184,7 @@ public class QuasiSpeciesTree extends Tree {
                 ((QuasiSpeciesTip) returnNode).getTipTimesList()[0] = node.getHeight();
                 if (haplotypeCounts.size() != 0){
                     ((QuasiSpeciesTip) returnNode).setTipTimesCountList(new int[1]);
-                    ((QuasiSpeciesTip) returnNode).getTipTimesCountList()[0] = haplotypeCounts.get(node.getNr());
+                    ((QuasiSpeciesTip) returnNode).getTipTimesCountList()[0] = getHaplotypeCounts(node);
                 }
             }
         }
@@ -1379,10 +1446,32 @@ public class QuasiSpeciesTree extends Tree {
      *
      */
     @Override
+    public void setEverythingDirty(final boolean isDirty) {
+        setSomethingIsDirty(isDirty);
+        if (!isDirty) {
+            for( Node n : m_nodes ) {
+                n.makeDirty(IS_CLEAN);
+            }
+            for( Node n : m_tips ) {
+                n.makeDirty(IS_CLEAN);
+            }
+            //  root.makeAllDirty(IS_CLEAN);
+        } else {
+            for( Node n : m_nodes ) {
+                n.makeDirty(IS_FILTHY);
+            }
+            for( Node n : m_tips ) {
+                n.makeDirty(IS_FILTHY);
+            }
+            //    root.makeAllDirty(IS_FILTHY);
+        }
+    }
+
+    @Override
     protected void store() {
         // from MultiTypeTree class
-        storedRoot = m_storedNodes[root.getNr()];
-        int iRoot = root.getNr();
+        int iRoot = root.getNr()-leafNodeCount;
+        storedRoot = m_storedNodes[iRoot];
 
         storeNodes(0, iRoot);
 
@@ -1391,11 +1480,17 @@ public class QuasiSpeciesTree extends Tree {
             storedRoot.setParent(null);
 
             if (root.getLeft()!=null)
-                storedRoot.setLeft(m_storedNodes[root.getLeft().getNr()]);
+                if (root.getLeft().isLeaf())
+                    storedRoot.setLeft(m_storedTips[root.getLeft().getNr()]);
+                else
+                    storedRoot.setLeft(m_storedNodes[root.getLeft().getNr()-leafNodeCount]);
             else
                 storedRoot.setLeft(null);
             if (root.getRight()!=null)
-                storedRoot.setRight(m_storedNodes[root.getRight().getNr()]);
+                if (root.getRight().isLeaf())
+                    storedRoot.setRight(m_storedTips[root.getRight().getNr()]);
+                else
+                    storedRoot.setRight(m_storedNodes[root.getRight().getNr()-leafNodeCount]);
             else
                 storedRoot.setRight(null);
         }
@@ -1412,24 +1507,12 @@ public class QuasiSpeciesTree extends Tree {
      * helper to store *
      */
     private void storeNodes(int iStart, int iEnd) {
-        // from MultiTypeTree class
-        for (int i = iStart; i<iEnd; i++) {
-            QuasiSpeciesNode sink = (QuasiSpeciesNode)m_storedNodes[i];
-            QuasiSpeciesNode src = (QuasiSpeciesNode)m_nodes[i];
-            sink.setHeight(src.getHeight());
-            sink.setParent(m_storedNodes[src.getParent().getNr()]);
-            if (src.getLeft()!=null) {
-                sink.setLeft(m_storedNodes[src.getLeft().getNr()]);
-                if (src.getRight()!=null)
-                    sink.setRight(m_storedNodes[src.getRight().getNr()]);
-                else
-                    sink.setRight(null);
-            }
-        // from MultiTypeTree class
-            sink.setHaploAboveName(src.getHaploAboveName());
-            sink.setContinuingHaploName(src.getContinuingHaploName());
-            sink.setStartBranchCounts(src.getStartBranchCounts());
-            if (src.isLeaf()){
+        for (int i = iStart; i < iEnd; i++) {
+            QuasiSpeciesNode sink;
+            QuasiSpeciesNode src;
+            if (i < leafNodeCount) {
+                sink = m_storedTips[i];
+                src = m_tips[i];
                 System.arraycopy(((QuasiSpeciesTip) sink).getAttachmentTimesList(),0,
                         ((QuasiSpeciesTip) src).getAttachmentTimesList(),0,
                         ((QuasiSpeciesTip) src).getAttachmentTimesList().length);
@@ -1440,9 +1523,62 @@ public class QuasiSpeciesTree extends Tree {
                         ((QuasiSpeciesTip) src).getTipTimesCountList(),0,
                         ((QuasiSpeciesTip) src).getTipTimesCountList().length);
                 ((QuasiSpeciesTip) sink).setParentHaplo(((QuasiSpeciesTip) src).getParentHaplo());
-
             }
+            else {
+                sink = (QuasiSpeciesNode)m_storedNodes[i-leafNodeCount];
+                src = (QuasiSpeciesNode)m_nodes[i-leafNodeCount];
+                if (src.getLeft()!=null) {
+                    if (src.getLeft().isLeaf())
+                        sink.setLeft(m_storedTips[src.getLeft().getNr()]);
+                    else
+                        sink.setLeft(m_storedNodes[src.getLeft().getNr()-leafNodeCount]);
+                    if (src.getRight()!=null)
+                        if (src.getRight().isLeaf())
+                            sink.setRight(m_storedTips[src.getRight().getNr()]);
+                        else
+                            sink.setRight(m_storedNodes[src.getRight().getNr()-leafNodeCount]);
+                    else
+                        sink.setRight(null);
+                }
+            }
+            sink.setHeight(src.getHeight());
+            sink.setParent(m_storedNodes[src.getParent().getNr()-leafNodeCount]);
+            sink.setHaploAboveName(src.getHaploAboveName());
+            sink.setContinuingHaploName(src.getContinuingHaploName());
+            sink.setStartBranchCounts(src.getStartBranchCounts());
         }
+    }
+
+    @Override
+    public void restore() {
+
+        // necessary for sampled ancestor trees
+        nodeCount = m_storedNodes.length + m_storedTips.length;
+
+        final Node[] tmp = m_storedNodes;
+        m_storedNodes = m_nodes;
+        m_nodes = tmp;
+        final QuasiSpeciesTip[] tmptips = m_storedTips;
+        m_storedTips = m_tips;
+        m_tips = tmptips;
+
+        root = m_nodes[storedRoot.getNr()-leafNodeCount];
+
+        // necessary for sampled ancestor trees,
+        // we have the nodes, no need for expensive recursion
+        leafNodeCount = m_tips.length;
+
+        hasStartedEditing = false;
+
+        for( Node n : m_nodes ) {
+            n.makeDirty(Tree.IS_CLEAN);
+        }
+
+        for( Node n : m_tips ) {
+            n.makeDirty(Tree.IS_CLEAN);
+        }
+
+        postCache = null;
     }
 
     /////////////////////////////////////////////////
@@ -1460,15 +1596,15 @@ public class QuasiSpeciesTree extends Tree {
         printStream.println("\tDimensions ntax="+getLeafNodeCount()+";");
         printStream.println("\t\tTaxlabels");
         for (int i = 0; i<getLeafNodeCount(); i++)
-            printStream.println("\t\t\t"+getNodesAsArray()[i].getID());
+            printStream.println("\t\t\t"+getTipsAsArray()[i].getID());
         printStream.println("\t\t\t;");
         printStream.println("End;");
 
         printStream.println("Begin trees;");
         printStream.println("\tTranslate");
         for (int i = 0; i<getLeafNodeCount(); i++) {
-            printStream.print("\t\t\t"+(getNodesAsArray()[i].getNr()+1)
-                    +" "+getNodesAsArray()[i].getID());
+            printStream.print("\t\t\t"+(getTipsAsArray()[i].getNr()+1)
+                    +" "+getTipsAsArray()[i].getID());
             if (i<getLeafNodeCount()-1)
                 printStream.print(",");
             printStream.print("\n");
