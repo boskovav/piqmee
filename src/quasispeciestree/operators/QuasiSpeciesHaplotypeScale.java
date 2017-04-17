@@ -1,9 +1,8 @@
 package quasispeciestree.operators;
 
 import beast.core.Description;
-import quasispeciestree.tree.QuasiSpeciesNode;
 import beast.util.Randomizer;
-import quasispeciestree.tree.QuasiSpeciesTip;
+import quasispeciestree.tree.QuasiSpeciesNode;
 import quasispeciestree.tree.QuasiSpeciesTree;
 
 import java.util.ArrayList;
@@ -42,9 +41,9 @@ public class QuasiSpeciesHaplotypeScale extends QuasiSpeciesTreeOperator{
         // Randomly select event on tree:
         // weighted by the number of events (i.e. count of each haplotype??)
         // for now do random uniform from just the haplotype count (disregarding the counts)
-        QuasiSpeciesTip node = null;
+        QuasiSpeciesNode node = null;
         do {
-            node = (QuasiSpeciesTip) qsTree.getNode(Randomizer.nextInt(qsTree.getLeafNodeCount()));
+            node = (QuasiSpeciesNode) qsTree.getNode(Randomizer.nextInt(qsTree.getLeafNodeCount()));
 
         } while (node.getAttachmentTimesList().length < 2);
 
@@ -93,7 +92,7 @@ public class QuasiSpeciesHaplotypeScale extends QuasiSpeciesTreeOperator{
                 tminold = temptiptimes[i];
                 toldbottom = tempqstimes[currentPosition];
             }
-            currentPosition = currentPosition - temptiptimescount[i];
+            currentPosition -= temptiptimescount[i];
         }
         // reposition attachment times: attach ((time - tmin) * (tnew/told)) + tmin
         // scale all the other positions in the array but the 0 position (haplo start time)
@@ -125,7 +124,7 @@ public class QuasiSpeciesHaplotypeScale extends QuasiSpeciesTreeOperator{
                 tminnew = temptiptimes[i];
                 tnewbottom = tempqstimes[currentPosition];
             }
-            currentPosition = currentPosition - temptiptimescount[i];
+            currentPosition -= temptiptimescount[i];
         }
 
         // check that the scaling was ok
@@ -175,7 +174,7 @@ public class QuasiSpeciesHaplotypeScale extends QuasiSpeciesTreeOperator{
                 if (parentHaplo == -1)
                     recalculateParentHaploAndCorrectContinuingHaploName(parentHaplo, oldNodeBelowHaploMoved);
                 else {
-                    int grandParentHaplo = ((QuasiSpeciesTip) qsTree.getNode(parentHaplo)).getParentHaplo();
+                    int grandParentHaplo = ((QuasiSpeciesNode) qsTree.getNode(parentHaplo)).getParentHaplo();
                     QuasiSpeciesNode oldNode = findNodeBelowThisHaplo(oldNodeBelowHaploMoved, parentHaplo);
                     recalculateParentHaploAndCorrectContinuingHaploName(grandParentHaplo, oldNode);
                 }

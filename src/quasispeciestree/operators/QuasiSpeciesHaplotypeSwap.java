@@ -2,9 +2,8 @@ package quasispeciestree.operators;
 
 import beast.core.Description;
 import beast.evolution.tree.Node;
-import quasispeciestree.tree.QuasiSpeciesNode;
 import beast.util.Randomizer;
-import quasispeciestree.tree.QuasiSpeciesTip;
+import quasispeciestree.tree.QuasiSpeciesNode;
 import quasispeciestree.tree.QuasiSpeciesTree;
 
 import java.util.ArrayList;
@@ -29,7 +28,7 @@ public class QuasiSpeciesHaplotypeSwap extends QuasiSpeciesTreeOperator{
         // check if this operator can be used at all?
         int canbeused = 0;
         for (Node node : qsTree.getExternalNodes()){
-            if (qsTree.getHaplotypeCounts((QuasiSpeciesNode) node)>0)
+            if (qsTree.getHaplotypeCounts(node) > 0)
                 canbeused++;
         }
         if (canbeused<1){
@@ -50,7 +49,7 @@ public class QuasiSpeciesHaplotypeSwap extends QuasiSpeciesTreeOperator{
         // check that this operator can actually perform a move
         int haplowithparents = 0;
         for (int i = 0; i < qsTree.getLeafNodeCount(); i++){
-            if (((QuasiSpeciesTip)qsTree.getNode(i)).getParentHaplo() != -1)
+            if (((QuasiSpeciesNode)qsTree.getNode(i)).getParentHaplo() != -1)
                 haplowithparents += 1;
         }
         if (haplowithparents == 0)
@@ -60,9 +59,9 @@ public class QuasiSpeciesHaplotypeSwap extends QuasiSpeciesTreeOperator{
         double logHastingsRatio = 0.0;
         // Randomly select event on tree:
         // for now choose uniformly at random from just the unique haplotype count (disregarding the counts)
-        QuasiSpeciesTip node = null;
+        QuasiSpeciesNode node = null;
         do {
-            node = (QuasiSpeciesTip) qsTree.getNode(Randomizer.nextInt(qsTree.getLeafNodeCount()));
+            node = (QuasiSpeciesNode) qsTree.getNode(Randomizer.nextInt(qsTree.getLeafNodeCount()));
         } while (node.getAttachmentTimesList().length < 2 || node.getParentHaplo() == -1);
 
         // if we did not assign the node at this stage, throw exception
@@ -72,10 +71,10 @@ public class QuasiSpeciesHaplotypeSwap extends QuasiSpeciesTreeOperator{
         int haplo = node.getNr();
 
         // get the parentHaploArray and the attachment times array to be changed
-        QuasiSpeciesTip parentHaplo = (QuasiSpeciesTip) qsTree.getNode(node.getParentHaplo());
-        QuasiSpeciesTip grandParentHaplo = null;
+        QuasiSpeciesNode parentHaplo = (QuasiSpeciesNode) qsTree.getNode(node.getParentHaplo());
+        QuasiSpeciesNode grandParentHaplo = null;
         if (parentHaplo.getParentHaplo() != -1)
-            grandParentHaplo = (QuasiSpeciesTip) qsTree.getNode(parentHaplo.getParentHaplo());;
+            grandParentHaplo = (QuasiSpeciesNode) qsTree.getNode(parentHaplo.getParentHaplo());;
 
         // get the attachment times for tip
         double[] tempqstimes = node.getAttachmentTimesList().clone();
@@ -141,7 +140,7 @@ public class QuasiSpeciesHaplotypeSwap extends QuasiSpeciesTreeOperator{
                 tminparentold = temptiptimesparent[i];
                 toldparentbottom = tempqstimesparent[currentPosition];
             }
-            currentPosition = currentPosition - temptiptimescountparent[i];
+            currentPosition -= temptiptimescountparent[i];
         }
         // check that the scaling was ok
         if (tmaxparent/toldparenttop < tminparentold/toldparentbottom){
@@ -153,7 +152,7 @@ public class QuasiSpeciesHaplotypeSwap extends QuasiSpeciesTreeOperator{
 // NO GRANDPARENT
         // find out tmax: grandparent haplotype is null, then tmax=origin
         if (grandParentHaplo == null){
-            tmax = origin.getValue();
+            tmax = originInput.get().getValue();
         }
 // GRANDPARENT
         // otherwise tmax is the common ancestor of grandParentHaplo and parentHaplo
@@ -194,7 +193,7 @@ public class QuasiSpeciesHaplotypeSwap extends QuasiSpeciesTreeOperator{
                 tminnew = temptiptimes[i];
                 tnewbottom = tempqstimes[currentPosition];
             }
-            currentPosition = currentPosition - temptiptimescount[i];
+            currentPosition -= temptiptimescount[i];
         }
         // check that the scaling was ok
         if (tmax/tnewtop < tminnew/tnewbottom){
@@ -242,7 +241,7 @@ public class QuasiSpeciesHaplotypeSwap extends QuasiSpeciesTreeOperator{
                 tminparentnew = temptiptimesparent[i];
                 tnewparentbottom = tempqstimesparent[currentPosition];
             }
-            currentPosition = currentPosition - temptiptimescountparent[i];
+            currentPosition -= temptiptimescountparent[i];
         }
         // check that the scaling was ok
         if (tmaxparent/tnewparenttop < tminparentnew/tnewparentbottom){
