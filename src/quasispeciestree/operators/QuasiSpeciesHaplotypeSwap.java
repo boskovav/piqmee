@@ -152,7 +152,7 @@ public class QuasiSpeciesHaplotypeSwap extends QuasiSpeciesTreeOperator{
 // NO GRANDPARENT
         // find out tmax: grandparent haplotype is null, then tmax=origin
         if (grandParentHaplo == null){
-            tmax = originInput.get().getValue();
+            tmax = origin.getValue();
         }
 // GRANDPARENT
         // otherwise tmax is the common ancestor of grandParentHaplo and parentHaplo
