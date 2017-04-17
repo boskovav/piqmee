@@ -3,7 +3,7 @@ package quasispeciestree.util;
 import beast.core.*;
 import beast.evolution.tree.Node;
 import quasispeciestree.tree.QuasiSpeciesTree;
-import quasispeciestree.tree.QuasiSpeciesTip;
+import quasispeciestree.tree.QuasiSpeciesNode;
 
 import java.io.PrintStream;
 
@@ -27,7 +27,7 @@ public class AttachmentTimes extends CalculationNode implements Function, Loggab
 
     private String haplotype;
 
-    private QuasiSpeciesTip haploNode;
+    private QuasiSpeciesNode haploNode;
 
     public AttachmentTimes() { };
 
@@ -37,7 +37,7 @@ public class AttachmentTimes extends CalculationNode implements Function, Loggab
         haplotype = haplotypeInput.get();
         for (Node node : qsTree.getExternalNodes()){
             if (haplotype.equals(node.getID().toString())){
-                haploNode = (QuasiSpeciesTip) node;
+                haploNode = (QuasiSpeciesNode) node;
             }
         }
     }
