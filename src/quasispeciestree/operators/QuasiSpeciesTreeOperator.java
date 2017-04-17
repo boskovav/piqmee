@@ -4,7 +4,6 @@ import beast.core.Description;
 import beast.core.Input;
 import beast.core.Operator;
 import beast.evolution.tree.Node;
-import quasispeciestree.tree.QuasiSpeciesTip;
 import quasispeciestree.tree.QuasiSpeciesTree;
 import quasispeciestree.tree.QuasiSpeciesNode;
 import beast.core.parameter.RealParameter;
@@ -23,12 +22,17 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
             "quasiSpeciesTree", "Quasi-species tree on which to operate.",
             Input.Validate.REQUIRED);
 
+    public Input<RealParameter> originInput = new Input<>(
+            "origin", "Origin of the quasi-species tree.",
+            Input.Validate.REQUIRED);
+
     protected QuasiSpeciesTree qsTree;
     protected RealParameter origin;
 
     @Override
     public void initAndValidate(){
         qsTree = quasiSpeciesTreeInput.get();
+        origin = originInput.get();
     }
 
     /* ***********************************************************************
@@ -322,7 +326,7 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
         if (destBranchBase.getContinuingHaploName() != -1) {
             int destHaplo = destBranchBase.getContinuingHaploName();
             //check if it starts above the newly created parent node
-            if (destTime < ((QuasiSpeciesTip) qsTree.getNode(destHaplo)).getAttachmentTimesList()[0]){
+            if (destTime < ((QuasiSpeciesNode) qsTree.getNode(destHaplo)).getAttachmentTimesList()[0]){
                 if (destBranchBase.getHaploAboveName() != -1){
                     destBranchBase.setHaploAboveName(-1);
                     parent.setHaploAboveName(destHaplo);
@@ -398,7 +402,7 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
         if (oldRoot.getContinuingHaploName() != -1) {
             int destHaplo = oldRoot.getContinuingHaploName();
             //check if it starts below the newly created parent node
-            if (destTime < ((QuasiSpeciesTip) qsTree.getNode(destHaplo)).getAttachmentTimesList()[0]) {
+            if (destTime < ((QuasiSpeciesNode) qsTree.getNode(destHaplo)).getAttachmentTimesList()[0]) {
                 if (oldRoot.getHaploAboveName() != -1){
                     oldRoot.setHaploAboveName(-1);
                     newRoot.setHaploAboveName(destHaplo);
@@ -537,7 +541,7 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
         // that node is the max possible attachment time of the haplotype
         QuasiSpeciesNode nodeToCheck = startNode;
         if(nodeToCheck.getContinuingHaploName() != -1 && nodeToCheck.getContinuingHaploName() != haplo
-                && ((QuasiSpeciesTip) qsTree.getNode(nodeToCheck.getContinuingHaploName())).getAttachmentTimesList()[0]
+                && ((QuasiSpeciesNode) qsTree.getNode(nodeToCheck.getContinuingHaploName())).getAttachmentTimesList()[0]
                     > newParentTime){
             // the max node is the new to be created node at the attach time!
             output.add(0,null);
