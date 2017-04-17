@@ -21,8 +21,8 @@ public class QuasiSpeciesSequenceAttachmentUniform extends QuasiSpeciesTreeOpera
     public void initAndValidate() {
         super.initAndValidate();
         if (qsTree.getTotalAttachmentCounts() == 0){
-            throw new IllegalArgumentException("In QuasiSpeciesSequenceAttachmentRandom operator --- "
-                    + "there are no QS duplicates. The QuasiSpeciesSequenceAttachmentRandom "
+            throw new IllegalArgumentException("In QuasiSpeciesSequenceAttachmentUniform operator --- "
+                    + "there are no QS duplicates. The QuasiSpeciesSequenceAttachmentUniform "
                     + "operator cannot be used. Please remove it from your xml file.");
         }
     }
@@ -87,17 +87,19 @@ public class QuasiSpeciesSequenceAttachmentUniform extends QuasiSpeciesTreeOpera
         int tminIdxHard = tempqstimes.length;
         double tminHard = temptiptimes[0];
         for (int i = 1; i < temptiptimes.length; i++){
-            if (changeIdx < currentPosition)
+            if (changeIdx > currentPosition)
                 break;
             else if (tempqstimes[currentPosition] < temptiptimes[i])
-                throw new IllegalStateException("QuasiSpeciesSequenceAttachmentRandom: seems like the attachment time is below its tip.");
-            else if (tempqstimes[currentPosition + 1] < temptiptimes[i]) {
+                throw new IllegalStateException("QuasiSpeciesSequenceAttachmentUniform: seems like the attachment time is below its tip.");
+            else if (currentPosition == tempqstimes.length - 1)
+                tminHard = temptiptimes[i];
+            else if (currentPosition != tempqstimes.length - 1 && tempqstimes[currentPosition + 1] < temptiptimes[i]) {
                 tminIdxHard = currentPosition;
                 tminHard = temptiptimes[i];
             }
             currentPosition -= temptiptimescount[i];
         }
-        if (changeIdx == tminIdxHard) {
+        if (changeIdx == tminIdxHard - 1) {
             if (tmin < tminHard)
                 tmin = tminHard;
         }

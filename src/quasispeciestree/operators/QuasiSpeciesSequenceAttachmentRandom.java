@@ -81,12 +81,14 @@ public class QuasiSpeciesSequenceAttachmentRandom extends QuasiSpeciesTreeOperat
         // go through the tempqstimes array and identify where we are in terms of temptiptimes array
         //  at the same time, keep ascertaining the hard lower bound
         int currentPosition = tempqstimes.length-1-(temptiptimescount[0]-1);
-        for (int i = 0; i < temptiptimes.length - 1; i++) {
-            if (changeIdx < currentPosition)
+        for (int i = 1; i < temptiptimes.length; i++) {
+            if (changeIdx > currentPosition)
                 break;
             else if (tempqstimes[currentPosition] < temptiptimes[i])
                 throw new IllegalStateException("QuasiSpeciesSequenceAttachmentRandom: seems like the attachment time is below its tip.");
-            else if (tempqstimes[currentPosition + 1] < temptiptimes[i]) {
+            else if (currentPosition == tempqstimes.length - 1)
+                tminHard = temptiptimes[i];
+            else if (currentPosition != tempqstimes.length - 1 && tempqstimes[currentPosition + 1] < temptiptimes[i]) {
                 tminIdxHard = currentPosition;
                 tminHard = temptiptimes[i];
             }
@@ -115,7 +117,9 @@ public class QuasiSpeciesSequenceAttachmentRandom extends QuasiSpeciesTreeOperat
         else
             tminIdx = tmaxIdx + 1;
 
-        if (tminIdx == tempqstimes.length)
+        if (tminIdx == tminIdxHard)
+            tmin = tminHard;
+        else if (tminIdx == tempqstimes.length)
             tmin = node.getHeight();
         else if (tminIdx > tempqstimes.length)
             throw new IllegalStateException("QuasiSpeciesSequenceAttachmentRandom: seems like the tminIdx was chosen wrongly.");
