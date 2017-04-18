@@ -141,9 +141,6 @@ public class QuasiSpeciesHaplotypeScale extends QuasiSpeciesTreeOperator{
                 return Double.NEGATIVE_INFINITY;
         }
 
-        // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
-//                logHastingsRatio -= Math.log(tmax - toldtop);
-//                logHastingsRatio += Math.log(tmax - tnewtop);
         // assign contribution to the Hastings ratio for having different possible scales for toldtop
         logHastingsRatio += Math.log(tmax/toldtop - tminold/toldbottom);
         logHastingsRatio -= Math.log(tmax/tnewtop - tminnew/tnewbottom);

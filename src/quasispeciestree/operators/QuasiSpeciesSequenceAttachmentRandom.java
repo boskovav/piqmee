@@ -171,15 +171,9 @@ public class QuasiSpeciesSequenceAttachmentRandom extends QuasiSpeciesTreeOperat
         if (changeIdx==1){
             if (tmaxIdx == 0){
                 tnewQSstart = tnew;
-                // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
-//                logHastingsRatio -= Math.log((double) haploStartMaxNewArray.get(1) - tempqstimes[1]);
-//                logHastingsRatio += Math.log((double) haploStartMaxNewArray.get(1) - tnew);
             }
             else{
                 tnewQSstart = tempqstimes[2];
-                // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
-//                logHastingsRatio -= Math.log((double) haploStartMaxNewArray.get(1) - tempqstimes[1]);
-//                logHastingsRatio += Math.log((double) haploStartMaxNewArray.get(1) - tempqstimes[2]);
             }
             tempqstimes[0] = tnewQSstart;
         }
@@ -187,9 +181,6 @@ public class QuasiSpeciesSequenceAttachmentRandom extends QuasiSpeciesTreeOperat
         else if (tmaxIdx==0){
             tnewQSstart = tnew;
             tempqstimes[0] = tnewQSstart;
-            // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
-//            logHastingsRatio -= Math.log(tmax - tempqstimes[1]);
-//            logHastingsRatio += Math.log(tmax - tnew);
         }
 
         tempqstimes[changeIdx]=tnew;

@@ -259,10 +259,6 @@ public class QuasiSpeciesHaplotypeSwap extends QuasiSpeciesTreeOperator{
 // HR AND CORRECTIONS TO THE TREE
 
         // HR contribution from CURRENT haplo
-        // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
-//        logHastingsRatio -= Math.log(tmaxparent - toldtop);
-//        logHastingsRatio += Math.log(tmax - tnewtop);
-
         // Incorporate the probability of scaling all the attachment times
         // assign contribution of each scaled attachment time
         logHastingsRatio += (tempqstimes.length - 3) * Math.log(scalefactor);
@@ -272,9 +268,6 @@ public class QuasiSpeciesHaplotypeSwap extends QuasiSpeciesTreeOperator{
         logHastingsRatio -= Math.log(tmaxparent/tnewtop - tminold/tnewbottom);
 
         // HR contribution from PARENT haplo
-        // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
-//        logHastingsRatio -= Math.log(tmax - toldparenttop);
-//        logHastingsRatio += Math.log(tmaxparent - tnewparenttop);
         // Incorporate the probability of scaling all the attachment times
         // assign contribution of each scaled attachment time
         logHastingsRatio += (tempqstimesparent.length - 3) * Math.log(parentscalefactor);
