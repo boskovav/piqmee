@@ -7,10 +7,8 @@ import beast.core.parameter.RealParameter;
 import beast.evolution.tree.Node;
 import beast.util.Randomizer;
 import quasispeciestree.tree.QuasiSpeciesNode;
-import quasispeciestree.tree.QuasiSpeciesTree;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -45,7 +43,7 @@ public class QuasiSpeciesTreeScale extends QuasiSpeciesTreeOperator{
     public Input<Double> scaleFactorInput = new Input<>("scaleFactor",
            "Scaling is restricted to the range [1/scaleFactor, scaleFactor]");
 
-    final public Input<Boolean> rootOnlyInput = new Input<>("rootOnly", "scale root of a tree only, ignored if tree is not specified (default false)", false);
+//    final public Input<Boolean> rootOnlyInput = new Input<>("rootOnly", "scale root of a tree only, ignored if tree is not specified (default false)", false);
 
     boolean indicatorsUsed, indicatorsInverseUsed;
 
@@ -54,13 +52,13 @@ public class QuasiSpeciesTreeScale extends QuasiSpeciesTreeOperator{
 
         super.initAndValidate();
 
-        if (indicatorsInput.get().size()>0) {
+        if (indicatorsInput.get().size() > 0) {
             if (indicatorsInput.get().size() != parametersInput.get().size())
                 throw new IllegalArgumentException("If an indicator element "
                         + "exists, the number of such elements must equal "
                         + "the number of parameter elements.");
 
-            for (int pidx=0; pidx<parametersInput.get().size(); pidx++) {
+            for (int pidx = 0; pidx < parametersInput.get().size(); pidx++) {
                 if (parametersInput.get().get(pidx).getDimension() !=
                         indicatorsInput.get().get(pidx).getDimension()) {
                     throw new IllegalArgumentException("The number of boolean "
@@ -74,13 +72,13 @@ public class QuasiSpeciesTreeScale extends QuasiSpeciesTreeOperator{
         } else
             indicatorsUsed = false;
 
-        if (indicatorsInverseInput.get().size()>0) {
+        if (indicatorsInverseInput.get().size() > 0) {
             if (indicatorsInverseInput.get().size() != parametersInverseInput.get().size())
                 throw new IllegalArgumentException("If an indicatorInverse element "
                         + "exists, the number of such elements must equal "
                         + "the number of parameterInverse elements.");
 
-            for (int pidx=0; pidx<parametersInverseInput.get().size(); pidx++) {
+            for (int pidx = 0; pidx < parametersInverseInput.get().size(); pidx++) {
                 if (parametersInverseInput.get().get(pidx).getDimension() !=
                         indicatorsInverseInput.get().get(pidx).getDimension()) {
                     throw new IllegalArgumentException("The number of boolean "
@@ -100,7 +98,7 @@ public class QuasiSpeciesTreeScale extends QuasiSpeciesTreeOperator{
 
         // Choose scale factor:
         double u = Randomizer.nextDouble();
-        double f = u*scaleFactorInput.get()+(1.0-u)/scaleFactorInput.get();
+        double f = u * scaleFactorInput.get() + (1.0 - u)/scaleFactorInput.get();
 
         // Keep track of Hastings ratio:
         double logf = Math.log(f);
@@ -682,85 +680,39 @@ public class QuasiSpeciesTreeScale extends QuasiSpeciesTreeOperator{
 
                 // Scale internal node heights
                 for (Node node : qsTree.getInternalNodes()) {
-                    node.setHeight(node.getHeight()*f);
+                    node.setHeight(node.getHeight() * f);
                     logHastingsRatio += logf;
                 }
 
                 // Scale haplotype attachment times
                 for (Node leaf : qsTree.getExternalNodes()) {
-                    double[] tempqstimes=qsTree.getAttachmentTimesList((QuasiSpeciesNode)leaf).clone();
-                    for (int i=0; i<tempqstimes.length; i++) {
+                    double[] tempqstimes = ((QuasiSpeciesNode)leaf).getAttachmentTimesList().clone();
+                    for (int i = 0; i < tempqstimes.length; i++) {
                         tempqstimes[i] = tempqstimes[i] * f;
                     }
-                    if (tempqstimes.length>1)
-                        tempqstimes[0]=tempqstimes[1];
+                    if (tempqstimes.length > 1)
+                        tempqstimes[0] = tempqstimes[1];
                     else
-                        tempqstimes[0]=leaf.getHeight();
+                        tempqstimes[0] = leaf.getHeight();
                     // reject the move as soon as the first QS attachment time exceeds the origin height
-                    if (tempqstimes.length>1 && tempqstimes[1]>origin.getValue())
+                    if (tempqstimes.length > 1 && tempqstimes[1] > origin.getValue())
                         return Double.NEGATIVE_INFINITY;
-                    // select a new QS start time for QS above the root --- always
-//                if (((QuasiSpeciesNode) root).getContinuingHaploName()==leaf.getNr()){
-//                    double x = Randomizer.nextDouble();
-//                    if (tempqstimes.length>1){
-//                        // this should never happen
-//                        if (root.getHeight()>tempqstimes[1]){
-//                            tempqstimes[0] = x*root.getHeight() + (1-x)*origin.getValue();
-//                            // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
-//                            logHastingsRatio -= Math.log(origin.getValue() - root.getHeight()/f);
-//                            logHastingsRatio += Math.log(origin.getValue() - root.getHeight());
-//                        }
-//                        else {
-//                            tempqstimes[0] = x*tempqstimes[1] + (1-x)*origin.getValue();
-//                            // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
-//                            logHastingsRatio -= Math.log(origin.getValue() - tempqstimes[1]/f);
-//                            logHastingsRatio += Math.log(origin.getValue() - tempqstimes[1]);
-//                        }
-//                    }
-//                    else {
-//                        tempqstimes[0] = x*root.getHeight() + (1-x)*origin.getValue();
-//                        // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
-//                        logHastingsRatio -= Math.log(origin.getValue() - root.getHeight()/f);
-//                        logHastingsRatio += Math.log(origin.getValue() - root.getHeight());
-//                    }
-//                }
-//                // make sure the QS haplo start does not interfere with the probability of acceptance of the move
-//                else if (((QuasiSpeciesNode) leaf).getHaploAboveName()==leaf.getNr()){
-//                    double y = Randomizer.nextDouble();
-//                    if (tempqstimes.length>1){
-//                        tempqstimes[0] = y*tempqstimes[1] + (1-y)*leaf.getParent().getHeight();
-//                        // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
-//                        logHastingsRatio -= Math.log(leaf.getParent().getHeight()/f - tempqstimes[1]/f);
-//                        logHastingsRatio += Math.log(leaf.getParent().getHeight() - tempqstimes[1]);
-//                    }
-//                    else {
-//                        tempqstimes[0] = y*leaf.getHeight() + (1-y)*leaf.getParent().getHeight();
-//                        // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
-//                        logHastingsRatio -= Math.log(leaf.getParent().getHeight()/f - leaf.getHeight());
-//                        logHastingsRatio += Math.log(leaf.getParent().getHeight() - leaf.getHeight());
-//                    }
-//                }
-//                // if we do not scale the haplo start above the root/leaf manually, it is scaled through f
-//                else {
-//                    // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
-//                    logHastingsRatio += logf;
-//                }
 
-                    qsTree.setAttachmentTimesList(leaf.getNr(), tempqstimes);
+                    ((QuasiSpeciesNode) leaf).setAttachmentTimesList(tempqstimes);
                     // contribution from haplotype duplicate attach time scaling
                     if (tempqstimes.length > 1)
-                        logHastingsRatio += (tempqstimes.length-1) * logf;
+                        logHastingsRatio += (tempqstimes.length - 1) * logf;
                 }
 //        }
 
         // Scale parameters:
-        for (int pidx=0; pidx<parametersInput.get().size(); pidx++) {
+        for (int pidx = 0; pidx < parametersInput.get().size(); pidx++) {
             RealParameter param = parametersInput.get().get(pidx);
-            for (int i=0; i<param.getDimension(); i++) {
+            for (int i = 0; i < param.getDimension(); i++) {
                 if (!indicatorsUsed ||
                         indicatorsInput.get().get(pidx).getValue(i)) {
                     double oldValue = param.getValue(i);
-                    double newValue = oldValue*f;
+                    double newValue = oldValue * f;
                     if (newValue < param.getLower() || newValue > param.getUpper())
                         return Double.NEGATIVE_INFINITY;
 
@@ -771,13 +723,13 @@ public class QuasiSpeciesTreeScale extends QuasiSpeciesTreeOperator{
         }
 
         // Scale parameters inversely:
-        for (int pidx=0; pidx<parametersInverseInput.get().size(); pidx++) {
+        for (int pidx = 0; pidx < parametersInverseInput.get().size(); pidx++) {
             RealParameter param = parametersInverseInput.get().get(pidx);
-            for (int i=0; i<param.getDimension(); i++) {
+            for (int i = 0; i < param.getDimension(); i++) {
                 if (!indicatorsInverseUsed ||
                         indicatorsInverseInput.get().get(pidx).getValue(i)) {
                     double oldValue = param.getValue(i);
-                    double newValue = oldValue/f;
+                    double newValue = oldValue / f;
                     if (newValue < param.getLower() || newValue > param.getUpper())
                         return Double.NEGATIVE_INFINITY;
 
@@ -788,18 +740,27 @@ public class QuasiSpeciesTreeScale extends QuasiSpeciesTreeOperator{
         }
 
         // Reject invalid tree scalings:
-        if (f<1.0) {
+        if (f < 1.0) {
             for (Node leaf : qsTree.getExternalNodes()) {
-                double[] tempqstimes=qsTree.getAttachmentTimesList(leaf.getNr());
-                if (leaf.getParent().getHeight()<leaf.getHeight() || tempqstimes[tempqstimes.length-1]<leaf.getHeight())
+                double[] tempqstimes = ((QuasiSpeciesNode)leaf).getAttachmentTimesList();
+                // get also tip times to help define valid scalings
+                double[] temptiptimes = ((QuasiSpeciesNode)leaf).getTipTimesList();
+                int[] temptiptimescount = ((QuasiSpeciesNode)leaf).getTipTimesCountList();
+                if (leaf.getParent().getHeight() < leaf.getHeight() || tempqstimes[tempqstimes.length-1] < leaf.getHeight())
                     return Double.NEGATIVE_INFINITY;
-                if (tempqstimes.length>1 && tempqstimes[0]<leaf.getHeight()){
-                    System.out.println("problem in hereeeeee you did not really scale the QS start apparently");
-                    System.exit(0);
+                // check also if branching times corresponding to samples through time are also above the respective time
+                int currentPosition = tempqstimes.length-1-(temptiptimescount[0]-1);
+                for (int i = 1; i < temptiptimes.length; i++){
+                    if (tempqstimes[currentPosition] < temptiptimes[i])
+                        return Double.NEGATIVE_INFINITY;
+                    currentPosition -= temptiptimescount[i];
+                }
+                if (tempqstimes.length > 1 && tempqstimes[0] < leaf.getHeight()){
+                    throw new IllegalStateException("problem in hereeeeee you did not really scale the QS start apparently");
                 }
             }
-        }else {
-            if (root.getHeight()>origin.getValue())
+        } else {
+            if (root.getHeight() > origin.getValue())
                 return Double.NEGATIVE_INFINITY;
         }
 
