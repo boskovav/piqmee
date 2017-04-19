@@ -7,7 +7,6 @@ import beast.evolution.speciation.BirthDeathSkylineModel;
 import beast.evolution.tree.Node;
 import beast.evolution.tree.TreeInterface;
 import quasispeciestree.tree.QuasiSpeciesNode;
-import quasispeciestree.tree.QuasiSpeciesTip;
 import quasispeciestree.tree.QuasiSpeciesTree;
 
 import java.util.ArrayList;
@@ -27,17 +26,19 @@ public class BirthDeathSkylineQuasiSpeciesModel extends BirthDeathSkylineModel{
 //            "quasiSpeciesTree", "Quasi-Species tree over which to calculate a prior or likelihood",
 //            Input.Validate.REQUIRED);
 
+    // Empty constructor as required:
+    public BirthDeathSkylineQuasiSpeciesModel() { };
+
+    ArrayList isRhoTip;
+
     @Override
     public void initAndValidate() {
         super.initAndValidate();
 
-        if(SAModel || r!=null) {
-            System.out.println("The sampled ancestor model has not been implemented to work with quasispecies model yet");
-            System.exit(0);
-        }
-    }
+        if(SAModel || r!=null)
+            throw new IllegalArgumentException("The sampled ancestor model has not been implemented to work with quasispecies model yet");
 
-    ArrayList isRhoTip;
+    }
 
     /*
      * Adds the number of qs duplicates to the count of tips at each of the contemporaneous sampling times ("rho" sampling time)
@@ -54,17 +55,17 @@ public class BirthDeathSkylineQuasiSpeciesModel extends BirthDeathSkylineModel{
 
         int tipCount = tree.getLeafNodeCount();
 
-        for (int k = 0; k < totalIntervals; k++) {
+        for (int i = 0; i < tipCount; i++) {
 
-            for (int i = 0; i < tipCount; i++) {
+            QuasiSpeciesNode node = (QuasiSpeciesNode) tree.getNode(i);
+            double[] tipTimes = node.getTipTimesList();
+            int[] tipTimeCounts = node.getTipTimesCountList();
 
-                QuasiSpeciesTip node = (QuasiSpeciesTip) tree.getNode(i);
-                double[] tipTimes = node.getTipTimesList();
-                int[] tipTimeCounts = node.getTipTimesCountList();
+            boolean[] isRhoTipArray = new boolean[tipTimes.length];
 
-                boolean[] isRhoTipArray = new boolean[tipTimes.length];
+            for (int index = 0; index < tipTimes.length; index++) {
 
-                for (int index = 0; index < tipTimes.length; index++) {
+                for (int k = 0; k < totalIntervals; k++) {
 
                     if (Math.abs((times[totalIntervals - 1] - times[k]) - tipTimes[index]) < 1e-10) {
                         if (rho[k] == 0 && psi[k] == 0) {
@@ -76,8 +77,8 @@ public class BirthDeathSkylineQuasiSpeciesModel extends BirthDeathSkylineModel{
                         }
                     }
                 }
-                isRhoTip.add(i,isRhoTipArray);
             }
+            isRhoTip.add(i,isRhoTipArray);
         }
         return 0.;
     }
@@ -89,7 +90,7 @@ public class BirthDeathSkylineQuasiSpeciesModel extends BirthDeathSkylineModel{
 
         double maxheight= tree.getRoot().getHeight();
         for (Node node : tree.getExternalNodes()){
-            double[] attachmentTimes = ((QuasiSpeciesTip) node).getAttachmentTimesList();
+            double[] attachmentTimes = ((QuasiSpeciesNode) node).getAttachmentTimesList();
             if (attachmentTimes.length > 1 && attachmentTimes[1] > maxheight){
                 maxheight = attachmentTimes[1];
             }
@@ -117,7 +118,7 @@ public class BirthDeathSkylineQuasiSpeciesModel extends BirthDeathSkylineModel{
         }
 
         for (int i = 0; i < tipCount; i++) {
-            QuasiSpeciesTip node = (QuasiSpeciesTip) tree.getNode(i);
+            QuasiSpeciesNode node = (QuasiSpeciesNode) tree.getNode(i);
             double[] attachTimes = node.getAttachmentTimesList();
             double[] tipTimes = node.getTipTimesList();
             int[] tipTimeCounts = node.getTipTimesCountList();
@@ -127,10 +128,18 @@ public class BirthDeathSkylineQuasiSpeciesModel extends BirthDeathSkylineModel{
             else {
                 // start at position 1, since position 0 is the "fake" start of the haplo
                 int position = 1;
-                for (int j = 0; j < tipTimes.length; j++) {
+                if (tipTimes[0] < time){
+                    for (int l = position; l < position + tipTimeCounts[0] - 1 ; l++){
+                        if (attachTimes[l] > time) count += 1;
+                        else break;
+                    }
+                }
+                position += tipTimeCounts[0] - 1;
+                for (int j = 1; j < tipTimes.length; j++) {
                     if (tipTimes[j] < time){
                         for (int l = position; l < position + tipTimeCounts[j]; l++){
                             if (attachTimes[l] > time) count += 1;
+                            else break;
                         }
                     }
                     position += tipTimeCounts[j];
@@ -157,7 +166,7 @@ public class BirthDeathSkylineQuasiSpeciesModel extends BirthDeathSkylineModel{
         }
 
         for (int i = 0; i < tipCount; i++) {
-            QuasiSpeciesTip node = (QuasiSpeciesTip) tree.getNode(i);
+            QuasiSpeciesNode node = (QuasiSpeciesNode) tree.getNode(i);
             double[] attachTimes = node.getAttachmentTimesList();
             double[] tipTimes = node.getTipTimesList();
             int[] tipTimeCounts = node.getTipTimesCountList();
@@ -167,10 +176,18 @@ public class BirthDeathSkylineQuasiSpeciesModel extends BirthDeathSkylineModel{
             else {
                 // start at position 1, since position 0 is the "fake" start of the haplo
                 int position = 1;
-                for (int j = 0; j < tipTimes.length; j++) {
+                if (tipTimes[0] < time){
+                    for (int l = position; l < position + tipTimeCounts[0] - 1 ; l++){
+                        if (attachTimes[l] > time) count += 1;
+                        else break;
+                    }
+                }
+                position += tipTimeCounts[0] - 1;
+                for (int j = 1; j < tipTimes.length; j++) {
                     if (tipTimes[j] < time){
                         for (int l = position; l < position + tipTimeCounts[j]; l++){
                             if (attachTimes[l] > time) count += 1;
+                            else break;
                         }
                     }
                     position += tipTimeCounts[j];
@@ -295,9 +312,9 @@ public class BirthDeathSkylineQuasiSpeciesModel extends BirthDeathSkylineModel{
 //                    " = " + temp + "; QS start branches = " + node.getID());
 //            if (Double.isInfinite(logP))
 //                return logP;
-            int nQSTemp = (int) qsTree.getHaplotypeCounts((QuasiSpeciesNode) node);
-            double[] QSTimesTemp = ((QuasiSpeciesTip) node).getAttachmentTimesList();
-            for (int j = 1; j <= nQSTemp; j++ ){
+            int nQSTemp = qsTree.getHaplotypeCounts(node);
+            double[] QSTimesTemp = ((QuasiSpeciesNode) node).getAttachmentTimesList();
+            for (int j = 1; j < nQSTemp; j++ ){
                 double x = times[totalIntervals - 1] - QSTimesTemp[j];
                 index = index(x);
                 // term for the Quasi-Species tree likelihood calculation counting possible attachment branches
@@ -324,7 +341,7 @@ public class BirthDeathSkylineQuasiSpeciesModel extends BirthDeathSkylineModel{
         for (int i = 0; i < nTips; i++) {
             // TODO what happens if not all tips have QS counts specified in XML --- we get warning, is this enough?
 
-            QuasiSpeciesTip node = (QuasiSpeciesTip) tree.getNode(i);
+            QuasiSpeciesNode node = (QuasiSpeciesNode) tree.getNode(i);
             boolean[] isRhoTipArray = (boolean[]) isRhoTip.get(i);
 
             for (int j = 0; j < isRhoTipArray.length; j++) {
@@ -337,7 +354,7 @@ public class BirthDeathSkylineQuasiSpeciesModel extends BirthDeathSkylineModel{
 //                System.out.println("2nd factor included");
 //                if (!(tree.getNode(i)).isDirectAncestor()) {
 //                    if (!SAModel) {
-                    temp = (nQSTemp + 1) * (Math.log(psi[index]) - log_q(index, times[index], y));
+                    temp = nQSTemp * (Math.log(psi[index]) - log_q(index, times[index], y));
 //                    } else {
 //                        temp = Math.log(psi[index] * (r[index] + (1 - r[index]) * p0(index, times[index], y))) - log_q(index, times[index], y);
 //                    }
