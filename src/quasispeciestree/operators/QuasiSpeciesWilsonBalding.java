@@ -23,10 +23,10 @@ import java.util.ArrayList;
         +" See <a href='http://www.genetics.org/cgi/content/full/161/3/1307/F1'>picture</a>."
         +" This version selects a new starting point for the 'interrupted' or randomly chosen haplotype"
         + "from the moved subtree, rescales all the attachment times of the corresponding haplotype on a newly "
-        + "generated branch with a scale factor chosen for the first attachment time and finds a new haplotype"
-        + "starting point between the first attachment time and the next MRCA with another haplotype")
+        + "generated branch with a scale factor chosen for the first attachment time.")
+//        " and finds a new haplotype"
+//        + "starting point between the first attachment time and the next MRCA with another haplotype")
 public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
-
 
     public Input<Double> alphaInput = new Input<>("alpha",
         "Root height proposal parameter", Validate.REQUIRED);
@@ -37,6 +37,11 @@ public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
         super.initAndValidate();
 
         alpha = alphaInput.get();
+
+        // Check that operator can be applied to tree:
+        if (qsTree.getLeafNodeCount() < 3)
+            throw new IllegalStateException("Tree is too small for"
+                    +" QuasiSpeciesWilsonBalding operator.");
     }
 
     /**
@@ -46,22 +51,6 @@ public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
      */
     @Override
     public double proposal() {
-        //testing
-        //for (int i=0; i<qsTree.getLeafNodeCount(); i++){
-        //    if (qsTree.getParentHaplo()[i]==i){
-        //        System.out.println("problem in hereeeeee");
-        //        System.exit(0);
-        //    }
-        //    if (qsTree.getParentHaplo()[i]!=-1 && i==qsTree.getParentHaplo()[qsTree.getParentHaplo()[i]]){
-        //        System.out.println("problem in hereeeeee");
-        //        System.exit(0);
-        //    }
-        //}
-
-        // Check that operator can be applied to tree:
-        if (qsTree.getLeafNodeCount()<3)
-            throw new IllegalStateException("Tree too small for"
-                    +" TypedWilsonBalding operator.");
 
         // Select source node:
         Node srcNode;
@@ -77,28 +66,24 @@ public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
         double t_srcNodeS = srcNodeS.getHeight();
 
         int srcHaplo = ((QuasiSpeciesNode) srcNode).getContinuingHaploName();
+
         // if there is no haplotype passing the current chosen node,
         //  get all the possible haplotypes that can be moved up
         ArrayList<Integer> possibleHaplo = new ArrayList<>();
-//        int[] oldParentHaplo = qsTree.getParentHaplo().clone();
-//        int[] parentHaplo = qsTree.getParentHaplo();
         if (srcHaplo == -1){
-//            checkNumberOfPossibleSrcHaplo((QuasiSpeciesNode) srcNode, oldParentHaplo, possibleHaplo);
-            checkNumberOfPossibleSrcHaplo((QuasiSpeciesNode) srcNode, qsTree.getParentHaplo(), possibleHaplo);
+            checkNumberOfPossibleSrcHaplo((QuasiSpeciesNode) srcNode, possibleHaplo);
             // choose randomly from the array of haplotypes one to move up
             srcHaplo = possibleHaplo.get(Randomizer.nextInt(possibleHaplo.size()));
         }
-        else {
+        else
             possibleHaplo.add(srcHaplo);
-        }
 
         // Select destination branch node:
         Node destNode;
         do {
             destNode = qsTree.getNode(Randomizer.nextInt(qsTree.getNodeCount()));
-//        } while ((destNode.getParent() != null && destNode.getParent().getHeight() <= srcNode.getHeight()) || (srcNode.getNr() == destNode.getNr()));
-        // TODO THIS IS TO AVOID ROOT MOVES FOR NOW
         } while (invalidDestNode(srcNode, destNode));
+
         Node destNodeP = destNode.getParent();
         double t_destNode = destNode.getHeight();
 
@@ -108,8 +93,6 @@ public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
             return Double.NEGATIVE_INFINITY;
         }
         assert destNodeP != null;
-        if ( destNodeP.getNr() == srcNodeP.getNr() || destNode.getNr() == srcNodeP.getNr() || destNodeP.getNr() == srcNode.getNr())
-            return Double.NEGATIVE_INFINITY;
 
         double scalefactor=0;
         double toldQSstart=0;
@@ -414,8 +397,10 @@ public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
         double logHastingsRatio = 0.0;
 
         // Find current boundaries for haplotype start times
-        double haploStartMin = qsTree.getNode(srcHaplo).getHeight();
-        double haploStartMax = getMaxPossibleHaploAttachTime(srcHaplo,(QuasiSpeciesNode) srcNode);
+        QuasiSpeciesNode node = (QuasiSpeciesNode) qsTree.getNode(srcHaplo);
+
+        double haploStartMin = node.getHeight();
+        double haploStartMax = getMaxPossibleHaploAttachTime((QuasiSpeciesNode) srcNode, srcHaplo);
 
         // Record srcNode grandmother height:
         double t_srcNodeG = srcNodeP.getParent().getHeight();
@@ -423,64 +408,68 @@ public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
         // Choose height of new attachment point:
         double min_newTime = Math.max(t_destNode, t_srcNode);
         double t_destNodeP = destNodeP.getHeight();
-        double span = t_destNodeP-min_newTime;
-        double newTime = min_newTime+span*Randomizer.nextDouble();
+        double span = t_destNodeP - min_newTime;
+        double newTime = min_newTime + span * Randomizer.nextDouble();
+
+        // get the attachment times array to be changed
+        double[] tempqstimes = node.getAttachmentTimesList().clone();
+        // get also tip times to help define max/min scalings
+        double[] temptiptimes = node.getTipTimesList();
+        int[] temptiptimescount = node.getTipTimesCountList();
 
         // Choose attachment point for the moved haplotype
-        //QuasiSpeciesNode haploStartMaxNode = getMaxPossibleHaploAttachNode((QuasiSpeciesNode) srcNode, (QuasiSpeciesNode) destNode, newTime);
-        ArrayList haploStartMaxNewArray = getMaxPossibleHaploAttachTimeForQSStart((QuasiSpeciesNode) destNode, srcHaplo, newTime);
+        ArrayList haploStartMaxNewArray = getMaxPossibleHaploAttachTime((QuasiSpeciesNode) destNode, srcHaplo, newTime);
         double haploStartMaxNew = (double) haploStartMaxNewArray.get(1);
         // choose new time to attach
         // get a random number deciding where the current haplo will be moved
         double u = Randomizer.nextDouble();
-//        double tnew = u*haploStartMin + (1-u)*haploStartMaxNew;
         double tnew = 0;
         // reposition attachment times: attach ((time - haploStartMin) * (tHaploNew/told)) + haploStartMin
-        double[] tempqstimes=qsTree.getAttachmentTimesList(srcHaplo).clone();
         // get the haplotype's starting time
         toldQSstart = tempqstimes[0];
-        double told=0;
+        double told = 0;
         if (tempqstimes.length > 1){
             told = tempqstimes[1];
             // Scale the haplotype strains
             // scale all the other positions in the array but the 0 position (haplo start time)
-//            scalefactor = (tnew - haploStartMin)/(told - haploStartMin);
-            scalefactor = u*(haploStartMin/told) + (1.0-u)*(haploStartMaxNew/told);
-            tnew = tempqstimes[1] * scalefactor;
-            for (int i=1; i<tempqstimes.length; i++) {
-//                tempqstimes[i] = ((tempqstimes[i] - haploStartMin) * scalefactor) + haploStartMin;
+            scalefactor = u * (haploStartMin/told) + (1.0 - u) * (haploStartMaxNew/told);
+            for (int i = 1; i < tempqstimes.length; i++) {
                 tempqstimes[i] = tempqstimes[i] * scalefactor;
             }
+            tnew = tempqstimes[1];
             // Reject invalid haplotype scalings:
-            if (scalefactor<1.0 && tempqstimes[tempqstimes.length-1]<qsTree.getNode(srcHaplo).getHeight())
+            if (scalefactor < 1.0){
+                if (tempqstimes[tempqstimes.length-1] < node.getHeight())
                     return Double.NEGATIVE_INFINITY;
+                int currentPosition = tempqstimes.length-1-(temptiptimescount[0]-1);
+                for (int i = 1; i < temptiptimes.length; i++){
+                    if (tempqstimes[currentPosition] < temptiptimes[i])
+                        return Double.NEGATIVE_INFINITY;
+                    currentPosition -= temptiptimescount[i];
+                }
+            }
 
             // set the haplotype's starting time to the new time
-//            double x = Randomizer.nextDouble();
-//            tnewQSstart = x*tempqstimes[1] + (1-x)*haploStartMaxNew;
             tnewQSstart = tempqstimes[1];
             tempqstimes[0] = tnewQSstart;
-            // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
-//            logHastingsRatio -= Math.log(haploStartMax - told);
-//            logHastingsRatio += Math.log(haploStartMaxNew - tempqstimes[1]);
+
+            // Incorporate probability of current haplotype to move
+            // scaling the attachment times (see Scaling Operator)
+            // assign contribution to the Hastings ratio for having different possible scales for told
+            logHastingsRatio += Math.log(haploStartMaxNew/told - haploStartMin/told);
+            logHastingsRatio -= Math.log(haploStartMax/tnew - haploStartMin/tnew);
+            // assign contribution of each scaled attachment time
+            logHastingsRatio += (tempqstimes.length - 3) * Math.log(scalefactor);
         }
         else {
             // set the haplotype's starting time to the new time
-//            double x = Randomizer.nextDouble();
-//            tnewQSstart = x*haploStartMin + (1-x)*haploStartMaxNew;
-//            tnew = u*haploStartMin + (1-u)*haploStartMaxNew;
-//            tnewQSstart = tnew;
             tnewQSstart = haploStartMin;
             tempqstimes[0] = tnewQSstart;
-            // assign contribution of the QS start to the Hastings ratio --- only with Felsenstein
-//            logHastingsRatio -= Math.log(haploStartMax - haploStartMin);
-//            logHastingsRatio += Math.log(haploStartMaxNew - haploStartMin);
         }
         // rewrite the attachment times array
-        qsTree.setAttachmentTimesList(srcHaplo, tempqstimes);
+        node.setAttachmentTimesList(tempqstimes);
 
         // Implement tree changes:
-        // TODO disconnect and connect branches need the correction for the fact that QS starts on the passed nodes could move up/down
         QuasiSpeciesNode correctTreeFromThisNode1 = disconnectBranch((QuasiSpeciesNode) srcNode, srcHaplo);
         QuasiSpeciesNode correctTreeFromThisNode2 = connectBranch((QuasiSpeciesNode) srcNode,
                 (QuasiSpeciesNode) destNode, newTime, srcHaplo, tnewQSstart);
@@ -528,28 +517,16 @@ public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
 //            }
 //        }
         // in any case (changed or not the aboveNodeHaplo/parentHaplo array) recalculate countPossibleStartBranches
-        int[] startBranchCountsArray = qsTree.countPossibleStartBranches();
-        qsTree.setStartBranchCounts(startBranchCountsArray);
+        qsTree.countAndSetPossibleStartBranches();
 
         // Incorporate probability of choosing current haplotype to move
         logHastingsRatio += Math.log(possibleHaplo.size());
-        if (tempqstimes.length > 1){
-            // scaling the attachment times (see Scaling Operator)
-            // assign contribution to the Hastings ratio for having different possible scales for told
-            logHastingsRatio += Math.log(haploStartMaxNew/told - haploStartMin/told);
-            logHastingsRatio -= Math.log(haploStartMax/tnew - haploStartMin/tnew);
-            // assign contribution of each scaled attachment time
-//            logHastingsRatio -= 2 * (Math.log(scalefactor * (haploStartMaxNew - haploStartMin) + haploStartMin) - Math.log(haploStartMaxNew));
-//            logHastingsRatio += (tempqstimes.length-1) * Math.log(scalefactor);
-            logHastingsRatio += (tempqstimes.length-3) * Math.log(scalefactor);
-        }
+
         // Incorporate probability of choosing current haplotype to move back
         if (((QuasiSpeciesNode) srcNode).getContinuingHaploName() != srcHaplo){
             // check how many haplotypes can be pulled up
             ArrayList<Integer> backPossibleHaplo = new ArrayList<>();
-//            int[] newParentHaplo = qsTree.getParentHaplo();
-//            checkNumberOfPossibleSrcHaplo((QuasiSpeciesNode) srcNode, newParentHaplo, backPossibleHaplo);
-            checkNumberOfPossibleSrcHaplo((QuasiSpeciesNode) srcNode, qsTree.getParentHaplo(), backPossibleHaplo);
+            checkNumberOfPossibleSrcHaplo((QuasiSpeciesNode) srcNode, backPossibleHaplo);
             // account for this in the hastings ratio
             logHastingsRatio -= Math.log(backPossibleHaplo.size());
         }
@@ -569,18 +546,17 @@ public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
             // very bad trees that are always accepted.
             // For symmetry, newRange = 0 should therefore be ruled out as well
 //                return Double.NEGATIVE_INFINITY;
-            System.out.println("problem in hereeeeee 3");
-            System.exit(0);
+            throw new IllegalStateException("problem in hereeeeee: QuasiSpeciesWilsonBalding - some branch lengths are 0?");
         }
 
         // Ensure BEAST knows to recalculate affected likelihood:
-        qsTree.getNode(srcHaplo).makeDirty(QuasiSpeciesTree.IS_FILTHY);
+        node.makeDirty(QuasiSpeciesTree.IS_FILTHY);
 
         return logHastingsRatio;
     }
 
     /**
-     * Returns true if srcNode CANNOT be used for the CWBR ? Wilson-Balding ? move.
+     * Returns true if srcNode CANNOT be used for the Wilson-Balding move.
      *
      * @param srcNode
      * @return True if srcNode invalid.
@@ -602,9 +578,9 @@ public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
                 return true;
             // make sure that the target branch is above the subtree being moved
             // if the parent is root then the only possibility is the sister branch tip/node,
-            // and if this one is below the source node, we cannot attach it to it
+            // and if this one is below the source node, we cannot attach to it
             // and attaching to root would just swap left/right = not much use
-            if (srcNode.getHeight()>=sister.getHeight())
+            if (srcNode.getHeight() >= sister.getHeight())
                 return true;
         }
 
@@ -612,7 +588,7 @@ public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
     }
 
     /**
-     * Returns true if destNode CANNOT be used for the CWBR move in conjunction
+     * Returns true if destNode CANNOT be used for the Wilson-Balding move in conjunction
      * with srcNode.
      *
      * @param srcNode
@@ -622,18 +598,17 @@ public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
     private boolean invalidDestNode(Node srcNode, Node destNode) {
 
         if (    // cannot attach to the same place
-                destNode==srcNode
-                ||destNode==srcNode.getParent()
-                // changing height of attachment, does not change much
-                ||destNode.getParent()==srcNode.getParent())
+                destNode == srcNode
+                        || destNode == srcNode.getParent()
+                        // changing height of attachment, does not change much
+                        || destNode.getParent() == srcNode.getParent())
             return true;
 
         Node destNodeP = destNode.getParent();
         // make sure that the target branch is above the subtree being moved
-        if (destNodeP!=null&&(destNodeP.getHeight()<=srcNode.getHeight()))
+        if (destNodeP != null && (destNodeP.getHeight() <= srcNode.getHeight()))
             return true;
 
         return false;
     }
-
 }
