@@ -580,21 +580,21 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
      *  without the need to push any haplotypes below the common ancestor
      *
      * @param startNode the node at which to start the search going down towards the tips
-     * @param parentHaplo the array of parent haplotypes for each haplotype
      * @param possibleHaplo the number of haplotypes that can be pulled up - will be re-written here
      */
-    public void checkNumberOfPossibleSrcHaplo(QuasiSpeciesNode startNode, int[] parentHaplo,
-                                              ArrayList<Integer> possibleHaplo){
+    public void checkNumberOfPossibleSrcHaplo(QuasiSpeciesNode startNode, ArrayList<Integer> possibleHaplo){
         List<Node> children = startNode.getAllLeafNodes();
+        ArrayList haploStartMaxNewArray = getMaxPossibleHaploAttachTime(startNode, -1, startNode.getHeight());
         for (Node childLeafNode : children) {
             int childLeafNodeNr = childLeafNode.getNr();
-            if (parentHaplo[childLeafNodeNr] == -1){
+            if (((QuasiSpeciesNode)childLeafNode).getParentHaplo() == -1 ||
+                    ((QuasiSpeciesNode)childLeafNode).getParentHaplo() == (int) haploStartMaxNewArray.get(2)){
                 possibleHaplo.add(childLeafNodeNr);
             }
             else {
                 boolean addnode = true;
                 for (Node otherChildLeafNode : children){
-                    if(otherChildLeafNode.getNr()==parentHaplo[childLeafNodeNr]){
+                    if(otherChildLeafNode.getNr() == ((QuasiSpeciesNode)childLeafNode).getParentHaplo()){
                         addnode = false;
                         break;
                     }
