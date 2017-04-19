@@ -49,7 +49,7 @@ public class QuasiSpeciesHaplotypeSwap extends QuasiSpeciesTreeOperator{
         // check that this operator can actually perform a move
         int haplowithparents = 0;
         for (int i = 0; i < qsTree.getLeafNodeCount(); i++){
-            if (((QuasiSpeciesNode)qsTree.getNode(i)).getParentHaplo() != -1)
+            if (((QuasiSpeciesNode)qsTree.getNode(i)).getParentHaplo() != -1 && ((QuasiSpeciesNode)qsTree.getNode(i)).getAttachmentTimesList().length > 1)
                 haplowithparents += 1;
         }
         if (haplowithparents == 0)
@@ -146,7 +146,8 @@ public class QuasiSpeciesHaplotypeSwap extends QuasiSpeciesTreeOperator{
         if (tmaxparent/toldparenttop < tminparentold/toldparentbottom){
             // in this case, it is possible that there is no acceptable scaling for the parent haplo
             // but then this move cannot be performed at the moment
-            throw new IllegalStateException("problem in hereeeeee: HaplotypeSwap: The scaled values are not calculated properly?");
+            return Double.NEGATIVE_INFINITY;
+            // throw new IllegalStateException("problem in hereeeeee: HaplotypeSwap: The scaled values are not calculated properly?");
         }
 
 // NO GRANDPARENT
