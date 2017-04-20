@@ -35,12 +35,10 @@ import beast.evolution.branchratemodel.BranchRateModel;
 import beast.evolution.branchratemodel.StrictClockModel;
 import beast.evolution.likelihood.*;
 import beast.evolution.tree.Node;
-//import beast.evolution.tree.Tree;
 import beast.evolution.tree.TreeInterface;
 import quasispeciestree.sitemodel.QuasiSpeciesSiteModel;
 import quasispeciestree.substitutionmodel.QuasiSpeciesSubstitutionModel;
 import quasispeciestree.tree.QuasiSpeciesNode;
-import quasispeciestree.tree.QuasiSpeciesTip;
 import quasispeciestree.tree.QuasiSpeciesTree;
 
 import java.util.*;
@@ -575,7 +573,7 @@ public class QuasiSpeciesTreeLikelihood extends QuasiSpeciesGenericTreeLikelihoo
     int traverse(final QuasiSpeciesNode node){
 
         QuasiSpeciesTree Tree = (QuasiSpeciesTree) treeInput.get();
-        Double originHeight = Tree.originInput.get().getValue();
+        Double originHeight = origin.get().getValue();
 
         int update = (node.isDirty() | hasDirt);
 
@@ -593,7 +591,7 @@ public class QuasiSpeciesTreeLikelihood extends QuasiSpeciesGenericTreeLikelihoo
         // branch lengths from the origin/attachment time to tip
         final double totalBranchTime;
         if (node.isLeaf())
-            totalBranchTime = ((QuasiSpeciesTip) node).getTotalBranchLengths();
+            totalBranchTime = node.getTotalBranchLengths();
         else if (node.isRoot())
             totalBranchTime = originHeight - node.getHeight();
 //        else if (node.getContinuingHaploName() != -1)
@@ -609,7 +607,7 @@ public class QuasiSpeciesTreeLikelihood extends QuasiSpeciesGenericTreeLikelihoo
         //    tip node to hold the probability of no change in the QS sequence for the whole duration of the QS
         double partBranchTime = 0;
         if (node.getHaploAboveName() != -1)
-            partBranchTime = ( node.getLength() - (((QuasiSpeciesTip) Tree.getNode(node.getHaploAboveName())).getAttachmentTimesList()[0]-node.getHeight()) ) * branchRate;
+            partBranchTime = ( node.getLength() - (((QuasiSpeciesNode) Tree.getNode(node.getHaploAboveName())).getAttachmentTimesList()[0]-node.getHeight()) ) * branchRate;
 
         // First update the transition probability matrix(ices) for this branch
         // Update the transition probability for the branches that do not evolve
@@ -635,9 +633,9 @@ public class QuasiSpeciesTreeLikelihood extends QuasiSpeciesGenericTreeLikelihoo
                 // TODO in case we use something else than JC69, check whether the node is used here for something!!! since we do not have full
                 // TODO node parent length of the branch
                 if (parent != null)
-                    substitutionModel.getTransitionProbabilities(null, parent.getHeight(), ((QuasiSpeciesTip) Tree.getNode(node.getHaploAboveName())).getAttachmentTimesList()[0], jointBranchRate, probabilities);
+                    substitutionModel.getTransitionProbabilities(null, parent.getHeight(), ((QuasiSpeciesNode) Tree.getNode(node.getHaploAboveName())).getAttachmentTimesList()[0], jointBranchRate, probabilities);
                 else
-                    substitutionModel.getTransitionProbabilities(null, originHeight, ((QuasiSpeciesTip) Tree.getNode(node.getHaploAboveName())).getAttachmentTimesList()[0], jointBranchRate, probabilities);
+                    substitutionModel.getTransitionProbabilities(null, originHeight, ((QuasiSpeciesNode) Tree.getNode(node.getHaploAboveName())).getAttachmentTimesList()[0], jointBranchRate, probabilities);
                 likelihoodCore.setNodeMatrix(nodeCount + node.getHaploAboveName(), i, probabilities);
             }
             update |= Tree.IS_DIRTY;

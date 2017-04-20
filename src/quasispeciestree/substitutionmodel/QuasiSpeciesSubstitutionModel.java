@@ -37,59 +37,7 @@ import quasispeciestree.tree.QuasiSpeciesNode;
 
 @Description("Specifies substitution model from which a transition probability matrix for a given " +
         "distance can be obtained.")
-public interface QuasiSpeciesSubstitutionModel{
-    /**
-     * get the complete transition probability matrix for the given distance
-     * determined as (fStartTime-fEndTime)*fRate
-     *
-     * @param node       tree node for which to calculate the probabilities
-     * @param fStartTime
-     * @param fEndTime   we assume start time is larger than end time
-     * @param fRate      rate, includes gamma rates and branch rates
-     * @param matrix     an array to store the matrix which represents the transition probability
-     *                   matrix in the form of an array. So, matrix must be of size n*n where n is number of states.
-     */
-    void getTransitionProbabilities(QuasiSpeciesNode node, double fStartTime, double fEndTime, double fRate, double[] matrix);
-
-    /**
-     * @param node In most cases, the rate matrix is independent of the tree, but if it changes
-     *             throughout a tree, the node can provide this information.
-     * @return instantaneous rate matrix Q, where Q is flattened into an array
-     *         This is a square matrix, where rows add to zero, or null when no rate
-     *         matrix is available.
-     */
-    double[] getRateMatrix(QuasiSpeciesNode node);
-
-    /**
-     * return frequencies for root distribution *
-     */
-    double[] getFrequencies();
-
-    public int getStateCount();
-
-
-    /**
-     * This function returns the Eigen decomposition of the instantaneous rate matrix if available.
-     * Such Eigen decomposition may not be available because the substitution model changes over time,
-     * for example, when one HKY model applies for some time t less than threshold time T while a GTR
-     * model applies when t >= T.
-     *
-     * @param node In most cases, the rate matrix, and thus the Eigen decomposition, is independent of the tree,
-     *             but if it changes throughout a tree, the node can provide this information.
-     * @return the EigenDecomposition, null if not available
-     */
-    EigenDecomposition getEigenDecomposition(QuasiSpeciesNode node);
-
-    /**
-     * @return whether substitution model can return complex diagonalizations
-     *         If so, for example, a treelikelihood needs to be able to deal with this.
-     */
-    boolean canReturnComplexDiagonalization();
-
-    /**
-     * return true if this substitution model is suitable for the data type
-     */
-    boolean canHandleDataType(DataType dataType);
+public interface QuasiSpeciesSubstitutionModel extends SubstitutionModel{
 
     /**
      * basic implementation of a SubstitutionModel bringing together relevant super class*
@@ -131,43 +79,12 @@ public interface QuasiSpeciesSubstitutionModel{
         }
 
         @Override
-        public double[] getRateMatrix(QuasiSpeciesNode node) {
+        public double[] getRateMatrix(Node node) {
             return null;
         }
 
     } // class Base
 
-    /**
-     * basic implementation of a SubstitutionModel bringing together relevant super class*
-     */
-    @Description(value = "Base implementation of a nucleotide substitution model.", isInheritable = false)
-    public abstract class NucleotideBase extends Base {
-
-        public double freqA, freqC, freqG, freqT,
-        // A+G
-        freqR,
-        // C+T
-        freqY;
-
-
-        @Override
-        public int getStateCount() {
-            assert nrOfStates == 4;
-            return nrOfStates;
-        }
-
-        protected void calculateFreqRY() {
-            double[] freqs = frequencies.getFreqs();
-            freqA = freqs[0];
-            freqC = freqs[1];
-            freqG = freqs[2];
-            freqT = freqs[3];
-            freqR = freqA + freqG;
-            freqY = freqC + freqT;
-        }
-
-
-    } // class NucleotideBase
     /**
      * get the complete transition probability matrix for the given distance
      * determined as (fStartTime-fEndTime)*fRate
@@ -180,4 +97,4 @@ public interface QuasiSpeciesSubstitutionModel{
      */
     void getTransitionProbabilities(QuasiSpeciesNode node, double fTime, double fRate, double[] nochangematrix);
 
-} // class SubstitutionModel
+}

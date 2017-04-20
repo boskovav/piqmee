@@ -6,6 +6,7 @@ import beast.core.Distribution;
 import beast.core.Input;
 import beast.core.Input.Validate;
 import beast.core.State;
+import beast.core.parameter.RealParameter;
 import beast.evolution.alignment.Alignment;
 import beast.evolution.branchratemodel.BranchRateModel;
 import beast.evolution.sitemodel.SiteModelInterface;
@@ -33,6 +34,8 @@ public class QuasiSpeciesGenericTreeLikelihood extends Distribution {
     
     public Input<BranchRateModel.Base> branchRateModelInput = new Input<BranchRateModel.Base>("branchRateModel",
             "A model describing the rates on the branches of the beast.tree.");
+	public Input<RealParameter> origin =
+			new Input<RealParameter>("origin", "The time from origin to last sample (must be larger than tree height)", (RealParameter) null, Validate.REQUIRED);
 
     
     

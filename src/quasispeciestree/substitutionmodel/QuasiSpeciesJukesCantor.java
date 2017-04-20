@@ -52,7 +52,7 @@ public class QuasiSpeciesJukesCantor extends QuasiSpeciesSubstitutionModel.Base 
     }
 
     @Override
-    public void getTransitionProbabilities(QuasiSpeciesNode node, double fStartTime, double fEndTime, double fRate, double[] matrix) {
+    public void getTransitionProbabilities(Node node, double fStartTime, double fEndTime, double fRate, double[] matrix) {
         double fDelta = 4.0 / 3.0 * (fStartTime - fEndTime);
         double fPStay = (1.0 + 3.0 * Math.exp(-fDelta * fRate)) / 4.0;
         double fPMove = (1.0 - Math.exp(-fDelta * fRate)) / 4.0;
@@ -65,7 +65,7 @@ public class QuasiSpeciesJukesCantor extends QuasiSpeciesSubstitutionModel.Base 
     }
 
     @Override
-    public EigenDecomposition getEigenDecomposition(QuasiSpeciesNode node) {
+    public EigenDecomposition getEigenDecomposition(Node node) {
         return eigenDecomposition;
     }
 
