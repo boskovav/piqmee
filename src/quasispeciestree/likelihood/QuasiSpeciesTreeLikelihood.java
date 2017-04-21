@@ -1,75 +1,39 @@
-/*
-* File TreeLikelihood.java
-*
-* Copyright (C) 2010 Remco Bouckaert remco@cs.auckland.ac.nz
-*
-* This file is part of BEAST2.
-* See the NOTICE file distributed with this work for additional
-* information regarding copyright ownership and licensing.
-*
-* BEAST is free software; you can redistribute it and/or modify
-* it under the terms of the GNU Lesser General Public License as
-* published by the Free Software Foundation; either version 2
-* of the License, or (at your option) any later version.
-*
-*  BEAST is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*  GNU Lesser General Public License for more details.
-*
-* You should have received a copy of the GNU Lesser General Public
-* License along with BEAST; if not, write to the
-* Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
-* Boston, MA  02110-1301  USA
-*/
-
-
 package quasispeciestree.likelihood;
 
 import beast.core.Description;
 import beast.core.Input;
 import beast.core.State;
 import beast.core.util.Log;
+import beast.core.parameter.RealParameter;
 import beast.evolution.alignment.Alignment;
 import beast.evolution.branchratemodel.BranchRateModel;
 import beast.evolution.branchratemodel.StrictClockModel;
-import beast.evolution.likelihood.*;
+import beast.evolution.substitutionmodel.EigenDecomposition;
 import beast.evolution.tree.Node;
 import beast.evolution.tree.TreeInterface;
-import quasispeciestree.sitemodel.QuasiSpeciesSiteModel;
-import quasispeciestree.substitutionmodel.QuasiSpeciesSubstitutionModel;
+import beast.evolution.likelihood.LikelihoodCore;
+import beast.evolution.likelihood.BeerLikelihoodCore;
+import beast.evolution.likelihood.GenericTreeLikelihood;
+import beast.evolution.sitemodel.SiteModel;
+import beast.evolution.substitutionmodel.SubstitutionModel;
 import quasispeciestree.tree.QuasiSpeciesNode;
 import quasispeciestree.tree.QuasiSpeciesTree;
 
 import java.util.*;
 
 
-@Description("Calculates the probability of sequence data on a beast.quasispeciestree.tree given a site and substitution model using " +
-        "a variant of the 'peeling algorithm'. For details, see" +
-        "Felsenstein, Joseph (1981). Evolutionary trees from DNA sequences: a maximum likelihood approach. J Mol Evol 17 (6): 368-376.")
-public class QuasiSpeciesTreeLikelihood extends QuasiSpeciesGenericTreeLikelihood {
+@Description("Calculates the probability of sequence data on a beast.quasispeciestree.tree " +
+        "given a site and substitution model using a variant of the 'peeling algorithm'. " +
+        "For details, see Felsenstein, Joseph (1981). Evolutionary trees from DNA sequences: a maximum likelihood approach. J Mol Evol 17 (6): 368-376.")
+public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
 
-    final public Input<Boolean> m_useAmbiguities = new Input<>("useAmbiguities", "flag to indicate that sites containing ambiguous states should be handled instead of ignored (the default)", false);
-    final public Input<Boolean> m_useTipLikelihoods = new Input<>("useTipLikelihoods", "flag to indicate that partial likelihoods are provided at the tips", false);
-
-
+    final public Input<Boolean> useAmbiguities = new Input<>("useAmbiguities", "flag to indicate that sites containing ambiguous states should be handled instead of ignored (the default)", false);
+    final public Input<Boolean> useTipLikelihoods = new Input<>("useTipLikelihoods", "flag to indicate that partial likelihoods are provided at the tips", false);
     public static enum Scaling {none, always, _default};
     final public Input<Scaling> scaling = new Input<>("scaling", "type of scaling to use, one of " + Arrays.toString(Scaling.values()) + ". If not specified, the -beagle_scaling flag is used.", Scaling._default, Scaling.values());
 
-
-    /**
-     * calculation engine *
-     */
-    protected QuasiSpeciesLikelihoodCore likelihoodCore;
-    BeagleTreeLikelihood beagle;
-
-    /**
-     * BEASTObject associated with inputs. Since none of the inputs are StateNodes, it
-     * is safe to link to them only once, during initAndValidate.
-     */
-    QuasiSpeciesSubstitutionModel substitutionModel;
-    protected QuasiSpeciesSiteModel.Base m_siteModel;
-    protected BranchRateModel.Base branchRateModel;
+    public Input<RealParameter> origin =
+            new Input<RealParameter>("origin", "The time from origin to last sample (must be larger than tree height)", (RealParameter) null, Input.Validate.REQUIRED);
 
     /**
      * flag to indicate the
@@ -80,51 +44,38 @@ public class QuasiSpeciesTreeLikelihood extends QuasiSpeciesGenericTreeLikelihoo
      */
     protected int hasDirt;
 
-    /**
-     * Lengths of the branches in the tree associated with each of the nodes
-     * in the tree through their node  numbers. By comparing whether the
-     * current branch length differs from stored branch lengths, it is tested
-     * whether a node is dirty and needs to be recomputed (there may be other
-     * reasons as well...).
-     * These lengths take branch rate models in account.
-     */
-    protected double[] m_branchLengths;
-    protected double[] storedBranchLengths;
+    protected LikelihoodCore likelihoodCore;
+//    BeagleTreeLikelihood beagle;
+    protected SubstitutionModel substitutionModel;
+    protected SiteModel.Base siteModel;
+    protected BranchRateModel.Base branchRateModel;
+    protected double[] patternLogLikelihoods;
+    protected double[] rootPartials;
+    protected double[] originPartials;
+    int nodeCount;
+    int leafNodeCount;
+    int matrixSize;
+    int nStates;
+    Alignment alignment;
 
     /**
-     * memory allocation for likelihoods for each of the patterns *
-     */
-    protected double[] patternLogLikelihoods;
-    /**
-     * memory allocation for the root partials *
-     */
-    protected double[] originTempPartials;
-    /**
-     * memory allocation for the origin partials *
-     */
-    protected double[] originPartials;
-    /**
-     * memory allocation for probability tables obtained from the SiteModel *
+     * Memory for transition probabilities.
      */
     double[] probabilities;
-
-    int matrixSize;
-
+    /**
+     * Memory for substitution rates QS.
+     */
+    double[] rates;
     /**
      * flag to indicate ascertainment correction should be applied *
      */
     boolean useAscertainedSitePatterns = false;
-
     /**
      * dealing with proportion of site being invariant *
      */
     double proportionInvariant = 0;
     List<Integer> constantPattern = null;
 
-    int nodeCount;
-    int leafNodeCount;
-
-    Alignment alignment;
 
     @Override
     public void initAndValidate(){
@@ -141,8 +92,8 @@ public class QuasiSpeciesTreeLikelihood extends QuasiSpeciesGenericTreeLikelihoo
 //        try {
 //            beagle.initByName(
 //                    "data", dataInput.get(), "tree", treeInput.get(), "siteModel", siteModelInput.get(),
-//                    "branchRateModel", branchRateModelInput.get(), "useAmbiguities", m_useAmbiguities.get(),
-//                    "useTipLikelihoods", m_useTipLikelihoods.get(),"scaling", scaling.get().toString());
+//                    "branchRateModel", branchRateModelInput.get(), "useAmbiguities", useAmbiguities.get(),
+//                    "useTipLikelihoods", useTipLikelihoods.get(),"scaling", scaling.get().toString());
 //            if (beagle.beagle != null) {
 //                //a Beagle instance was found, so we use it
 //                return;
@@ -151,17 +102,19 @@ public class QuasiSpeciesTreeLikelihood extends QuasiSpeciesGenericTreeLikelihoo
 //            // ignore
 //        }
         // No Beagle instance was found, so we use the good old java likelihood core
-        beagle = null;
+//        beagle = null;
 
         nodeCount = treeInput.get().getNodeCount();
         leafNodeCount = treeInput.get().getLeafNodeCount();
 
-        if (!(siteModelInput.get() instanceof QuasiSpeciesSiteModel.Base)) {
+        nStates = alignment.getMaxStateCount();
+
+        if (!(siteModelInput.get() instanceof SiteModel.Base)) {
             throw new IllegalArgumentException("siteModel input should be of type SiteModel.Base");
         }
-        m_siteModel = (QuasiSpeciesSiteModel.Base) siteModelInput.get();
-        m_siteModel.setDataType(alignment.getDataType());
-        substitutionModel = m_siteModel.substModelInput.get();
+        siteModel = (SiteModel.Base) siteModelInput.get();
+        siteModel.setDataType(alignment.getDataType());
+        substitutionModel = siteModel.substModelInput.get();
 
         if (branchRateModelInput.get() != null) {
             branchRateModel = branchRateModelInput.get();
@@ -170,15 +123,12 @@ public class QuasiSpeciesTreeLikelihood extends QuasiSpeciesGenericTreeLikelihoo
         }
         // the entries corresponding to node number, store the branch length above the node
         // the entries corresponding to the node number + node count store the branch lengths above the QS origin, wherever this may be
-        m_branchLengths = new double[nodeCount+leafNodeCount];
-        storedBranchLengths = new double[nodeCount+leafNodeCount];
 
-        int stateCount = alignment.getMaxStateCount();
         int patterns = alignment.getPatternCount();
-//        if (stateCount == 4) {
+//        if (nStates == 4) {
 //            likelihoodCore = new BeerLikelihoodCore4();
 //        } else {
-            likelihoodCore = new QuasiSpeciesBeerLikelihoodCore(stateCount);
+            likelihoodCore = new QuasiSpeciesBeerLikelihoodCore(nStates);
 //        }
 
         String className = getClass().getSimpleName();
@@ -187,20 +137,38 @@ public class QuasiSpeciesTreeLikelihood extends QuasiSpeciesGenericTreeLikelihoo
         Log.info.println("  " + alignment.toString(true));
         // print startup messages via Log.print*
 
-        proportionInvariant = m_siteModel.getProportionInvariant();
-        m_siteModel.setPropInvariantIsCategory(false);
+        proportionInvariant = siteModel.getProportionInvariant();
+        siteModel.setPropInvariantIsCategory(false);
         if (proportionInvariant > 0) {
-            calcConstantPatternIndices(patterns, stateCount);
+            calcConstantPatternIndices(patterns, nStates);
         }
 
         initCore();
 
         patternLogLikelihoods = new double[patterns];
-        originTempPartials = new double[patterns * stateCount];
-        originPartials = new double[patterns * stateCount];
-        matrixSize = (stateCount + 1) * (stateCount + 1);
-        probabilities = new double[(stateCount + 1) * (stateCount + 1)];
+        rootPartials = new double[patterns * nStates * siteModel.getCategoryCount()];
+        originPartials = new double[patterns * nStates];
+        matrixSize = (nStates + 1) * (nStates + 1);
+        probabilities = new double[(nStates + 1) * (nStates + 1)];
         Arrays.fill(probabilities, 1.0);
+
+        EigenDecomposition eigenDecomposition = substitutionModel.getEigenDecomposition(null);
+        double[] evec = eigenDecomposition.getEigenVectors();
+        double[] eval = eigenDecomposition.getEigenValues();
+        double[] ievc = eigenDecomposition.getInverseEigenVectors();
+        rates = new double[nStates];
+        double[] tmpevectimesevals = new double[nStates * nStates];
+        for (int i = 0; i < nStates; i++){
+            for (int j = 0; j < nStates; j++){
+                tmpevectimesevals[i * nStates + j] = evec[i * nStates + j] * eval[j];
+            }
+        }
+        for (int i = 0; i < nStates; i++){
+            rates[i] = 0;
+            for (int j = 0; j < nStates; j++){
+                rates[i] += tmpevectimesevals[i * nStates + j] * ievc[j * nStates + i];
+            }
+        }
 
         if (alignment.isAscertained) {
             useAscertainedSitePatterns = true;
@@ -208,30 +176,30 @@ public class QuasiSpeciesTreeLikelihood extends QuasiSpeciesGenericTreeLikelihoo
     }
 
     /**
-     * Determine indices of m_fRootProbabilities that need to be updates
+     * Determine indices of rootProbabilities that need to be updated
      * // due to sites being invariant. If none of the sites are invariant,
      * // the 'site invariant' category does not contribute anything to the
      * // root probability. If the site IS invariant for a certain character,
      * // taking ambiguities in account, there is a contribution of 1 from
      * // the 'site invariant' category.
      */
-    void calcConstantPatternIndices(final int patterns, final int stateCount) {
+    void calcConstantPatternIndices(final int patterns, final int nStates) {
         constantPattern = new ArrayList<>();
         for (int i = 0; i < patterns; i++) {
             final int[] pattern = alignment.getPattern(i);
-            final boolean[] isInvariant = new boolean[stateCount];
+            final boolean[] isInvariant = new boolean[nStates];
             Arrays.fill(isInvariant, true);
             for (final int state : pattern) {
                 final boolean[] isStateSet = alignment.getStateSet(state);
-                if (m_useAmbiguities.get() || !alignment.getDataType().isAmbiguousState(state)) {
-                    for (int k = 0; k < stateCount; k++) {
+                if (useAmbiguities.get() || !alignment.getDataType().isAmbiguousState(state)) {
+                    for (int k = 0; k < nStates; k++) {
                         isInvariant[k] &= isStateSet[k];
                     }
                 }
             }
-            for (int k = 0; k < stateCount; k++) {
+            for (int k = 0; k < nStates; k++) {
                 if (isInvariant[k]) {
-                    constantPattern.add(i * stateCount + k);
+                    constantPattern.add(i * nStates + k);
                 }
             }
         }
@@ -242,16 +210,15 @@ public class QuasiSpeciesTreeLikelihood extends QuasiSpeciesGenericTreeLikelihoo
         likelihoodCore.initialize(
                 nodeCount+leafNodeCount,
                 alignment.getPatternCount(),
-                m_siteModel.getCategoryCount(),
-                true, m_useAmbiguities.get()
+                siteModel.getCategoryCount(),
+                true, useAmbiguities.get()
         );
 
         final int extNodeCount = nodeCount / 2 + 1;
-//        final int intNodeCount = nodeCount / 2;
         // the intNodeCount includes the true internal nodes and the QS start "nodes"
         final int intNodeCount = nodeCount / 2 + extNodeCount;
 
-        if (m_useAmbiguities.get() || m_useTipLikelihoods.get()) {
+        if (useAmbiguities.get() || useTipLikelihoods.get()) {
             setPartials(treeInput.get().getRoot(), alignment.getPatternCount());
         } else {
             setStates(treeInput.get().getRoot(), alignment.getPatternCount());
@@ -410,85 +377,6 @@ public class QuasiSpeciesTreeLikelihood extends QuasiSpeciesGenericTreeLikelihoo
         }
     }
 
-//    /* Assumes there IS a branch rate model as opposed to traverse() */
-//    int traverse(final Node node) {
-//
-//        int update = (node.isDirty() | hasDirt);
-//
-//        final int nodeIndex = node.getNr();
-//
-//        final double branchRate = branchRateModel.getRateForBranch(node);
-//        final double branchTime = node.getLength() * branchRate;
-//
-//        // First update the transition probability matrix(ices) for this branch
-//        //if (!node.isRoot() && (update != Tree.IS_CLEAN || branchTime != m_StoredBranchLengths[nodeIndex])) {
-//        if (!node.isRoot() && (update != Tree.IS_CLEAN || branchTime != m_branchLengths[nodeIndex])) {
-//            m_branchLengths[nodeIndex] = branchTime;
-//            final Node parent = node.getParent();
-//            likelihoodCore.setNodeMatrixForUpdate(nodeIndex);
-//            for (int i = 0; i < m_siteModel.getCategoryCount(); i++) {
-//                final double jointBranchRate = m_siteModel.getRateForCategory(i, node) * branchRate;
-//                substitutionModel.getTransitionProbabilities(node, parent.getHeight(), node.getHeight(), jointBranchRate, probabilities);
-//                //System.out.println(node.getNr() + " " + Arrays.toString(m_fProbabilities));
-//                likelihoodCore.setNodeMatrix(nodeIndex, i, probabilities);
-//            }
-//            update |= Tree.IS_DIRTY;
-//        }
-//
-//        // If the node is internal, update the partial likelihoods.
-//        if (!node.isLeaf()) {
-//
-//            // Traverse down the two child nodes
-//            final Node child1 = node.getLeft(); //Two children
-//            final int update1 = traverse(child1);
-//
-//            final Node child2 = node.getRight();
-//            final int update2 = traverse(child2);
-//
-//            // If either child node was updated then update this node too
-//            if (update1 != Tree.IS_CLEAN || update2 != Tree.IS_CLEAN) {
-//
-//                final int childNum1 = child1.getNr();
-//                final int childNum2 = child2.getNr();
-//
-//                likelihoodCore.setNodePartialsForUpdate(nodeIndex);
-//                update |= (update1 | update2);
-//                if (update >= Tree.IS_FILTHY) {
-//                    likelihoodCore.setNodeStatesForUpdate(nodeIndex);
-//                }
-//
-//                if (m_siteModel.integrateAcrossCategories()) {
-//                    likelihoodCore.calculatePartials(childNum1, childNum2, nodeIndex);
-//                } else {
-//                    throw new RuntimeException("Error TreeLikelihood 201: Site categories not supported");
-//                    //m_pLikelihoodCore->calculatePartials(childNum1, childNum2, nodeNum, siteCategories);
-//                }
-//
-//                if (node.isRoot()) {
-//                    // No parent this is the root of the beast.tree -
-//                    // calculate the pattern likelihoods
-//                    final double[] frequencies = //m_pFreqs.get().
-//                            substitutionModel.getFrequencies();
-//
-//                    final double[] proportions = m_siteModel.getCategoryProportions(node);
-//                    likelihoodCore.integratePartials(node.getNr(), proportions, m_fRootPartials);
-//
-//                    if (constantPattern != null) { // && !SiteModel.g_bUseOriginal) {
-//                        proportionInvariant = m_siteModel.getProportionInvariant();
-//                        // some portion of sites is invariant, so adjust root partials for this
-//                        for (final int i : constantPattern) {
-//                            m_fRootPartials[i] += proportionInvariant;
-//                        }
-//                    }
-//
-//                    likelihoodCore.calculateLogLikelihoods(m_fRootPartials, frequencies, patternLogLikelihoods);
-//                }
-//
-//            }
-//        }
-//        return update;
-//    } // traverseWithBRM
-
 
     /** CalculationNode methods **/
 
@@ -506,7 +394,7 @@ public class QuasiSpeciesTreeLikelihood extends QuasiSpeciesGenericTreeLikelihoo
             hasDirt = QuasiSpeciesTree.IS_FILTHY;
             return true;
         }
-        if (m_siteModel.isDirtyCalculation()) {
+        if (siteModel.isDirtyCalculation()) {
             hasDirt = QuasiSpeciesTree.IS_DIRTY;
             return true;
         }
@@ -528,7 +416,6 @@ public class QuasiSpeciesTreeLikelihood extends QuasiSpeciesGenericTreeLikelihoo
             likelihoodCore.store();
         }
         super.store();
-        System.arraycopy(m_branchLengths, 0, storedBranchLengths, 0, m_branchLengths.length);
     }
 
     @Override
@@ -542,9 +429,6 @@ public class QuasiSpeciesTreeLikelihood extends QuasiSpeciesGenericTreeLikelihoo
             likelihoodCore.restore();
         }
         super.restore();
-        double[] tmp = m_branchLengths;
-        m_branchLengths = storedBranchLengths;
-        storedBranchLengths = tmp;
     }
 
     /**
@@ -560,7 +444,7 @@ public class QuasiSpeciesTreeLikelihood extends QuasiSpeciesGenericTreeLikelihoo
      */
     @Override
     public List<String> getConditions() {
-        return m_siteModel.getConditions();
+        return siteModel.getConditions();
     }
 
 
@@ -582,11 +466,6 @@ public class QuasiSpeciesTreeLikelihood extends QuasiSpeciesGenericTreeLikelihoo
         final double branchRate = branchRateModel.getRateForBranch(node);
 
 
-        // hacks around unaccessible variables from TreeLikelihood
-//        QuasiSpeciesSubstitutionModel substitutionModel = m_siteModel.substModelInput.get();
-//        int stateCount = dataInput.get().getMaxStateCount();
-//        double[] probabilities = new double[(stateCount + 1) * (stateCount + 1)];
-
         // get the branch length, if the node is a tip, the total branch length above is the sum of the
         // branch lengths from the origin/attachment time to tip
         final double totalBranchTime;
@@ -594,8 +473,6 @@ public class QuasiSpeciesTreeLikelihood extends QuasiSpeciesGenericTreeLikelihoo
             totalBranchTime = node.getTotalBranchLengths();
         else if (node.isRoot())
             totalBranchTime = originHeight - node.getHeight();
-//        else if (node.getContinuingHaploName() != -1)
-//            totalBranchTime = 0;
         else
             totalBranchTime = node.getLength();
 
@@ -612,26 +489,25 @@ public class QuasiSpeciesTreeLikelihood extends QuasiSpeciesGenericTreeLikelihoo
         // First update the transition probability matrix(ices) for this branch
         // Update the transition probability for the branches that do not evolve
         // if the node is at tip, it holds the probability that the sequence does not change from the tip to the start of the haplo
-        if (node.isLeaf() && (update != Tree.IS_CLEAN || branchTime != m_branchLengths[nodeIndex])){
-            m_branchLengths[nodeIndex] = branchTime;
-//            final Node parent = node.getParent();
+        if (node.isLeaf() && update != Tree.IS_CLEAN){
             likelihoodCore.setNodeMatrixForUpdate(nodeIndex);
-            for (int i = 0; i < m_siteModel.getCategoryCount(); i++) {
-                final double jointBranchRate = m_siteModel.getRateForCategory(i, node) * branchRate;
-                substitutionModel.getTransitionProbabilities(node, totalBranchTime, jointBranchRate, probabilities);
+            for (int i = 0; i < siteModel.getCategoryCount(); i++) {
+                final double jointBranchRate = siteModel.getRateForCategory(i, node) * branchRate;
+                // fill the transition probability matrix with move probabilities
+                Arrays.fill(probabilities, 0);
+                for (int j = 0; j < 4; j++) {
+                    probabilities[j * 5] = Math.exp(-totalBranchTime * jointBranchRate);;
+                }
                 likelihoodCore.setNodeMatrix(nodeIndex, i, probabilities);
             }
             update |= Tree.IS_DIRTY;
         }
         // Update the transition probability for the partial branches (internal node to QS start)
-        if (node.getHaploAboveName() != -1 && (update != Tree.IS_CLEAN || partBranchTime != m_branchLengths[nodeCount + node.getHaploAboveName()])) {
-            m_branchLengths[nodeCount + node.getHaploAboveName()] = partBranchTime;
+        if (node.getHaploAboveName() != -1 && update != Tree.IS_CLEAN) {
             final Node parent = node.getParent();
             likelihoodCore.setNodeMatrixForUpdate(nodeCount + node.getHaploAboveName());
-            for (int i = 0; i < m_siteModel.getCategoryCount(); i++) {
-                final double jointBranchRate = m_siteModel.getRateForCategory(i, node) * branchRate;
-                // TODO in case we use something else than JC69, check whether the node is used here for something!!! since we do not have full
-                // TODO node parent length of the branch
+            for (int i = 0; i < siteModel.getCategoryCount(); i++) {
+                final double jointBranchRate = siteModel.getRateForCategory(i, node) * branchRate;
                 if (parent != null)
                     substitutionModel.getTransitionProbabilities(null, parent.getHeight(), ((QuasiSpeciesNode) Tree.getNode(node.getHaploAboveName())).getAttachmentTimesList()[0], jointBranchRate, probabilities);
                 else
@@ -642,23 +518,21 @@ public class QuasiSpeciesTreeLikelihood extends QuasiSpeciesGenericTreeLikelihoo
         }
         //Update the transition probability matrix(ices) for all other branches
         //if (!node.isRoot() && (update != Tree.IS_CLEAN || branchTime != m_StoredBranchLengths[nodeIndex])) {
-        else if (!node.isRoot() && ! node.isLeaf() && (update != Tree.IS_CLEAN || branchTime != m_branchLengths[nodeIndex])) {
-            m_branchLengths[nodeIndex] = branchTime;
+        else if (!node.isRoot() && ! node.isLeaf() && update != Tree.IS_CLEAN ) {
             final Node parent = node.getParent();
             likelihoodCore.setNodeMatrixForUpdate(nodeIndex);
-            for (int i = 0; i < m_siteModel.getCategoryCount(); i++) {
-                final double jointBranchRate = m_siteModel.getRateForCategory(i, node) * branchRate;
+            for (int i = 0; i < siteModel.getCategoryCount(); i++) {
+                final double jointBranchRate = siteModel.getRateForCategory(i, node) * branchRate;
                 substitutionModel.getTransitionProbabilities(node, parent.getHeight(), node.getHeight(), jointBranchRate, probabilities);
                 likelihoodCore.setNodeMatrix(nodeIndex, i, probabilities);
             }
             update |= Tree.IS_DIRTY;
         }
         //Update the transition probability matrix(ices) for root-origin branch
-        else if (node.isRoot() && (update != Tree.IS_CLEAN || branchTime != m_branchLengths[nodeIndex])) {
-            m_branchLengths[nodeIndex] = branchTime;
+        else if (node.isRoot() && update != Tree.IS_CLEAN) {
             likelihoodCore.setNodeMatrixForUpdate(nodeIndex);
-            for (int i = 0; i < m_siteModel.getCategoryCount(); i++) {
-                final double jointBranchRate = m_siteModel.getRateForCategory(i, node) * branchRate;
+            for (int i = 0; i < siteModel.getCategoryCount(); i++) {
+                final double jointBranchRate = siteModel.getRateForCategory(i, node) * branchRate;
                 substitutionModel.getTransitionProbabilities(node, originHeight, node.getHeight(), jointBranchRate, probabilities);
                 likelihoodCore.setNodeMatrix(nodeIndex, i, probabilities);
             }
@@ -691,17 +565,15 @@ public class QuasiSpeciesTreeLikelihood extends QuasiSpeciesGenericTreeLikelihoo
                 }
 
                 likelihoodCore.setNodePartialsForUpdate(nodeIndex);
-//                if (node.isLeaf())
-//                    likelihoodCore.setNodePartialsForUpdate(nodeCount + nodeIndex);
                 update |= (update1 | update2);
-                if (update >= Tree.IS_FILTHY) {
+                if (update >= Tree.IS_FILTHY)
                     likelihoodCore.setNodeStatesForUpdate(nodeIndex);
-//                    if (node.isLeaf())
-//                        likelihoodCore.setNodeStatesForUpdate(nodeCount + nodeIndex);
-                }
 
-                if (m_siteModel.integrateAcrossCategories()) {
-                    likelihoodCore.calculateQSPartials(childNum1, childNum2, nodeIndex, child1QS, child2QS, child1parentQS, nodeCount);
+                if (siteModel.integrateAcrossCategories()) {
+                    //if (nStates == 4)
+                    //    ((QuasiSpeciesBeerLikelihoodCore4) likelihoodCore).calculateQSPartials(childNum1, childNum2, nodeIndex, child1QS, child2QS, child1parentQS, nodeCount);
+                    //else
+                        ((QuasiSpeciesBeerLikelihoodCore) likelihoodCore).calculateQSPartials(childNum1, childNum2, nodeIndex, child1QS, child2QS, child1parentQS, nodeCount);
                 } else {
                     throw new RuntimeException("Error TreeLikelihood 201: Site categories not supported");
                     //m_pLikelihoodCore->calculatePartials(childNum1, childNum2, nodeNum, siteCategories);
@@ -713,14 +585,14 @@ public class QuasiSpeciesTreeLikelihood extends QuasiSpeciesGenericTreeLikelihoo
 //                    // if NO root-origin branch do the old likelihood calculation
 //                    if (Tree.originInput.get().getValue()==null){
 //                        // integrate over all possible site categories the sites can be in
-//                        final double[] proportions = m_siteModel.getCategoryProportions(node);
-//                        likelihoodCore.integratePartials(node.getNr(), proportions, m_fRootPartials);
+//                        final double[] proportions = siteModel.getCategoryProportions(node);
+//                        likelihoodCore.integratePartials(node.getNr(), proportions, rootPartials);
 //
 //                        if (constantPattern != null) { // && !SiteModel.g_bUseOriginal) {
-//                            double proportionInvariant = m_siteModel.getProportionInvariant();
+//                            double proportionInvariant = siteModel.getProportionInvariant();
 //                            // some portion of sites is invariant, so adjust root partials for this
 //                            for (final int i : constantPattern) {
-//                                m_fRootPartials[i] += proportionInvariant;
+//                                rootPartials[i] += proportionInvariant;
 //                            }
 //                        }
 //
@@ -728,20 +600,26 @@ public class QuasiSpeciesTreeLikelihood extends QuasiSpeciesGenericTreeLikelihoo
 //                        // integrate over all possible starting state
 //                        final double[] frequencies = //m_pFreqs.get().
 //                                substitutionModel.getFrequencies();
-//                        likelihoodCore.calculateLogLikelihoods(m_fRootPartials, frequencies, patternLogLikelihoods);
+//                        likelihoodCore.calculateLogLikelihoods(rootPartials, frequencies, patternLogLikelihoods);
 //                    }
 //                    // else continue the likelihood calculation up to the origin
 //                    else {
                         // include the root-orig branch!!!
 
-                        likelihoodCore.calculateOriginRootPartials(nodeIndex, child1parentQS, nodeCount, originTempPartials);
+                        //if (nStates == 4)
+                        //    ((QuasiSpeciesBeerLikelihoodCore4)likelihoodCore).calculateOriginRootPartials(nodeIndex, child1parentQS, nodeCount, rootPartials);
+                        //else
+                            ((QuasiSpeciesBeerLikelihoodCore)likelihoodCore).calculateOriginRootPartials(nodeIndex, child1parentQS, nodeCount, rootPartials);
 
                         // integrate over all possible site categories the sites can be in
-                        final double[] proportions = m_siteModel.getCategoryProportions(node);
-                        likelihoodCore.integratePartials(originTempPartials, proportions, originPartials);
+                        final double[] proportions = siteModel.getCategoryProportions(node);
+                        //if (nStates == 4)
+                        //    ((QuasiSpeciesBeerLikelihoodCore4)likelihoodCore).integratePartials(rootPartials, proportions, originPartials);
+                        //else
+                            ((QuasiSpeciesBeerLikelihoodCore)likelihoodCore).integratePartials(rootPartials, proportions, originPartials);
 
                         if (constantPattern != null) { // && !SiteModel.g_bUseOriginal) {
-                            proportionInvariant = m_siteModel.getProportionInvariant();
+                            proportionInvariant = siteModel.getProportionInvariant();
                             // some portion of sites is invariant, so adjust root partials for this
                             for (final int i : constantPattern) {
                                 originPartials[i] += proportionInvariant;
@@ -764,14 +642,20 @@ public class QuasiSpeciesTreeLikelihood extends QuasiSpeciesGenericTreeLikelihoo
 
                 final int child1parentQS = ((QuasiSpeciesNode) node).getContinuingHaploName();
 
-                likelihoodCore.calculateOriginTipPartials(nodeIndex, child1parentQS, nodeCount, originTempPartials);
+                //if (nStates == 4)
+                //    ((QuasiSpeciesBeerLikelihoodCore4)likelihoodCore).calculateOriginTipPartials(nodeIndex, child1parentQS, nodeCount, rootPartials);
+                //else
+                    ((QuasiSpeciesBeerLikelihoodCore)likelihoodCore).calculateOriginTipPartials(nodeIndex, child1parentQS, nodeCount, rootPartials);
 
                 // integrate over all possible site categories the sites can be in
-                final double[] proportions = m_siteModel.getCategoryProportions(node);
-                likelihoodCore.integratePartials(originTempPartials, proportions, originPartials);
+                final double[] proportions = siteModel.getCategoryProportions(node);
+                //if (nStates == 4)
+                //    ((QuasiSpeciesBeerLikelihoodCore4)likelihoodCore).integratePartials(rootPartials, proportions, originPartials);
+                //else
+                    ((QuasiSpeciesBeerLikelihoodCore)likelihoodCore).integratePartials(rootPartials, proportions, originPartials);
 
                 if (constantPattern != null) { // && !SiteModel.g_bUseOriginal) {
-                    proportionInvariant = m_siteModel.getProportionInvariant();
+                    proportionInvariant = siteModel.getProportionInvariant();
                     // some portion of sites is invariant, so adjust root partials for this
                     for (final int i : constantPattern) {
                         originPartials[i] += proportionInvariant;
@@ -786,8 +670,16 @@ public class QuasiSpeciesTreeLikelihood extends QuasiSpeciesGenericTreeLikelihoo
             }
         }
         return update;
-    } // traverseWithBRM
+    }
 
+    /**
+     * Function to subset full alignment to only sequences carried at tips in the
+     * unique sequence tree
+     *
+     * @param data  full alignment
+     * @param leafs leaf nodes of the unique-sequence tree
+     * @return subsetted alignment
+     */
     public Alignment subset(Input<Alignment> data, List<Node> leafs){
         Alignment fullData = data.get();
         int tipCount = leafs.size();
@@ -799,5 +691,4 @@ public class QuasiSpeciesTreeLikelihood extends QuasiSpeciesGenericTreeLikelihoo
         Alignment subsetData = new Alignment(sequences, fullData.dataTypeInput.get());
         return subsetData;
     }
-
-} // class TreeLikelihood
+}
