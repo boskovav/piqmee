@@ -4,9 +4,8 @@ import beast.core.Description;
 import beast.evolution.alignment.distance.Distance;
 
 /**
- * Created by boskovav on 03/03/17.
+ *  @author Veronika Boskova created on 03/03/17
  */
-
 @Description("Counts the simple number of characters that differ between sequences. " +
              "Note that unknowns are not ignored, so if both are unknowns '?' the distance is zero.")
 public class DifferenceCount extends Distance.Base {

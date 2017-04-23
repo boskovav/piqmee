@@ -1,10 +1,12 @@
 package quasispeciestree.likelihood;
 
+import beast.core.Description;
 import beast.evolution.likelihood.BeerLikelihoodCore;
 
 /**
- * quasispecies likelihood core *
+ *  @author Veronika Boskova created on 03/03/17
  */
+@Description("quasispecies likelihood core")
 public class QuasiSpeciesBeerLikelihoodCore extends BeerLikelihoodCore {
 
     public QuasiSpeciesBeerLikelihoodCore(int nrOfStates) {
