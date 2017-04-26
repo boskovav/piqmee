@@ -560,10 +560,8 @@ public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
                 final int childNum2 = child2.getNr();
                 final int child2QS = ((QuasiSpeciesNode) child2).getContinuingHaploName();
                 final int child2parentQS = ((QuasiSpeciesNode) child2.getParent()).getContinuingHaploName();
-                if (child1parentQS != child2parentQS){
-                    System.out.println("In QuasiSpeciesTreeLikelihood - QS of parent of child 1 ne to QS of parent of child 2");
-                    System.exit(0);
-                }
+                if (child1parentQS != child2parentQS)
+                    throw new IllegalStateException("In QuasiSpeciesTreeLikelihood - QS of parent of child 1 ne to QS of parent of child 2");
 
                 likelihoodCore.setNodePartialsForUpdate(nodeIndex);
                 update |= (update1 | update2);
