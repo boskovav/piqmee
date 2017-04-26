@@ -411,68 +411,23 @@ public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
         double span = t_destNodeP - min_newTime;
         double newTime = min_newTime + span * Randomizer.nextDouble();
 
-        // get the attachment times array to be changed
-        double[] tempqstimes = node.getAttachmentTimesList().clone();
-        // get also tip times to help define max/min scalings
-        double[] temptiptimes = node.getTipTimesList();
-        int[] temptiptimescount = node.getTipTimesCountList();
-
         // Choose attachment point for the moved haplotype
         ArrayList haploStartMaxNewArray = getMaxPossibleHaploAttachTime((QuasiSpeciesNode) destNode, srcHaplo, newTime);
         double haploStartMaxNew = (double) haploStartMaxNewArray.get(1);
-        // choose new time to attach
-        // get a random number deciding where the current haplo will be moved
-        double u = Randomizer.nextDouble();
-        double tnew = 0;
-        // reposition attachment times: attach ((time - haploStartMin) * (tHaploNew/told)) + haploStartMin
-        // get the haplotype's starting time
-        toldQSstart = tempqstimes[0];
-        double told = 0;
-        if (tempqstimes.length > 1){
-            told = tempqstimes[1];
-            // Scale the haplotype strains
-            // scale all the other positions in the array but the 0 position (haplo start time)
-            scalefactor = u * (haploStartMin/told) + (1.0 - u) * (haploStartMaxNew/told);
-            for (int i = 1; i < tempqstimes.length; i++) {
-                tempqstimes[i] = tempqstimes[i] * scalefactor;
-            }
-            tnew = tempqstimes[1];
-            // Reject invalid haplotype scalings:
-            if (scalefactor < 1.0){
-                if (tempqstimes[tempqstimes.length-1] < node.getHeight())
-                    return Double.NEGATIVE_INFINITY;
-                int currentPosition = tempqstimes.length-1-(temptiptimescount[0]-1);
-                for (int i = 1; i < temptiptimes.length; i++){
-                    if (tempqstimes[currentPosition] < temptiptimes[i])
-                        return Double.NEGATIVE_INFINITY;
-                    currentPosition -= temptiptimescount[i];
-                }
-            }
 
-            // set the haplotype's starting time to the new time
-            tnewQSstart = tempqstimes[1];
-            tempqstimes[0] = tnewQSstart;
-
-            // Incorporate probability of current haplotype to move
-            // scaling the attachment times (see Scaling Operator)
-            // assign contribution to the Hastings ratio for having different possible scales for told
-            logHastingsRatio += Math.log(haploStartMaxNew/told - haploStartMin/told);
-            logHastingsRatio -= Math.log(haploStartMax/tnew - haploStartMin/tnew);
-            // assign contribution of each scaled attachment time
-            logHastingsRatio += (tempqstimes.length - 3) * Math.log(scalefactor);
+        // scale the haplotype
+        if (node.getAttachmentTimesList().length > 1) {
+            double logHastingsRatioContribution = scaleThisHaplo(node, haploStartMaxNew, haploStartMax, haploStartMin, 0);
+            if (logHastingsRatioContribution == Double.NEGATIVE_INFINITY)
+                return Double.NEGATIVE_INFINITY;
+            else
+                logHastingsRatio += logHastingsRatioContribution;
         }
-        else {
-            // set the haplotype's starting time to the new time
-            tnewQSstart = haploStartMin;
-            tempqstimes[0] = tnewQSstart;
-        }
-        // rewrite the attachment times array
-        node.setAttachmentTimesList(tempqstimes);
 
         // Implement tree changes:
         QuasiSpeciesNode correctTreeFromThisNode1 = disconnectBranch((QuasiSpeciesNode) srcNode, srcHaplo);
         QuasiSpeciesNode correctTreeFromThisNode2 = connectBranch((QuasiSpeciesNode) srcNode,
-                (QuasiSpeciesNode) destNode, newTime, srcHaplo, tnewQSstart);
+                (QuasiSpeciesNode) destNode, newTime, srcHaplo, node.getAttachmentTimesList()[0]);
 
         // Recalculate continuingHaplo and HaploAbove arrays
         recalculateParentHaploAndCorrectContinuingHaploName(-1, (QuasiSpeciesNode) qsTree.getRoot());
@@ -552,6 +507,7 @@ public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
         // Ensure BEAST knows to recalculate affected likelihood:
         node.makeDirty(QuasiSpeciesTree.IS_FILTHY);
 
+        // RETURN log(HASTINGS RATIO)
         return logHastingsRatio;
     }
 

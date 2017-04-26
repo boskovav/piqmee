@@ -49,8 +49,10 @@ public class QuasiSpeciesHaplotypeSwap extends QuasiSpeciesTreeOperator{
         // check that this operator can actually perform a move
         int haplowithparents = 0;
         for (int i = 0; i < qsTree.getLeafNodeCount(); i++){
-            if (((QuasiSpeciesNode)qsTree.getNode(i)).getParentHaplo() != -1 && ((QuasiSpeciesNode)qsTree.getNode(i)).getAttachmentTimesList().length > 1)
+            if (((QuasiSpeciesNode)qsTree.getNode(i)).getParentHaplo() != -1 && ((QuasiSpeciesNode)qsTree.getNode(i)).getAttachmentTimesList().length > 1) {
                 haplowithparents += 1;
+                break;
+            }
         }
         if (haplowithparents == 0)
             return Double.NEGATIVE_INFINITY;
@@ -76,18 +78,6 @@ public class QuasiSpeciesHaplotypeSwap extends QuasiSpeciesTreeOperator{
         if (parentHaplo.getParentHaplo() != -1)
             grandParentHaplo = (QuasiSpeciesNode) qsTree.getNode(parentHaplo.getParentHaplo());;
 
-        // get the attachment times for tip
-        double[] tempqstimes = node.getAttachmentTimesList().clone();
-        // get also tip times to help define max/min scalings
-        double[] temptiptimes = node.getTipTimesList();
-        int[] temptiptimescount = node.getTipTimesCountList();
-
-        // get the attachment times for tip's parent
-        double[] tempqstimesparent = parentHaplo.getAttachmentTimesList().clone();
-        // get also tip times to help define maxparent/minparent scalings
-        double[] temptiptimesparent = parentHaplo.getTipTimesList();
-        int[] temptiptimescountparent = parentHaplo.getTipTimesCountList();
-
         // get a node above which the current/parent/grand parent haplotype arises
         QuasiSpeciesNode oldNodeBelowCurrentHaplo = findNodeBelowThisHaplo(node,haplo);
         QuasiSpeciesNode oldNodeBelowParentHaplo = findNodeBelowThisHaplo(node,parentHaplo.getNr());
@@ -95,199 +85,45 @@ public class QuasiSpeciesHaplotypeSwap extends QuasiSpeciesTreeOperator{
         // reposition the event (i.e. haplotype's first attachment time) uniformly at random between tmin and tmax
         // what is the parent haplo start time?
         ArrayList haploStartMaxNewArray = getMaxPossibleHaploAttachTime(oldNodeBelowCurrentHaplo, haplo, 0);
+        double maxTimeParent = (double) haploStartMaxNewArray.get(1);
 
-
-        // CURRENT
-        // note down what needs to be found out to propose a new start time
-        // and to reposition the event (i.e. haplotype's first attachment time) uniformly at random between tmin and tmax
-        double scalefactor = 0;
-        double toldQSstart = tempqstimes[0];
-        double tnewQSstart = 0;
-        double tmax;
-        double tminold = node.getHeight();
-        double tminnew = node.getHeight();
-        double toldtop = tempqstimes[1];
-        double tnewtop = 0;
-        double toldbottom = tempqstimes[tempqstimes.length-1];
-        double tnewbottom = 0;
-        // to get the tmin check for each sampling time of the haplo that the last possible attach time is above the
-        //  the corresponding sampling time
-        int currentPosition = tempqstimes.length-1-(temptiptimescount[0]-1);
-        for (int i = 1; i < temptiptimes.length; i++){
-            if (tminold/toldbottom < temptiptimes[i]/tempqstimes[currentPosition]) {
-                tminold = temptiptimes[i];
-                toldbottom = tempqstimes[currentPosition];
-            }
-            currentPosition = currentPosition - temptiptimescount[i];
-        }
-        // PARENT
-        // get the haplotype's starting time
-        double parentscalefactor = 0;
-        double toldQSstartparent = tempqstimesparent[0];
-        double tnewQSstartparent = 0;
-        double tmaxparent = (double) haploStartMaxNewArray.get(1);
-        double tminparentold = parentHaplo.getHeight();
-        double tminparentnew = parentHaplo.getHeight();
-        double toldparenttop = tempqstimesparent[1];
-        double tnewparenttop = 0;
-        double toldparentbottom = tempqstimesparent[tempqstimesparent.length-1];
-        double tnewparentbottom = 0;
-        // to get the tminparent check for each sampling time of the haplo that the last possible attach time is above the
-        //  the corresponding sampling time
-        currentPosition = tempqstimesparent.length-1-(temptiptimescountparent[0]-1);
-        for (int i = 1; i < temptiptimesparent.length; i++){
-            if (tminparentold/toldparentbottom < temptiptimesparent[i]/tempqstimesparent[currentPosition]) {
-                tminparentold = temptiptimesparent[i];
-                toldparentbottom = tempqstimesparent[currentPosition];
-            }
-            currentPosition -= temptiptimescountparent[i];
-        }
-        // check that the scaling was ok
-        if (tmaxparent/toldparenttop < tminparentold/toldparentbottom){
-            // in this case, it is possible that there is no acceptable scaling for the parent haplo
-            // but then this move cannot be performed at the moment
-            return Double.NEGATIVE_INFINITY;
-            // throw new IllegalStateException("problem in hereeeeee: HaplotypeSwap: The scaled values are not calculated properly?");
-        }
-
-// NO GRANDPARENT
-        // find out tmax: grandparent haplotype is null, then tmax=origin
+        // get the maximum possible attachment time for the haplo
+        double maxTime;
+        // NO GRANDPARENT
+        // grandparent haplotype is null, then tmax=origin
         if (grandParentHaplo == null){
-            tmax = origin.getValue();
+            maxTime = origin.getValue();
         }
-// GRANDPARENT
+        // GRANDPARENT
         // otherwise tmax is the common ancestor of grandParentHaplo and parentHaplo
         else{
             // get a node above which the grandparent haplotype arises
-            tmax = (double) getMaxPossibleHaploAttachTime(
+            maxTime = (double) getMaxPossibleHaploAttachTime(
                     (QuasiSpeciesNode)haploStartMaxNewArray.get(0),parentHaplo.getNr(),0).get(1);
         }
-// PROPOSE NEW TIMES FOR CURRENT HAPLO
-        // get a random number deciding where the start point of the current haplo will be moved
-        double u = Randomizer.nextDouble();
-        // reposition attachment times: attach ((time - tmin) * (tnew/told)) + tmin
-        // scale all the other positions in the array but the 0 position (haplo start time)
-        scalefactor = u*(tminold/toldbottom) + (1.0-u)*(tmax/toldtop);
-        for (int i = 1; i < tempqstimes.length; i++) {
-            tempqstimes[i] = tempqstimes[i] * scalefactor;
-        }
-        // get new time to attach of first attachment time
-        tnewtop = tempqstimes[1];
-        // set the haplotype's starting time to the new time
-        tnewQSstart = tempqstimes[1];
-        tempqstimes[0] = tnewQSstart;
 
-        // check that the scaling was ok
-        if (tmax/toldtop < tminold/toldbottom){
-            throw new IllegalStateException("problem in hereeeeee: HaplotypeSwap: The scaled values are not calculated properly?");
-
-        }
-        // check that the newly scaled attachment times do not go over the boundaries
-        if (tnewQSstart > tmax || tnewQSstart < tmaxparent)
+        // scale haplo
+        double logHastingsRatioContribution = scaleThisHaplo(node, maxTime, maxTimeParent, node.getHeight(),0);
+        if (logHastingsRatioContribution == Double.NEGATIVE_INFINITY)
             return Double.NEGATIVE_INFINITY;
-        tnewbottom = tempqstimes[tempqstimes.length-1];
-        currentPosition = tempqstimes.length-1-(temptiptimescount[0]-1);
-        for (int i = 1; i < temptiptimes.length; i++){
-            if(temptiptimes[i] > tempqstimes[currentPosition])
-                return Double.NEGATIVE_INFINITY;
-            if (tminnew/tnewbottom < temptiptimes[i]/tempqstimes[currentPosition]) {
-                tminnew = temptiptimes[i];
-                tnewbottom = tempqstimes[currentPosition];
-            }
-            currentPosition -= temptiptimescount[i];
-        }
-        // check that the scaling was ok
-        if (tmax/tnewtop < tminnew/tnewbottom){
-            throw new IllegalStateException("problem in hereeeeee: HaplotypeSwap: The scaled values are not calculated properly?");
+        else logHastingsRatio += logHastingsRatioContribution;
 
-        }
-        // Reject invalid haplotype scalings:
-        if (scalefactor < 1.0){
-            if (tnewQSstart < node.getHeight()){
-                throw new IllegalStateException("problem in hereeeeee you did not really scale the QS start apparently");
-            }
-            else if (tempqstimes[tempqstimes.length-1] < node.getHeight())
-                return Double.NEGATIVE_INFINITY;
-        }
-
-// PROPOSE NEW TIMES FOR PARENT HAPLO
-        // choose new time to start for the parent node uniformly at random between tminparent and tmaxparent
-        //  i.e. below the common ancestor node and scale all attachment times of this haplo
-        double v = Randomizer.nextDouble();
-        // reposition parent haplo attachment times: attach ((time - tminparent) * (tnewparent/toldparent)) + tminparent
-        // scale all the other positions in the array but the 0 position (haplo start time)
-        parentscalefactor = v*(tminparentold/toldparentbottom) + (1.0-v)*(tmaxparent/toldparenttop);
-        for (int i = 1; i < tempqstimesparent.length; i++) {
-            tempqstimesparent[i] = tempqstimesparent[i] * parentscalefactor;
-        }
-        // get new time to attach of first attachment time
-        tnewparenttop = tempqstimesparent[1];
-        // set the haplotype's starting time to the new time
-        tnewQSstartparent = tempqstimesparent[1];
-        tempqstimesparent[0] = tnewQSstartparent;
-
-        // check that the scaling was ok
-        if (tmax/toldparenttop < tminparentold/toldparentbottom){
-            throw new IllegalStateException("problem in hereeeeee: HaplotypeSwap: The scaled values are not calculated properly?");
-        }
         // check that the newly scaled attachment times do not go over the boundaries
-        if (tnewQSstartparent > tmaxparent || tnewQSstartparent > tmax)
+        if (node.getAttachmentTimesList()[0] < (double) haploStartMaxNewArray.get(1))
             return Double.NEGATIVE_INFINITY;
-        tnewparentbottom = tempqstimesparent[tempqstimesparent.length-1];
-        currentPosition = tempqstimesparent.length-1-(temptiptimescountparent[0]-1);
-        for (int i = 1; i < temptiptimesparent.length; i++){
-            if(temptiptimesparent[i] > tempqstimesparent[currentPosition])
-                return Double.NEGATIVE_INFINITY;
-            if (tminparentnew/tnewparentbottom < temptiptimesparent[i]/tempqstimesparent[currentPosition]) {
-                tminparentnew = temptiptimesparent[i];
-                tnewparentbottom = tempqstimesparent[currentPosition];
-            }
-            currentPosition -= temptiptimescountparent[i];
-        }
-        // check that the scaling was ok
-        if (tmaxparent/tnewparenttop < tminparentnew/tnewparentbottom){
-            throw new IllegalStateException("problem in hereeeeee: HaplotypeSwap: The scaled values are not calculated properly?");
-        }
-        // Reject invalid haplotype scalings:
-        if (parentscalefactor < 1.0){
-            if (tnewQSstartparent < parentHaplo.getHeight()){
-                throw new IllegalStateException("problem in hereeeeee you did not really scale the QS start apparently");
-            }
-            else if (tempqstimesparent[tempqstimesparent.length-1] < parentHaplo.getHeight())
-                return Double.NEGATIVE_INFINITY;
-        }
 
-// HR AND CORRECTIONS TO THE TREE
+        // scale also parent haplo
+        logHastingsRatioContribution = scaleThisHaplo(parentHaplo, maxTimeParent, maxTime, parentHaplo.getHeight(),0);
+        if (logHastingsRatioContribution == Double.NEGATIVE_INFINITY)
+            return Double.NEGATIVE_INFINITY;
+        else logHastingsRatio += logHastingsRatioContribution;
 
-        // HR contribution from CURRENT haplo
-        // Incorporate the probability of scaling all the attachment times
-        // assign contribution of each scaled attachment time
-        logHastingsRatio += (tempqstimes.length - 3) * Math.log(scalefactor);
-
-        // assign contribution to the Hastings ratio for having different possible scales for toldtop
-        logHastingsRatio += Math.log(tmax/toldtop - tminold/toldbottom);
-        logHastingsRatio -= Math.log(tmaxparent/tnewtop - tminold/tnewbottom);
-
-        // HR contribution from PARENT haplo
-        // Incorporate the probability of scaling all the attachment times
-        // assign contribution of each scaled attachment time
-        logHastingsRatio += (tempqstimesparent.length - 3) * Math.log(parentscalefactor);
-
-        // assign contribution to the Hastings ratio for having different possible scales for toldparenttop
-        logHastingsRatio += Math.log(tmaxparent/toldparenttop - tminparentold/toldparentbottom);
-        logHastingsRatio -= Math.log(tmax/tnewparenttop - tminparentnew/tnewparentbottom);
-
-        // rewrite the attachment times array
-        node.setAttachmentTimesList(tempqstimes);
-
-         // rewrite the attachment times array
-        parentHaplo.setAttachmentTimesList(tempqstimesparent);
 
         // find out what nodes have been passed by changing the haplo height
-        QuasiSpeciesNode nodeBelowHaploMoved = (QuasiSpeciesNode) findNodeBelowAfterRepositioningHaploStart(oldNodeBelowCurrentHaplo,tnewQSstart);
+        QuasiSpeciesNode nodeBelowHaploMoved = (QuasiSpeciesNode) findNodeBelowAfterRepositioningHaploStart(oldNodeBelowCurrentHaplo,node.getAttachmentTimesList()[0]);
 
         // find the new node above which the haplo arises
-        QuasiSpeciesNode nodeBelowHaploParent = (QuasiSpeciesNode) findNodeBelowAfterRepositioningHaploStart(parentHaplo,tnewQSstartparent);
+        QuasiSpeciesNode nodeBelowHaploParent = (QuasiSpeciesNode) findNodeBelowAfterRepositioningHaploStart(parentHaplo,parentHaplo.getAttachmentTimesList()[0]);
 
 
         // calculate up to where the haplotypes from the passed nodes can max attach to

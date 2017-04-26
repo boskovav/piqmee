@@ -4,6 +4,7 @@ import beast.core.Description;
 import beast.core.Input;
 import beast.core.Operator;
 import beast.evolution.tree.Node;
+import beast.util.Randomizer;
 import quasispeciestree.tree.QuasiSpeciesTree;
 import quasispeciestree.tree.QuasiSpeciesNode;
 import beast.core.parameter.RealParameter;
@@ -99,52 +100,7 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
         QuasiSpeciesNode sister = (QuasiSpeciesNode) getOtherChild(parent, node);
 
         // keep track of where does the haplotype arise
-        QuasiSpeciesNode nodeBelowHaploMoved = null;
-
-        //Check if the haplo to be moved is different from -1
-        if (haplotype!=-1){
-            // Disconnect the haplotype chosen to be moved when disconnecting the node
-            // if the haplotype to be moved is already present at node, then it must have arisen above in the tree
-            if (haplotype == node.getContinuingHaploName()){
-                // first check whether it arises at the node itself
-                if (node.getHaploAboveName() == haplotype){
-                    node.setHaploAboveName(-1);
-                    if (!node.isLeaf())
-                        node.setContinuingHaploName(-1);
-                    nodeBelowHaploMoved = null;
-                }
-                // second see whether there is continuing haplotype at the parent node
-                else {
-                    // check at which parent it arises
-                    QuasiSpeciesNode nodeAbove = parent;
-                    while (nodeAbove.getHaploAboveName() != haplotype){
-                        nodeAbove = (QuasiSpeciesNode) nodeAbove.getParent();
-                    }
-                    // set the node above which the haploMoved arises to -1, as haploMoved will be moved away
-                    nodeAbove.setHaploAboveName(-1);
-                    nodeAbove.setContinuingHaploName(-1);
-                    nodeBelowHaploMoved = nodeAbove;
-                    if (nodeBelowHaploMoved == node.getParent())
-                        nodeBelowHaploMoved = sister;
-                }
-            }
-            // otherwise the haplotype to be moved must have arisen below the node (need to clear the haploAboveName)
-            else{
-                // start checking at the tip
-                QuasiSpeciesNode nodeBelow = (QuasiSpeciesNode) qsTree.getNode(haplotype);
-                while (nodeBelow.getHaploAboveName() != haplotype){
-                    nodeBelow = (QuasiSpeciesNode) nodeBelow.getParent();
-                }
-                // set the node above which the haploMoved arises to -1, as haploMoved will be moved away
-                nodeBelow.setHaploAboveName(-1);
-                if (!nodeBelow.isLeaf())
-                    nodeBelow.setContinuingHaploName(-1);
-                nodeBelowHaploMoved = null;
-            }
-        }
-        else{
-            nodeBelowHaploMoved = null;
-        }
+        QuasiSpeciesNode nodeBelowHaploMoved = getQuasiSpeciesNodeBelowHaploDetached(node, haplotype, parent, sister, false);
 
         // Add haplotype start/attachment times originally attached to parent to those attached
         // to node's sister:
@@ -203,52 +159,7 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
         QuasiSpeciesNode sister = (QuasiSpeciesNode) getOtherChild(parent, node);
 
         // keep track of where does the haplotype arise
-        QuasiSpeciesNode nodeBelowHaploMoved = null;
-
-        //Check if the haplo to be moved is different from -1
-        if (haplotype!=-1) {
-            // Disconnect the haplotype chosen to be moved when disconnecting the node
-            // if the haplotype to be moved is already present at node, then it must have arisen above in the tree
-            if (haplotype == node.getContinuingHaploName()) {
-                // first check whether it arises at the node itself
-                if (node.getHaploAboveName() == haplotype) {
-                    node.setHaploAboveName(-1);
-                    if (!node.isLeaf())
-                        node.setContinuingHaploName(-1);
-                    nodeBelowHaploMoved = null;
-                }
-                // second see whether there is continuing haplotype at the parent node
-                else {
-                    // check at which parent it arises
-                    QuasiSpeciesNode nodeAbove = parent;
-                    while (nodeAbove.getHaploAboveName() != haplotype) {
-                        nodeAbove = (QuasiSpeciesNode) nodeAbove.getParent();
-                    }
-                    // set the node above which the haploMoved arises to -1, as haploMoved will be moved away
-                    nodeAbove.setHaploAboveName(-1);
-                    nodeAbove.setContinuingHaploName(-1);
-                    nodeBelowHaploMoved = nodeAbove;
-                    // if nodeBelowHaploMoved is not root, then we have got a problem
-                    if (!nodeBelowHaploMoved.isRoot())
-                        throw new IllegalArgumentException("Somehow the parent node of the haplotype to be detached" + " is not the same as the root, and we are using" + " disconnectBranchFromRoot() method.");
-                    if (nodeBelowHaploMoved == node.getParent())
-                        nodeBelowHaploMoved = sister;
-                }
-            }
-            // otherwise the haplotype to be moved must have arisen below the node (need to clear the haploAboveName)
-            else {
-                // start checking at the tip
-                QuasiSpeciesNode nodeBelow = (QuasiSpeciesNode) qsTree.getNode(haplotype);
-                while (nodeBelow.getHaploAboveName() != haplotype) {
-                    nodeBelow = (QuasiSpeciesNode) nodeBelow.getParent();
-                }
-                // set the node above which the haploMoved arises to -1, as haploMoved will be moved away
-                nodeBelow.setHaploAboveName(-1);
-                if (!nodeBelow.isLeaf())
-                    nodeBelow.setContinuingHaploName(-1);
-                nodeBelowHaploMoved = null;
-            }
-        }
+        QuasiSpeciesNode nodeBelowHaploMoved = getQuasiSpeciesNodeBelowHaploDetached(node, haplotype, parent, sister, true);
 
         // Add haplotype start/attachment times originally attached to parent to those attached
         // to node's sister:
@@ -280,6 +191,75 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
 
         // return from which node is the haplotype moved --- we have to re-attach and rescale it!
         // and re-assign continuing haplotypes/parenthaploarray from parent node onwards
+        return nodeBelowHaploMoved;
+    }
+
+    /**
+     * Helper function to disconnectBranch and disconnectBranchFromRoot
+     *  that clears continuingHaploName and haploAboveName for the moved haplo
+     *
+     * @param node to detach
+     * @param haplotype to detach (change haploAboveName for the corresponding node)
+     * @param parent node's parent
+     * @param sister node's sister
+     * @param disconnectfromroot
+     *
+     * @return QuasiSpeciesNode (parent/grandparent/.../root) above which the haplotype of the subtree to be moved arises
+     *                  (and for/below which the continuingHaploName have to be corrected)
+     */
+    public QuasiSpeciesNode getQuasiSpeciesNodeBelowHaploDetached(QuasiSpeciesNode node, int haplotype,
+                                                           QuasiSpeciesNode parent, QuasiSpeciesNode sister,
+                                                           boolean disconnectfromroot) {
+        QuasiSpeciesNode nodeBelowHaploMoved;
+        //Check if the haplo to be moved is different from -1
+        if (haplotype!=-1){
+            // Disconnect the haplotype chosen to be moved when disconnecting the node
+            // if the haplotype to be moved is already present at node, then it must have arisen above in the tree
+            if (haplotype == node.getContinuingHaploName()){
+                // first check whether it arises at the node itself
+                if (node.getHaploAboveName() == haplotype){
+                    node.setHaploAboveName(-1);
+                    if (!node.isLeaf())
+                        node.setContinuingHaploName(-1);
+                    nodeBelowHaploMoved = null;
+                }
+                // second see whether there is continuing haplotype at the parent node
+                else {
+                    // check at which parent it arises
+                    QuasiSpeciesNode nodeAbove = parent;
+                    while (nodeAbove.getHaploAboveName() != haplotype){
+                        nodeAbove.setContinuingHaploName(-1);
+                        nodeAbove = (QuasiSpeciesNode) nodeAbove.getParent();
+                    }
+                    // set the node above which the haploMoved arises to -1, as haploMoved will be moved away
+                    nodeAbove.setHaploAboveName(-1);
+                    nodeAbove.setContinuingHaploName(-1);
+                    nodeBelowHaploMoved = nodeAbove;
+                    // if nodeBelowHaploMoved is not root, then we have got a problem
+                    if (disconnectfromroot && !nodeBelowHaploMoved.isRoot())
+                        throw new IllegalArgumentException("Somehow the parent node of the haplotype to be detached"
+                                + " is not the same as the root, and we are using"
+                                + " disconnectBranchFromRoot() method.");
+                    if (nodeBelowHaploMoved == node.getParent())
+                        nodeBelowHaploMoved = sister;
+                }
+            }
+            // otherwise the haplotype to be moved must have arisen below the node (need to clear the haploAboveName)
+            else{
+                // start checking at the tip
+                QuasiSpeciesNode nodeBelow = (QuasiSpeciesNode) qsTree.getNode(haplotype);
+                while (nodeBelow.getHaploAboveName() != haplotype){
+                    nodeBelow = (QuasiSpeciesNode) nodeBelow.getParent();
+                    nodeBelow.setContinuingHaploName(-1);
+                }
+                // set the node above which the haploMoved arises to -1, as haploMoved will be moved away
+                nodeBelow.setHaploAboveName(-1);
+                nodeBelowHaploMoved = null;
+            }
+        }
+        else{
+            nodeBelowHaploMoved = null;
+        }
         return nodeBelowHaploMoved;
     }
 
@@ -336,24 +316,9 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
         }
 
         // set the aboveNodeHaplo for the node above which the haplotype moved arises to haplotypeNumber
-        QuasiSpeciesNode nodeBelowHaploMoved = null;
-        if(haplotype!=-1){
-            if (haploAttachTime >= destTime) {
-                nodeBelowHaploMoved = parent;
-                while (nodeBelowHaploMoved != qsTree.getRoot() && haploAttachTime > nodeBelowHaploMoved.getParent().getHeight()){
-                    nodeBelowHaploMoved = (QuasiSpeciesNode) nodeBelowHaploMoved.getParent();
-                }
-                nodeBelowHaploMoved.setHaploAboveName(haplotype);
-            }
-            else{
-                nodeBelowHaploMoved = (QuasiSpeciesNode) qsTree.getNode(haplotype);
-                while (haploAttachTime > nodeBelowHaploMoved.getParent().getHeight()){
-                    nodeBelowHaploMoved = (QuasiSpeciesNode) nodeBelowHaploMoved.getParent();
-                }
-                nodeBelowHaploMoved.setHaploAboveName(haplotype);
-                nodeBelowHaploMoved = parent;
-            }
-        }
+        QuasiSpeciesNode nodeBelowHaploMoved = getQuasiSpeciesNodeBelowHaploAttached(destTime, haplotype,
+                                                                            haploAttachTime, parent, false);
+
         // return the node for which the haploAboveName changed
         return nodeBelowHaploMoved;
     }
@@ -412,22 +377,50 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
         }
 
         // set the aboveNodeHaplo for the node above which the haplotype moved arises to haplotypeNumber
-        QuasiSpeciesNode nodeBelowHaploMoved = null;
-        if(haplotype!=-1) {
-            if (haploAttachTime >= destTime) {
-                nodeBelowHaploMoved = newRoot;
-                nodeBelowHaploMoved.setHaploAboveName(haplotype);
-            } else {
-                nodeBelowHaploMoved = (QuasiSpeciesNode) qsTree.getNode(haplotype);
-                while (haploAttachTime > nodeBelowHaploMoved.getParent().getHeight()) {
-                    nodeBelowHaploMoved = (QuasiSpeciesNode) nodeBelowHaploMoved.getParent();
-                }
-                nodeBelowHaploMoved.setHaploAboveName(haplotype);
-                nodeBelowHaploMoved = newRoot;
-            }
-        }
+        QuasiSpeciesNode nodeBelowHaploMoved = getQuasiSpeciesNodeBelowHaploAttached(destTime, haplotype,
+                                                                            haploAttachTime, newRoot, true);
 
         // return the node for which the haploAboveName changed
+        return nodeBelowHaploMoved;
+    }
+
+    /**
+     * Helper function to connectBranch and connectBranchToRoot
+     *  that assigns haploAboveName for the moved haplo
+     *
+     * @param destTime time at which the node attaches
+     * @param haplotype the haplotype that has to attach to new destination
+     * @param haploAttachTime the time at which the new haplotype attaches at new destination
+     * @param parent node at the new branch is attached
+     * @param isParentRoot
+     *
+     * @return QuasiSpeciesNode above which the moved haplotype is arising now
+     *                          (and for/below which the continuingHaploName have to be corrected)
+     */
+    public QuasiSpeciesNode getQuasiSpeciesNodeBelowHaploAttached(double destTime, int haplotype, double haploAttachTime,
+                                                                  QuasiSpeciesNode parent, boolean isParentRoot) {
+        QuasiSpeciesNode nodeBelowHaploMoved = null;
+        if(haplotype!=-1){
+            if (haploAttachTime >= destTime) {
+                nodeBelowHaploMoved = parent;
+                if (!isParentRoot){
+                    while (nodeBelowHaploMoved != qsTree.getRoot() && haploAttachTime > nodeBelowHaploMoved.getParent().getHeight()){
+                        nodeBelowHaploMoved = (QuasiSpeciesNode) nodeBelowHaploMoved.getParent();
+                    }
+                }
+                // set the aboveNodeHaplo for the node above which the haplotype moved arises to haplotypeNumber
+                nodeBelowHaploMoved.setHaploAboveName(haplotype);
+            }
+            else{
+                nodeBelowHaploMoved = (QuasiSpeciesNode) qsTree.getNode(haplotype);
+                while (haploAttachTime > nodeBelowHaploMoved.getParent().getHeight()){
+                    nodeBelowHaploMoved = (QuasiSpeciesNode) nodeBelowHaploMoved.getParent();
+                }
+                // set the aboveNodeHaplo for the node above which the haplotype moved arises to haplotypeNumber
+                nodeBelowHaploMoved.setHaploAboveName(haplotype);
+                nodeBelowHaploMoved = parent;
+            }
+        }
         return nodeBelowHaploMoved;
     }
 
@@ -636,5 +629,121 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
             startNode = (QuasiSpeciesNode) startNode.getParent();
         }
         return currentHaploNodeBelowPassed;
+    }
+
+    /**
+     * Function to propose and scale haplotype's attachment times, returns updated logHastingsRatio
+     *
+     * @param nodehaplo the node that holds the haplotype
+     * @param haploStartMaxNew the new maximum attachment time for the haplo
+     * @param haploStartMaxOld the old maximum attachment time for the haplo
+     * @param haploStartMin the minimum attachment time for the haplo
+     *
+     * @return logHastingsRatio contribution
+     */
+    public double scaleThisHaplo(QuasiSpeciesNode nodehaplo, double haploStartMaxNew, double haploStartMaxOld, double haploStartMin, double toldbottom) {
+
+        double logHastingsRatio = 0.0;
+
+        // get the attachment times array to be changed
+        double[] tempqstimes = nodehaplo.getAttachmentTimesList().clone();
+        // get also tip times to help define max/min scalings
+        double[] temptiptimes = nodehaplo.getTipTimesList();
+        int[] temptiptimescount = nodehaplo.getTipTimesCountList();
+
+        // reposition attachment times: attach ((time - tmin) * (tnew/told)) + tmin
+        if (tempqstimes.length > 1) {
+            // Choose attachment point for the moved haplotype
+            // choose new time to attach
+            // get a random number deciding where the current haplo will be moved
+            double u = Randomizer.nextDouble();
+            double scalefactor = 0;
+            // note down what needs to be found out to propose a new start time
+            // and to reposition the event (i.e. haplotype's first attachment time) uniformly at random between tmin and tmax
+            // find out tmin/tmax/told
+            double tmax = haploStartMaxNew;
+            double tminold = haploStartMin;
+            double tminnew = haploStartMin;
+            double toldtop = tempqstimes[1];
+            double tnewtop = 0;
+            if (toldbottom == 0)
+                toldbottom = tempqstimes[tempqstimes.length - 1];
+            double tnewbottom = 0;
+
+            // to get the tmin check for each sampling time of the haplo that the last possible attach time is above the
+            //  the corresponding sampling time
+            if (tempqstimes[tempqstimes.length - 1] < nodehaplo.getHeight())
+                throw new IllegalStateException("QuasiSpeciesOperator: The haplotype attachment time is below the sampling time");
+            int currentPosition = tempqstimes.length - 1 - (temptiptimescount[0] - 1);
+            for (int i = 1; i < temptiptimes.length; i++){
+                if (tempqstimes[currentPosition] < temptiptimes[i])
+                    throw new IllegalStateException("QuasiSpeciesOperator: The haplotype attachment time is below the sampling time");
+                if (tminold/toldbottom < temptiptimes[i]/tempqstimes[currentPosition]) {
+                    tminold = temptiptimes[i];
+                    toldbottom = tempqstimes[currentPosition];
+                }
+                currentPosition -= temptiptimescount[i];
+            }
+
+            // check that the scaling is ok
+            if (tmax < toldtop && tmax / toldtop < tminold / toldbottom){
+                // in this case, it is possible that there is no acceptable scaling for the parent haplo
+                // but then this move cannot be performed at the moment
+                return Double.NEGATIVE_INFINITY;
+            }
+
+            // Scale the haplotype strains
+            // scale all the other positions in the array but the 0 position (haplo start time)
+            scalefactor = u * (tminold / toldbottom) + (1.0 - u) * (tmax / toldtop);
+            for (int i = 1; i < tempqstimes.length; i++) {
+                tempqstimes[i] = tempqstimes[i] * scalefactor;
+            }
+            // get new time to attach of first attachment time
+            tnewtop = tempqstimes[1];
+            // set the haplotype's starting time to the new time
+            tempqstimes[0] = tempqstimes[1];
+
+            // check that the newly scaled attachment times do not go over the boundaries
+            if (tempqstimes[0] > tmax)
+                throw new IllegalStateException("QuasiSpeciesOperator: Scaling of haplotype just went through the roof");
+
+            //get the possible back scale interval
+            if (toldbottom == 0)
+                tnewbottom = tempqstimes[tempqstimes.length - 1];
+            else tnewbottom = tnewtop;
+            if (tempqstimes[tempqstimes.length - 1] < nodehaplo.getHeight())
+                throw new IllegalStateException("QuasiSpeciesOperator: The newly scaled haplotype attachment time is below the sampling time");
+            currentPosition = tempqstimes.length - 1 - (temptiptimescount[0] - 1);
+            for (int i = 1; i < temptiptimes.length; i++){
+                if (tempqstimes[currentPosition] < temptiptimes[i])
+                    throw new IllegalStateException("QuasiSpeciesOperator: The newly scaled haplotype attachment time is below the sampling time");
+                if (tminnew/tnewbottom < temptiptimes[i]/tempqstimes[currentPosition]) {
+                    tminnew = temptiptimes[i];
+                    tnewbottom = tempqstimes[currentPosition];
+                }
+                currentPosition -= temptiptimescount[i];
+            }
+
+            // check that the scaling was ok
+            if (tmax / tnewtop < tminnew / tnewbottom){
+                throw new IllegalStateException("QuasiSpeciesOperator: The haplotype scaled values are not calculated properly?");
+            }
+
+            // Incorporate probability of current haplotype to move
+            // scaling the attachment times (see Scaling Operator)
+            // assign contribution to the Hastings ratio for having different possible scales for toldtop
+            logHastingsRatio += Math.log(haploStartMaxNew / toldtop - tminold / toldbottom);
+            logHastingsRatio -= Math.log(haploStartMaxOld / tnewtop - tminnew / tnewbottom);
+            // assign contribution of each scaled attachment time
+            logHastingsRatio += (tempqstimes.length - 3) * Math.log(scalefactor);
+        } else
+            // set the haplotype's starting time to the new time
+            tempqstimes[0] = haploStartMin;
+
+        // rewrite the attachment times array
+        nodehaplo.setAttachmentTimesList(tempqstimes);
+
+        // RETURN log(HASTINGS RATIO) contribution
+        return logHastingsRatio;
     }
 }
