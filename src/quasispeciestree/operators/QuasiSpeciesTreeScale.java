@@ -193,8 +193,6 @@ public class QuasiSpeciesTreeScale extends QuasiSpeciesTreeOperator{
                     ((QuasiSpeciesNode) root).setHaploAboveName(-1);
                     // correct continuing haplo and parent haplo
                     recalculateParentHaploAndCorrectContinuingHaploName(-1, (QuasiSpeciesNode) root);
-                    // recalculate countPossibleStartBranches
-                    qsTree.countAndSetPossibleStartBranches();
                 }
             }
             // the haplo at the root can come from the right child
@@ -212,8 +210,6 @@ public class QuasiSpeciesTreeScale extends QuasiSpeciesTreeOperator{
                     ((QuasiSpeciesNode) root).setHaploAboveName(-1);
                     // correct continuing haplo and parent haplo
                     recalculateParentHaploAndCorrectContinuingHaploName(-1, (QuasiSpeciesNode) root);
-                    // recalculate countPossibleStartBranches
-                    qsTree.countAndSetPossibleStartBranches();
                 }
             }
             else if (haplo == -1 && newHeight < oldHeight && (leftabove || rightabove)){
@@ -222,18 +218,16 @@ public class QuasiSpeciesTreeScale extends QuasiSpeciesTreeOperator{
                     ((QuasiSpeciesNode) root).setHaploAboveName(haploleft);
                     // correct continuing haplo and parent haplo
                     recalculateParentHaploAndCorrectContinuingHaploName(-1, (QuasiSpeciesNode) root);
-                    // recalculate countPossibleStartBranches
-                    qsTree.countAndSetPossibleStartBranches();
                 }
                 else {
                     right.setHaploAboveName(-1);
                     ((QuasiSpeciesNode) root).setHaploAboveName(haploright);
                     // correct continuing haplo and parent haplo
                     recalculateParentHaploAndCorrectContinuingHaploName(-1, (QuasiSpeciesNode) root);
-                    // recalculate countPossibleStartBranches
-                    qsTree.countAndSetPossibleStartBranches();
                 }
             }
+            // recalculate countPossibleStartBranches
+            qsTree.countAndSetPossibleStartBranches();
 
         // scaling the entire tree
         } else {
