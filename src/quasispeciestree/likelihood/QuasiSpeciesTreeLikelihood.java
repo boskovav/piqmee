@@ -494,14 +494,11 @@ public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
         if (node.isLeaf() && update != Tree.IS_CLEAN){
             likelihoodCore.setNodeMatrixForUpdate(nodeIndex);
             for (int i = 0; i < siteModel.getCategoryCount(); i++) {
-
-
-                // todo this needs to be adapted to accomodate other models
                 final double jointBranchRate = siteModel.getRateForCategory(i, node) * branchRate;
                 // fill the transition probability matrix with move probabilities
                 Arrays.fill(probabilities, 0);
                 for (int j = 0; j < nStates; j++) {
-                    probabilities[j * 5] = Math.exp(-totalBranchTime * jointBranchRate * rates[j]);
+                    probabilities[j * 5] = Math.exp(totalBranchTime * jointBranchRate * rates[j]);
                 }
                 likelihoodCore.setNodeMatrix(nodeIndex, i, probabilities);
             }
