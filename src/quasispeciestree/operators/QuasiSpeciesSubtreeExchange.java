@@ -124,7 +124,7 @@ public class QuasiSpeciesSubtreeExchange extends QuasiSpeciesTreeOperator{
         else logHastingsRatio += logHastingsRatioContribution;
 
         // also scale dest haplo
-        logHastingsRatioContribution += scaleThisHaplo(destnodehaplo, srcHaploStartMax, destHaploStartMax, destHaploStartMin, 0);
+        logHastingsRatioContribution = scaleThisHaplo(destnodehaplo, srcHaploStartMax, destHaploStartMax, destHaploStartMin, 0);
         if (logHastingsRatioContribution == Double.NEGATIVE_INFINITY)
             return Double.NEGATIVE_INFINITY;
         else logHastingsRatio += logHastingsRatioContribution;
