@@ -169,7 +169,7 @@ public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
             for (int j = 0; j < nStates; j++){
                 rates[i] += tmpevectimesevals[i * nStates + j] * ievc[j * nStates + i];
             }
-            System.out.println(rates[i]);
+//            System.out.println(rates[i]);
         }
 
         if (alignment.isAscertained) {
