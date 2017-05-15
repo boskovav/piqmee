@@ -674,6 +674,10 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
             //  the corresponding sampling time
             if (tempqstimes[tempqstimes.length - 1] < nodehaplo.getHeight())
                 throw new IllegalStateException("QuasiSpeciesOperator: The haplotype attachment time is below the sampling time");
+            if (tminold/toldbottom < temptiptimes[0]/tempqstimes[tempqstimes.length - 1]) {
+                tminold = temptiptimes[0];
+                toldbottom = tempqstimes[tempqstimes.length - 1];
+            }
             int currentPosition = tempqstimes.length - 1 - (temptiptimescount[0] - 1);
             for (int i = 1; i < temptiptimes.length; i++){
                 if (tempqstimes[currentPosition] < temptiptimes[i])
