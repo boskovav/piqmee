@@ -404,7 +404,7 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
             if (haploAttachTime >= destTime) {
                 nodeBelowHaploMoved = parent;
                 if (!isParentRoot){
-                    while (nodeBelowHaploMoved != qsTree.getRoot() && haploAttachTime > nodeBelowHaploMoved.getParent().getHeight()){
+                    while (nodeBelowHaploMoved.getParent() != null && haploAttachTime > nodeBelowHaploMoved.getParent().getHeight()){
                         nodeBelowHaploMoved = (QuasiSpeciesNode) nodeBelowHaploMoved.getParent();
                     }
                 }
