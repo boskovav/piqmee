@@ -195,7 +195,7 @@ public class QuasiSpeciesTree extends Tree {
                 tempqstimes[currentPosition] = maxTimeArray[i-1] - (j + 1) * ((maxTimeArray[i-1] - temptiptimes[i]) / (1 + temptiptimescount[i]));
                 currentPosition++;
             }
-        }// TODO does this return the pointer to the tempqstimes? or do we have to have it as the return statement?
+        }
     }
 
     /**
@@ -1318,6 +1318,18 @@ public class QuasiSpeciesTree extends Tree {
         } else{
             return getFlattenedHaploTree().getRoot().toSortedNewick(new int[1], true);
         }
+    }
+
+    /**
+     * Return number of internalnodes and duplicate attachment points
+     * for scaling operator to correctly determine the hastings ratio
+     *
+     * @return number of internal nodes + duplicate attachment times
+     */
+    @Override
+    public int scale(final double scale) {
+        root.scale(scale);
+        return getInternalNodeCount() + getTotalAttachmentCounts() - getDirectAncestorNodeCount();
     }
 
     /////////////////////////////////////////////////

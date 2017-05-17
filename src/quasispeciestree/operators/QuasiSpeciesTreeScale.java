@@ -231,60 +231,15 @@ public class QuasiSpeciesTreeScale extends QuasiSpeciesTreeOperator{
 
         // scaling the entire tree
         } else {
-            logHastingsRatio -= 2 * logf;
-
-            // Scale internal node heights
-            for (Node node : qsTree.getInternalNodes()) {
-                node.setHeight(node.getHeight() * f);
-                logHastingsRatio += logf;
-            }
-
-            // Scale haplotype attachment times
-            for (Node leaf : qsTree.getExternalNodes()) {
-                double[] tempqstimes = ((QuasiSpeciesNode)leaf).getAttachmentTimesList().clone();
-                for (int i = 0; i < tempqstimes.length; i++) {
-                    tempqstimes[i] = tempqstimes[i] * f;
-                }
-                if (tempqstimes.length > 1)
-                    tempqstimes[0] = tempqstimes[1];
-                else
-                    tempqstimes[0] = leaf.getHeight();
-                // reject the move as soon as the first QS attachment time exceeds the origin height
-                if (tempqstimes.length > 1 && tempqstimes[1] > origin.getValue())
-                    return Double.NEGATIVE_INFINITY;
-
-                ((QuasiSpeciesNode) leaf).setAttachmentTimesList(tempqstimes);
-                // contribution from haplotype duplicate attach time scaling
-                if (tempqstimes.length > 1)
-                    logHastingsRatio += (tempqstimes.length - 1) * logf;
-            }
-
-            // Reject invalid tree scalings:
-            if (f < 1.0) {
-                for (Node leaf : qsTree.getExternalNodes()) {
-                    double[] tempqstimes = ((QuasiSpeciesNode)leaf).getAttachmentTimesList();
-                    // get also tip times to help define valid scalings
-                    double[] temptiptimes = ((QuasiSpeciesNode)leaf).getTipTimesList();
-                    int[] temptiptimescount = ((QuasiSpeciesNode)leaf).getTipTimesCountList();
-                    if (leaf.getParent().getHeight() < leaf.getHeight() || tempqstimes[tempqstimes.length-1] < leaf.getHeight())
-                        return Double.NEGATIVE_INFINITY;
-                    // check also if branching times corresponding to samples through time are also above the respective time
-                    int currentPosition = tempqstimes.length-1-(temptiptimescount[0]-1);
-                    for (int i = 1; i < temptiptimes.length; i++){
-                        if (tempqstimes[currentPosition] < temptiptimes[i])
-                            return Double.NEGATIVE_INFINITY;
-                        currentPosition -= temptiptimescount[i];
-                    }
-                    if (tempqstimes.length > 1 && tempqstimes[0] < leaf.getHeight()){
-                        throw new IllegalStateException("problem in QuasiSpeciesTreeScale: you did not really scale the QS start apparently");
-                    }
-                }
-            }
+            // scale the quasispecies.tree
+            final int totalNodes = qsTree.scale(f);
+            logHastingsRatio += (totalNodes - 2) * logf;
+            //return Math.log(f) * (totalNodes - 2);
         }
 
-        // Reject invalid tree/root scaling:
-        if (f > 1.0 && root.getHeight() > origin.getValue())
-                return Double.NEGATIVE_INFINITY;
+        // Reject invalid tree/root scaling: - done in BDSKY
+        //if (f > 1.0 && root.getHeight() > origin.getValue())
+        //        return Double.NEGATIVE_INFINITY;
 
         // Scale parameters:
         for (int pidx = 0; pidx < parametersInput.get().size(); pidx++) {
