@@ -72,6 +72,8 @@ public class QuasiSpeciesSubtreeExchangeEasy extends QuasiSpeciesTreeOperator{
                         break;
                     }
                 }
+                if (haplobelowparentnode==1)
+                    break;
             }
             if (haplobelowparentnode == 0)
                 return Double.NEGATIVE_INFINITY;
@@ -97,7 +99,7 @@ public class QuasiSpeciesSubtreeExchangeEasy extends QuasiSpeciesTreeOperator{
 
 
         // Reject if substitution would result in negative branch lengths:
-        if (destNode.getHeight() > srcNodeParent.getHeight() || srcNode.getHeight() > destNodeParent.getHeight())
+        if (destNode.getHeight() >= srcNodeParent.getHeight() || srcNode.getHeight() >= destNodeParent.getHeight())
             return Double.NEGATIVE_INFINITY;
 
         // Make changes to tree topology:

@@ -63,7 +63,7 @@ public class QuasiSpeciesSubtreeExchange extends QuasiSpeciesTreeOperator{
 
 
         // Reject if substitution would result in negative branch lengths:
-        if (destNode.getHeight() > srcNodeParent.getHeight() || srcNode.getHeight() > destNodeParent.getHeight())
+        if (destNode.getHeight() >= srcNodeParent.getHeight() || srcNode.getHeight() >= destNodeParent.getHeight())
             return Double.NEGATIVE_INFINITY;
 
         // Record probability of forward moves:
