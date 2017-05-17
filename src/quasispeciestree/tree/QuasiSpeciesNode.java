@@ -202,9 +202,9 @@ public class QuasiSpeciesNode extends Node {
             height *= scale;
         }
         if (!isLeaf()) {
-            getLeft().scale(scale);
+            ((QuasiSpeciesNode) getLeft()).scale(scale);
             if (getRight() != null) {
-                getRight().scale(scale);
+                ((QuasiSpeciesNode) getRight()).scale(scale);
             }
             if (height < getLeft().getHeight() || height < getRight().getHeight()) {
                 throw new IllegalArgumentException("Scale gives negative branch length");
