@@ -178,11 +178,11 @@ public class QuasiSpeciesNode extends Node {
 
         if (node.getLeft()!=null) {
             setLeft(nodes[node.getLeft().getNr()]);
-            getLeft().assignFrom(nodes, node.getLeft());
+            ((QuasiSpeciesNode) getLeft()).assignFrom(nodes, node.getLeft());
             getLeft().setParent(this);
             if (node.getRight()!=null) {
                 setRight(nodes[node.getRight().getNr()]);
-                getRight().assignFrom(nodes, node.getRight());
+                ((QuasiSpeciesNode) getRight()).assignFrom(nodes, node.getRight());
                 getRight().setParent(this);
             }
         }

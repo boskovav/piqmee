@@ -453,7 +453,7 @@ public class QuasiSpeciesTree extends Tree {
 
         ID = qsTree.ID;
         root = qsNodes[qsTree.root.getNr()];
-        root.assignFrom(qsNodes, qsTree.root);
+        ((QuasiSpeciesNode) root).assignFrom(qsNodes, qsTree.root);
         root.setParent(null);
 
         nodeCount = qsTree.nodeCount;
@@ -1328,7 +1328,7 @@ public class QuasiSpeciesTree extends Tree {
      */
     @Override
     public int scale(final double scale) {
-        root.scale(scale);
+        ((QuasiSpeciesNode) root).scale(scale);
         return getInternalNodeCount() + getTotalAttachmentCounts() - getDirectAncestorNodeCount();
     }
 
