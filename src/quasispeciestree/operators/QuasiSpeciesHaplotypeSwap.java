@@ -102,8 +102,12 @@ public class QuasiSpeciesHaplotypeSwap extends QuasiSpeciesTreeOperator{
                     (QuasiSpeciesNode)haploStartMaxNewArray.get(0),parentHaplo.getNr(),0).get(1);
         }
 
+        // find the mrca to determine the min boundary for the haplo
+        QuasiSpeciesNode mrca = findLastCommonAncestor(node, parentHaplo, (QuasiSpeciesNode) qsTree.getRoot());
+
         // scale haplo
-        double logHastingsRatioContribution = scaleThisHaplo(node, maxTime, maxTimeParent, node.getHeight(),0);
+        double logHastingsRatioContribution = scaleThisHaplo(node, maxTime, mrca.getHeight(), node.getAttachmentTimesList()[1],
+                                                                   maxTimeParent, node.getHeight(), 0);
         if (logHastingsRatioContribution == Double.NEGATIVE_INFINITY)
             return Double.NEGATIVE_INFINITY;
         else logHastingsRatio += logHastingsRatioContribution;
@@ -112,8 +116,14 @@ public class QuasiSpeciesHaplotypeSwap extends QuasiSpeciesTreeOperator{
         if (node.getAttachmentTimesList()[0] < (double) haploStartMaxNewArray.get(1))
             return Double.NEGATIVE_INFINITY;
 
+
+        // the scale haplo of does not know what the min is on the way back... is it the mrca or the node height?
+
+
+
         // scale also parent haplo
-        logHastingsRatioContribution = scaleThisHaplo(parentHaplo, maxTimeParent, maxTime, parentHaplo.getHeight(),0);
+        logHastingsRatioContribution = scaleThisHaplo(parentHaplo, maxTimeParent, parentHaplo.getHeight(), 0,
+                                                                   maxTime, mrca.getHeight(), -1);
         if (logHastingsRatioContribution == Double.NEGATIVE_INFINITY)
             return Double.NEGATIVE_INFINITY;
         else logHastingsRatio += logHastingsRatioContribution;

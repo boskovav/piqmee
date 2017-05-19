@@ -96,7 +96,8 @@ public class QuasiSpeciesWilsonBaldingEasy extends QuasiSpeciesTreeOperator{
 
                 // scale the haplotype
                 if (node.getAttachmentTimesList().length > 1) {
-                    double logHastingsRatioContribution = scaleThisHaplo(node, newTime, haploStartMax, haploStartMin, node.getAttachmentTimesList()[1]);
+                    double logHastingsRatioContribution = scaleThisHaplo(node, newTime, haploStartMin, node.getAttachmentTimesList()[1],
+                                                                               haploStartMax, haploStartMin, -1);
                     if (logHastingsRatioContribution == Double.NEGATIVE_INFINITY)
                         return Double.NEGATIVE_INFINITY;
                     else logHastingsRatio += logHastingsRatioContribution;
@@ -112,7 +113,7 @@ public class QuasiSpeciesWilsonBaldingEasy extends QuasiSpeciesTreeOperator{
             QuasiSpeciesNode correctTreeFromThisNode1 = disconnectBranch((QuasiSpeciesNode) srcNode, srcHaplo);
             QuasiSpeciesNode correctTreeFromThisNode2 = connectBranchToRoot((QuasiSpeciesNode) srcNode,
                     (QuasiSpeciesNode) destNode, newTime, srcHaplo, tnewQSstart);
-            qsTree.setRoot(srcNodeP);
+            qsTree.setRoot((QuasiSpeciesNode) srcNodeP);
 
             // Recalculate continuingHaplo and HaploAbove arrays
             recalculateParentHaploAndCorrectContinuingHaploName(-1, (QuasiSpeciesNode) srcNodeP);
@@ -164,7 +165,8 @@ public class QuasiSpeciesWilsonBaldingEasy extends QuasiSpeciesTreeOperator{
 
                 // scale the haplotype
                 if (node.getAttachmentTimesList().length > 1) {
-                    double logHastingsRatioContribution = scaleThisHaplo(node, newTime, haploStartMax, haploStartMin, node.getAttachmentTimesList()[1]);
+                    double logHastingsRatioContribution = scaleThisHaplo(node, newTime, haploStartMin, node.getAttachmentTimesList()[1],
+                                                                               haploStartMax, haploStartMin, -1);
                     if (logHastingsRatioContribution == Double.NEGATIVE_INFINITY)
                         return Double.NEGATIVE_INFINITY;
                     else logHastingsRatio += logHastingsRatioContribution;
@@ -180,7 +182,7 @@ public class QuasiSpeciesWilsonBaldingEasy extends QuasiSpeciesTreeOperator{
             QuasiSpeciesNode correctTreeFromThisNode1 = disconnectBranchFromRoot((QuasiSpeciesNode) srcNode, srcHaplo);
             QuasiSpeciesNode correctTreeFromThisNode2 = connectBranch((QuasiSpeciesNode) srcNode,
                     (QuasiSpeciesNode) destNode, newTime, srcHaplo, tnewQSstart);
-            qsTree.setRoot(srcNodeS);
+            qsTree.setRoot((QuasiSpeciesNode) srcNodeS);
 
             // Recalculate continuingHaplo and HaploAbove arrays
             recalculateParentHaploAndCorrectContinuingHaploName(-1, (QuasiSpeciesNode) qsTree.getRoot());
@@ -231,7 +233,8 @@ public class QuasiSpeciesWilsonBaldingEasy extends QuasiSpeciesTreeOperator{
 
             // scale the haplotype
             if (node.getAttachmentTimesList().length > 1) {
-                double logHastingsRatioContribution = scaleThisHaplo(node, newTime, haploStartMax, haploStartMin, node.getAttachmentTimesList()[1]);
+                double logHastingsRatioContribution = scaleThisHaplo(node, newTime, haploStartMin, node.getAttachmentTimesList()[1],
+                                                                           haploStartMax, haploStartMin, -1);
                 if (logHastingsRatioContribution == Double.NEGATIVE_INFINITY)
                     return Double.NEGATIVE_INFINITY;
                 else logHastingsRatio += logHastingsRatioContribution;

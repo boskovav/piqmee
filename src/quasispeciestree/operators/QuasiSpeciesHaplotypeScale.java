@@ -66,7 +66,8 @@ public class QuasiSpeciesHaplotypeScale extends QuasiSpeciesTreeOperator{
 
         // scale the haplotype
         double maxTime = (double)haploStartMaxNewArray.get(1);
-        double logHastingsRatioContribution = scaleThisHaplo(node, maxTime, maxTime, node.getHeight(), 0);
+        double logHastingsRatioContribution = scaleThisHaplo(node, maxTime, node.getHeight(), 0,
+                                                                    maxTime, node.getHeight(),0);
         if (logHastingsRatioContribution == Double.NEGATIVE_INFINITY)
             return Double.NEGATIVE_INFINITY;
         else logHastingsRatio += logHastingsRatioContribution;

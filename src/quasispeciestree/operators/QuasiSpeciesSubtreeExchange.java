@@ -94,15 +94,62 @@ public class QuasiSpeciesSubtreeExchange extends QuasiSpeciesTreeOperator{
         QuasiSpeciesNode destnodehaplo = (QuasiSpeciesNode) qsTree.getNode(destHaplo);
 
         double srcHaploStartMin = srcnodehaplo.getHeight();
+        double srcHaploStartMinBack = srcnodehaplo.getHeight();
         double srcHaploStartMax = getMaxPossibleHaploAttachTime((QuasiSpeciesNode) srcNode, srcHaplo);
 
         double destHaploStartMin = destnodehaplo.getHeight();
+        double destHaploStartMinBack = destnodehaplo.getHeight();
         double destHaploStartMax = getMaxPossibleHaploAttachTime((QuasiSpeciesNode) destNode, destHaplo);
 
-        if (destHaploStartMax == srcHaploStartMax){
-            QuasiSpeciesNode mrca = findLastCommonAncestor(srcnodehaplo, destnodehaplo, (QuasiSpeciesNode) qsTree.getRoot());
+        // check if the two haplotypes from the exchanged subtrees do not coincide
+        QuasiSpeciesNode mrca = findLastCommonAncestor(srcnodehaplo, destnodehaplo, (QuasiSpeciesNode) qsTree.getRoot());
+        double tbottomsrcforward = 0;
+        double tbottomsrcback = 0;
+        double tbottomdestforward = 0;
+        double tbottomdestback = 0;
+        boolean doscale = true;
+
+        // if same max, this means they can only be scaled up the their MRCA
+        if (destHaploStartMax == srcHaploStartMax && destHaploStartMax >= mrca.getHeight()){
             destHaploStartMax = mrca.getHeight();
             srcHaploStartMax = mrca.getHeight();
+        }
+        // else it is possible that one haplo is the parent of the second
+        else if (mrca.getContinuingHaploName() != -1){
+            if (mrca.getContinuingHaploName() == srcHaplo && destHaploStartMax == mrca.getHeight()){
+                if (destnodehaplo.getParentHaplo() != srcHaplo)
+                    throw new IllegalStateException("QuasiSpeciesSubtreeExchange: We found the src haplo is a parent " +
+                            "of the dest haplo, but this is not annotated as desthaplonode.getParentHaplo().");
+                if (destnodehaplo.getAttachmentTimesList().length > 1){
+                    destHaploStartMin = mrca.getHeight();
+                    tbottomdestforward = destnodehaplo.getAttachmentTimesList()[1];
+                    srcHaploStartMinBack = mrca.getHeight();
+                    // tbottomsrcback means that the minimum scaling will be srcHaploStartMinBack/attachtime[1] where
+                    // attachtime[1] will be taken from the newly scaled attachment time array
+                    tbottomsrcback = -1;
+                }
+                // else we have a src haplotype above mrca and dest haplo below but without duplicate
+                // so keep everything as it is - no not scale haplo, only change the tree
+                else
+                    doscale = false;
+            }
+            else if (mrca.getContinuingHaploName() == destHaplo && srcHaploStartMax == mrca.getHeight()){
+                if (srcnodehaplo.getParentHaplo() != destHaplo)
+                    throw new IllegalStateException("QuasiSpeciesSubtreeExchange: We found the dest haplo is a parent " +
+                            "of the src haplo, but this is not annotated as srchaplonode.getParentHaplo().");
+                if (srcnodehaplo.getAttachmentTimesList().length > 1){
+                    srcHaploStartMin = mrca.getHeight();
+                    tbottomsrcforward = srcnodehaplo.getAttachmentTimesList()[1];
+                    destHaploStartMinBack = mrca.getHeight();
+                    // tbottomdestback means that the minimum scaling will be destHaploStartMinBack/attachtime[1] where
+                    // attachtime[1] will be taken from the newly scaled attachment time array
+                    tbottomdestback = -1;
+                }
+                // else we have a dest haplotype above mrca and src haplo below but without duplicate
+                // so keep everything as it is - no not scale haplo, only change the tree
+                else
+                    doscale = false;
+            }
         }
 
         // set all the nodes where src or dest haplo pass to -1 and set above haplo for a node where they arise to -1
@@ -117,17 +164,23 @@ public class QuasiSpeciesSubtreeExchange extends QuasiSpeciesTreeOperator{
         replace(srcNodeParent, srcNode, destNode);
         replace(destNodeParent, destNode, srcNode);
 
-        // scale src haplo
-        double logHastingsRatioContribution = scaleThisHaplo(srcnodehaplo, destHaploStartMax, srcHaploStartMax, srcHaploStartMin, 0);
-        if (logHastingsRatioContribution == Double.NEGATIVE_INFINITY)
-            return Double.NEGATIVE_INFINITY;
-        else logHastingsRatio += logHastingsRatioContribution;
+        if (doscale) {
+            // scale src haplo
+            double logHastingsRatioContribution = scaleThisHaplo(srcnodehaplo, destHaploStartMax, srcHaploStartMin, tbottomsrcforward,
+                                                                               srcHaploStartMax, srcHaploStartMinBack, tbottomsrcback);
+            if (logHastingsRatioContribution == Double.NEGATIVE_INFINITY)
+                return Double.NEGATIVE_INFINITY;
+            else
+                logHastingsRatio += logHastingsRatioContribution;
 
-        // also scale dest haplo
-        logHastingsRatioContribution = scaleThisHaplo(destnodehaplo, srcHaploStartMax, destHaploStartMax, destHaploStartMin, 0);
-        if (logHastingsRatioContribution == Double.NEGATIVE_INFINITY)
-            return Double.NEGATIVE_INFINITY;
-        else logHastingsRatio += logHastingsRatioContribution;
+            // also scale dest haplo
+            logHastingsRatioContribution = scaleThisHaplo(destnodehaplo, srcHaploStartMax, destHaploStartMin, tbottomdestforward,
+                                                                         destHaploStartMax, destHaploStartMinBack, tbottomdestback);
+            if (logHastingsRatioContribution == Double.NEGATIVE_INFINITY)
+                return Double.NEGATIVE_INFINITY;
+            else
+                logHastingsRatio += logHastingsRatioContribution;
+        }
 
         // set above haplo for a node where src and dest haplo arise to srcHaplo and destHaplo respectively
         QuasiSpeciesNode correctTreeFromThisNodeSrc2 = getQuasiSpeciesNodeBelowHaploAttached(destNodeParent.getHeight(),

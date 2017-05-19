@@ -228,12 +228,11 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
                     // check at which parent it arises
                     QuasiSpeciesNode nodeAbove = parent;
                     while (nodeAbove.getHaploAboveName() != haplotype){
-                        nodeAbove.setContinuingHaploName(-1);
                         nodeAbove = (QuasiSpeciesNode) nodeAbove.getParent();
+                        nodeAbove.setContinuingHaploName(-1);
                     }
                     // set the node above which the haploMoved arises to -1, as haploMoved will be moved away
                     nodeAbove.setHaploAboveName(-1);
-                    nodeAbove.setContinuingHaploName(-1);
                     nodeBelowHaploMoved = nodeAbove;
                     // if nodeBelowHaploMoved is not root, then we have got a problem
                     if (disconnectfromroot && !nodeBelowHaploMoved.isRoot())
@@ -635,13 +634,18 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
      * Function to propose and scale haplotype's attachment times, returns updated logHastingsRatio
      *
      * @param nodehaplo the node that holds the haplotype
-     * @param haploStartMaxNew the new maximum attachment time for the haplo
-     * @param haploStartMaxOld the old maximum attachment time for the haplo
-     * @param haploStartMin the minimum attachment time for the haplo
+     * @param haploStartMaxForward the new maximum attachment time for the haplo
+     * @param haploStartMinForward the minimum attachment time for the haplo at the forward move
+     * @param tbottomInputForward the first to be considered lower bound for the haplo scaling (will be haploStartMin/toldbottom) on forward move
+     * @param haploStartMaxBack the old maximum attachment time for the haplo
+     * @param haploStartMinBack the minimum attachment time for the haplo at the backward move
+     * @param tbottomInputBack the first to be considered lower bound for the haplo scaling (will be haploStartMin/toldbottom) on backward move
      *
      * @return logHastingsRatio contribution
      */
-    public double scaleThisHaplo(QuasiSpeciesNode nodehaplo, double haploStartMaxNew, double haploStartMaxOld, double haploStartMin, double toldbottom) {
+    public double scaleThisHaplo(QuasiSpeciesNode nodehaplo,
+                                 double haploStartMaxForward, double haploStartMinForward, double tbottomInputForward,
+                                 double haploStartMaxBack, double haploStartMinBack, double tbottomInputBack) {
 
         double logHastingsRatio = 0.0;
 
@@ -661,36 +665,39 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
             // note down what needs to be found out to propose a new start time
             // and to reposition the event (i.e. haplotype's first attachment time) uniformly at random between tmin and tmax
             // find out tmin/tmax/told
-            double tmax = haploStartMaxNew;
-            double tminold = haploStartMin;
-            double tminnew = haploStartMin;
-            double toldtop = tempqstimes[1];
-            double tnewtop = 0;
-            if (toldbottom == 0)
-                toldbottom = tempqstimes[tempqstimes.length - 1];
-            double tnewbottom = 0;
+            double tmaxf = haploStartMaxForward;
+            double tmaxb = haploStartMaxBack;
+            double tminf = haploStartMinForward;
+            double tminb = haploStartMinBack;
+            double ttopf = tempqstimes[1];
+            double ttopb = 0;
+            double tbottomf = 0;
+            if (tbottomInputForward == 0)
+                tbottomf = tempqstimes[tempqstimes.length - 1];
+            else tbottomf = tbottomInputForward;
+            double tbottomb = 0;
 
             // to get the tmin check for each sampling time of the haplo that the last possible attach time is above the
             //  the corresponding sampling time
             if (tempqstimes[tempqstimes.length - 1] < nodehaplo.getHeight())
                 throw new IllegalStateException("QuasiSpeciesOperator: The haplotype attachment time is below the sampling time");
-            if (tminold/toldbottom < temptiptimes[0]/tempqstimes[tempqstimes.length - 1]) {
-                tminold = temptiptimes[0];
-                toldbottom = tempqstimes[tempqstimes.length - 1];
+            if (tminf/tbottomf < temptiptimes[0]/tempqstimes[tempqstimes.length - 1]) {
+                tminf = temptiptimes[0];
+                tbottomf = tempqstimes[tempqstimes.length - 1];
             }
             int currentPosition = tempqstimes.length - 1 - (temptiptimescount[0] - 1);
             for (int i = 1; i < temptiptimes.length; i++){
                 if (tempqstimes[currentPosition] < temptiptimes[i])
                     throw new IllegalStateException("QuasiSpeciesOperator: The haplotype attachment time is below the sampling time");
-                if (tminold/toldbottom < temptiptimes[i]/tempqstimes[currentPosition]) {
-                    tminold = temptiptimes[i];
-                    toldbottom = tempqstimes[currentPosition];
+                if (tminf/tbottomf < temptiptimes[i]/tempqstimes[currentPosition]) {
+                    tminf = temptiptimes[i];
+                    tbottomf = tempqstimes[currentPosition];
                 }
                 currentPosition -= temptiptimescount[i];
             }
 
             // check that the scaling is ok
-            if (tmax < toldtop && tmax / toldtop < tminold / toldbottom){
+            if (tmaxf / ttopf < tminf / tbottomf){
                 // in this case, it is possible that there is no acceptable scaling for the parent haplo
                 // but then this move cannot be performed at the moment
                 return Double.NEGATIVE_INFINITY;
@@ -698,51 +705,58 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
 
             // Scale the haplotype strains
             // scale all the other positions in the array but the 0 position (haplo start time)
-            scalefactor = u * (tminold / toldbottom) + (1.0 - u) * (tmax / toldtop);
+            scalefactor = u * (tminf / tbottomf) + (1.0 - u) * (tmaxf / ttopf);
             for (int i = 1; i < tempqstimes.length; i++) {
                 tempqstimes[i] = tempqstimes[i] * scalefactor;
             }
             // get new time to attach of first attachment time
-            tnewtop = tempqstimes[1];
+            ttopb = tempqstimes[1];
             // set the haplotype's starting time to the new time
             tempqstimes[0] = tempqstimes[1];
 
             // check that the newly scaled attachment times do not go over the boundaries
-            if (tempqstimes[0] > tmax)
+            if (tempqstimes[0] > tmaxf)
                 throw new IllegalStateException("QuasiSpeciesOperator: Scaling of haplotype just went through the roof");
 
             //get the possible back scale interval
-            if (toldbottom == 0)
-                tnewbottom = tempqstimes[tempqstimes.length - 1];
-            else tnewbottom = tnewtop;
+            if (tbottomInputBack == 0)
+                tbottomb = tempqstimes[tempqstimes.length - 1];
+            else if (tbottomInputBack == -1)
+                tbottomb = tempqstimes[1];
+            else tbottomb = tbottomInputBack;
+
             if (tempqstimes[tempqstimes.length - 1] < nodehaplo.getHeight())
                 throw new IllegalStateException("QuasiSpeciesOperator: The newly scaled haplotype attachment time is below the sampling time");
+            if (tminb/tbottomb < temptiptimes[0]/tempqstimes[tempqstimes.length - 1]) {
+                tminb = temptiptimes[0];
+                tbottomb = tempqstimes[tempqstimes.length - 1];
+            }
             currentPosition = tempqstimes.length - 1 - (temptiptimescount[0] - 1);
             for (int i = 1; i < temptiptimes.length; i++){
                 if (tempqstimes[currentPosition] < temptiptimes[i])
                     throw new IllegalStateException("QuasiSpeciesOperator: The newly scaled haplotype attachment time is below the sampling time");
-                if (tminnew/tnewbottom < temptiptimes[i]/tempqstimes[currentPosition]) {
-                    tminnew = temptiptimes[i];
-                    tnewbottom = tempqstimes[currentPosition];
+                if (tminb/tbottomb < temptiptimes[i]/tempqstimes[currentPosition]) {
+                    tminb = temptiptimes[i];
+                    tbottomb = tempqstimes[currentPosition];
                 }
                 currentPosition -= temptiptimescount[i];
             }
 
             // check that the scaling was ok
-            if (tmax / tnewtop < tminnew / tnewbottom){
+            if (tmaxb / ttopb < tminb / tbottomb){
                 throw new IllegalStateException("QuasiSpeciesOperator: The haplotype scaled values are not calculated properly?");
             }
 
             // Incorporate probability of current haplotype to move
             // scaling the attachment times (see Scaling Operator)
             // assign contribution to the Hastings ratio for having different possible scales for toldtop
-            logHastingsRatio += Math.log(haploStartMaxNew / toldtop - tminold / toldbottom);
-            logHastingsRatio -= Math.log(haploStartMaxOld / tnewtop - tminnew / tnewbottom);
+            logHastingsRatio += Math.log(haploStartMaxForward / ttopf - tminf / tbottomf);
+            logHastingsRatio -= Math.log(haploStartMaxBack / ttopb - tminb / tbottomb);
             // assign contribution of each scaled attachment time
             logHastingsRatio += (tempqstimes.length - 3) * Math.log(scalefactor);
         } else
             // set the haplotype's starting time to the new time
-            tempqstimes[0] = haploStartMin;
+            tempqstimes[0] = nodehaplo.getHeight();
 
         // rewrite the attachment times array
         nodehaplo.setAttachmentTimesList(tempqstimes);
