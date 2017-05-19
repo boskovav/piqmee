@@ -55,6 +55,8 @@ public class BirthDeathSkylineQuasiSpeciesModel extends BirthDeathSkylineModel{
 
         int tipCount = tree.getLeafNodeCount();
 
+        double maxdate = tree.getRoot().getHeight();
+
         for (int i = 0; i < tipCount; i++) {
 
             QuasiSpeciesNode node = (QuasiSpeciesNode) tree.getNode(i);
@@ -67,7 +69,7 @@ public class BirthDeathSkylineQuasiSpeciesModel extends BirthDeathSkylineModel{
 
                 for (int k = 0; k < totalIntervals; k++) {
 
-                    if (Math.abs((times[totalIntervals - 1] - times[k]) - tipTimes[index]) < 1e-10) {
+                    if (Math.abs(((times[totalIntervals - 1] - times[k]) - tipTimes[index])/maxdate) < 1e-10) {
                         if (rho[k] == 0 && psi[k] == 0) {
                             return Double.NEGATIVE_INFINITY;
                         }
@@ -288,10 +290,6 @@ public class BirthDeathSkylineQuasiSpeciesModel extends BirthDeathSkylineModel{
                 // term for the Quasi-Species tree likelihood calculation counting possible QS start branches (gamma)
                 temp = node.getStartBranchCounts();
                 logP += Math.log(temp);
-//                logP += Math.log(startBranchCountArray[i]) - Math.log(lineageCountAtTime(tree.getNode(nTips + i).getHeight(),tree));
-// testing
-//                System.out.println("1st pwd" +
-//                        " = " + Math.log(temp) + "; QS start branches = " + tree.getNode(nTips + i).getID());
                 if (printTempResults) System.out.println("1st pwd" +
                         " = " + temp + "; QS start branches = " + node.getID());
                 if (Double.isInfinite(logP))
@@ -300,18 +298,7 @@ public class BirthDeathSkylineQuasiSpeciesModel extends BirthDeathSkylineModel{
         }
         // first product term in f[T] over all QS transmission times
         //
-//        // to start with, get array containing possible number branches the haplotype can start from
-//        int[] startBranchCountArray= tree.countPossibleStartBranches();
-//        //
         for (Node node : tree.getExternalNodes()){
-            // term for the Quasi-Species tree likelihood calculation counting possible QS start branches
-//            int gamma=startBranchCountArray[node.getNr()];
-//            temp = gamma;
-//            logP += Math.log(temp);
-//            if (printTempResults) System.out.println("1st pwd" +
-//                    " = " + temp + "; QS start branches = " + node.getID());
-//            if (Double.isInfinite(logP))
-//                return logP;
             int nQSTemp = qsTree.getHaplotypeCounts(node);
             double[] QSTimesTemp = ((QuasiSpeciesNode) node).getAttachmentTimesList();
             for (int j = 1; j < nQSTemp; j++ ){
@@ -320,15 +307,11 @@ public class BirthDeathSkylineQuasiSpeciesModel extends BirthDeathSkylineModel{
                 // term for the Quasi-Species tree likelihood calculation counting possible attachment branches
                 // THIS IS A CONSTANT FOR ANY TREE TOPOLOGY, SO OMIT THIS TERM FOR NUMERICAL STABILITY AND CALCULATION SPEED
                 //int gammaj = tree.countPossibleAttachmentBranches((QuasiSpeciesNode) node, j, tree.getAttachmentTimesList((QuasiSpeciesNode) node)[j]);
+                //    gammaj is actually 1 here
                 //temp = Math.log(gammaj * birth[index] * g(index, times[index], x));
                 //      times 2 for left OR right -- constant factor also not taken into account
                 // temp = Math.log(2 * gammaj * birth[index] * g(index, times[index], x));
-//                logP += Math.log(lineageCountAtTime(QSTimesTemp[j], tree)- j) - Math.log(lineageCountAtTime(QSTimesTemp[j], tree));
                 temp = Math.log(birth[index]) + log_q(index, times[index], x);
-// testing
-//                System.out.println(tree.getAttachmentTimesList((QuasiSpeciesNode) node)[j]);
-//                System.out.println("1st pwd" +
-//                        " = " + temp + "; QSinterval & QS attachment branches = " + node.getID() + " " +j);
                 logP += temp;
                 if (printTempResults) System.out.println("1st pwd" +
                         " = " + temp + "; QSinterval & QS attachment branches = " + node.getID() + " " +j);
@@ -339,19 +322,16 @@ public class BirthDeathSkylineQuasiSpeciesModel extends BirthDeathSkylineModel{
 
         // middle product term in f[T]
         for (int i = 0; i < nTips; i++) {
-            // TODO what happens if not all tips have QS counts specified in XML --- we get warning, is this enough?
 
             QuasiSpeciesNode node = (QuasiSpeciesNode) tree.getNode(i);
             boolean[] isRhoTipArray = (boolean[]) isRhoTip.get(i);
 
             for (int j = 0; j < isRhoTipArray.length; j++) {
                 if (!isRhoTipArray[j] || m_rho.get() == null) {
-//            || tree.getHaplotypeCounts((QuasiSpeciesNode) tree.getNode(i))>0) {
                     int nQSTemp = node.getTipTimesCountList()[j];
                     double y = times[totalIntervals - 1] - node.getTipTimesList()[j];
                     index = index(y);
-// testing
-//                System.out.println("2nd factor included");
+
 //                if (!(tree.getNode(i)).isDirectAncestor()) {
 //                    if (!SAModel) {
                     temp = nQSTemp * (Math.log(psi[index]) - log_q(index, times[index], y));
@@ -393,8 +373,6 @@ public class BirthDeathSkylineQuasiSpeciesModel extends BirthDeathSkylineModel{
             if (n[j] > 0) {
                 temp = n[j] * (log_q(j, times[j], time) + Math.log(1 - rho[j-1]));
                 logP += temp;
-// testing
-//                System.out.println("3rd factor (nj loop) = " + temp + "; interval = " + j + "; n[j] = " + n[j]);
                 if (printTempResults)
                     System.out.println("3rd factor (nj loop) = " + temp + "; interval = " + j + "; n[j] = " + n[j]);//+ "; Math.log(g(j, times[j], time)) = " + Math.log(g(j, times[j], time)));
                 if (Double.isInfinite(logP))
@@ -413,8 +391,6 @@ public class BirthDeathSkylineQuasiSpeciesModel extends BirthDeathSkylineModel{
             if (rho[j] > 0 && N[j] > 0) {
                 temp = N[j] * Math.log(rho[j]);    // term for contemporaneous sampling
                 logP += temp;
-// testing
-//                System.out.println("3rd factor (Nj loop) = " + temp + "; interval = " + j + "; N[j] = " + N[j]);
                 if (printTempResults)
                     System.out.println("3rd factor (Nj loop) = " + temp + "; interval = " + j + "; N[j] = " + N[j]);
                 if (Double.isInfinite(logP))
@@ -428,8 +404,6 @@ public class BirthDeathSkylineQuasiSpeciesModel extends BirthDeathSkylineModel{
 //            logP +=  Math.log(2)*internalNodeCount;
 //        }
 
-//        if (logP > 0)
-//            return Double.NEGATIVE_INFINITY;
         return logP;
     }
 
