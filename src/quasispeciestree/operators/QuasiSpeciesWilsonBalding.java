@@ -103,8 +103,8 @@ public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
 //            double t_srcNodeG = srcNodeP.getParent().getHeight();
 //
 //            // Choose new root height:
-//            //double newTime = t_destNode+Randomizer.nextExponential(1.0 / (alpha * t_destNode));
-//            double newTime = Randomizer.uniform(t_destNode,origin.getValue());
+//            double newTime = t_destNode+Randomizer.nextExponential(1.0 / (alpha * t_destNode));
+//            //double newTime = Randomizer.uniform(t_destNode,origin.getValue());
 //
 //            // Choose attachment point for the moved haplotype - may not necessarily be the origin height
 //            ArrayList haploStartMaxNewArray = getMaxPossibleHaploAttachTime((QuasiSpeciesNode) destNode, srcHaplo, newTime);
@@ -152,10 +152,10 @@ public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
 //            // P(moving forth)=(1/(alpha*t_destNode)*exp(-1/(alpha*t_destNode)*(newTime-t_destNode))) // exponentially distr
 //            // HR=P(back)/P(forth)=(alpha*t_destNode)*exp(1/(alpha*t_destNode)*(newTime-t_destNode))/(time span moving back)
 //            // log(HR)=log(alpha*t_destNode)+(1/(alpha*t_destNode)*(newTime-t_destNode))-log(time span moving back)
-//            //logHastingsRatio += Math.log(alpha * t_destNode) + (1.0 / alpha) * (newTime / t_destNode - 1.0)
-//            //                  - Math.log(t_srcNodeG - Math.max(t_srcNode, t_srcNodeS));
-//            logHastingsRatio += Math.log(origin.getValue()-t_destNode)
+//            logHastingsRatio += Math.log(alpha * t_destNode) + (1.0 / alpha) * (newTime / t_destNode - 1.0)
 //                              - Math.log(t_srcNodeG - Math.max(t_srcNode, t_srcNodeS));
+//            //logHastingsRatio += Math.log(origin.getValue()-t_destNode)
+//            //                  - Math.log(t_srcNodeG - Math.max(t_srcNode, t_srcNodeS));
 //
 //            //if ((origin.getValue() - Math.max(t_srcNode, t_destNode)) == 0 || (t_srcNodeG - Math.max(t_srcNode, t_srcNodeS)) == 0) {
 //            if ((t_srcNodeG - Math.max(t_srcNode, t_srcNodeS)) == 0) {
@@ -241,10 +241,10 @@ public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
 //            // P(moving forth)=1/(time span moving forth)
 //            // HR=P(back)/P(forth)=(time span moving forth)/(alpha*t_srcNodeS)*exp(1/(alpha*t_srcNodeS)*(oldTime-t_srcNodeS))
 //            // log(HR)=log(time span moving forth)-log(alpha*t_srcNodeS)-(1/(alpha*t_srcNodeS)*(oldTime-t_srcNodeS))
-//            //logHastingsRatio += Math.log(t_destNodeP - Math.max(t_srcNode, t_destNode))
-//            //                  - Math.log(alpha * t_srcNodeS) - (1.0 / alpha) * (oldTime / t_srcNodeS - 1.0);
 //            logHastingsRatio += Math.log(t_destNodeP - Math.max(t_srcNode, t_destNode))
-//                              - Math.log(origin.getValue() - t_srcNodeS);
+//                              - Math.log(alpha * t_srcNodeS) - (1.0 / alpha) * (oldTime / t_srcNodeS - 1.0);
+//            //logHastingsRatio += Math.log(t_destNodeP - Math.max(t_srcNode, t_destNode))
+//            //                  - Math.log(origin.getValue() - t_srcNodeS);
 //            //if ((t_destNodeP - Math.max(t_srcNode, t_destNode)) == 0 || (origin.getValue() - t_srcNodeS) == 0) {
 //            if ((t_destNodeP - Math.max(t_srcNode, t_destNode)) == 0) {
 //                // This happens when some branch lengths are zero.
