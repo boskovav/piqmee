@@ -43,7 +43,7 @@ public class QuasiSpeciesTree extends Tree {
             throw new IllegalArgumentException("Attempted to instantiate "
                     + "quasi-species tree with regular root node.");
 
-        setRoot(rootNode);
+        setRoot((QuasiSpeciesNode) rootNode);
         initArrays();
     }
 
@@ -58,7 +58,7 @@ public class QuasiSpeciesTree extends Tree {
             }
 
             QuasiSpeciesTree other = (QuasiSpeciesTree) m_initial.get();
-            root = other.root.copy();
+            root = ((QuasiSpeciesNode)other.root).copy();
             nodeCount = other.nodeCount;
             internalNodeCount = other.internalNodeCount;
             leafNodeCount = other.leafNodeCount;
@@ -429,7 +429,7 @@ public class QuasiSpeciesTree extends Tree {
         QuasiSpeciesTree tree = new QuasiSpeciesTree();
         tree.ID = ID;
         tree.index = index;
-        tree.root = root.copy();
+        tree.root = ((QuasiSpeciesNode)root).copy();
         tree.nodeCount = nodeCount;
         tree.internalNodeCount = internalNodeCount;
         tree.leafNodeCount = leafNodeCount;
@@ -652,6 +652,7 @@ public class QuasiSpeciesTree extends Tree {
      * Helper function for getFullTree
      */
     public void setRoot(final QuasiSpeciesNode root){
+        super.setRoot(root);
         this.root = root;
     }
 

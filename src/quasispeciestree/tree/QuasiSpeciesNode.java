@@ -113,7 +113,7 @@ public class QuasiSpeciesNode extends Node {
      * @return (deep) copy of node
      */
     @Override
-    public QuasiSpeciesNode copy() {
+    public Node copy() {
         QuasiSpeciesNode node = new QuasiSpeciesNode();
         node.height = height;
         node.labelNr = labelNr;
@@ -137,10 +137,10 @@ public class QuasiSpeciesNode extends Node {
         }
 
         if (getLeft()!=null) {
-            node.setLeft(getLeft().copy());
+            node.setLeft(((QuasiSpeciesNode)getLeft()).copy());
             node.getLeft().setParent(node);
             if (getRight()!=null) {
-                node.setRight(getRight().copy());
+                node.setRight(((QuasiSpeciesNode)getRight()).copy());
                 node.getRight().setParent(node);
             }
         }
