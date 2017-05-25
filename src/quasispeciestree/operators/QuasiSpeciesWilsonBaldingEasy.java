@@ -50,7 +50,7 @@ public class QuasiSpeciesWilsonBaldingEasy extends QuasiSpeciesTreeOperator{
         Node srcNode;
         do {
             srcNode = qsTree.getNode(Randomizer.nextInt(qsTree.getNodeCount()));
-        } while (invalidSrcNode(srcNode) || (((QuasiSpeciesNode) srcNode).getContinuingHaploName() != ((QuasiSpeciesNode) srcNode).getHaploAboveName()));
+        } while (invalidSrcNode(srcNode) || (((QuasiSpeciesNode) srcNode).getContinuingHaploName() != ((QuasiSpeciesNode) srcNode).getHaploAboveName()) || srcNode.getParent().isRoot());
 
         Node srcNodeP = srcNode.getParent();
         Node srcNodeS = getOtherChild(srcNodeP, srcNode);
@@ -64,7 +64,7 @@ public class QuasiSpeciesWilsonBaldingEasy extends QuasiSpeciesTreeOperator{
         Node destNode;
         do {
             destNode = qsTree.getNode(Randomizer.nextInt(qsTree.getNodeCount()));
-        } while (invalidDestNode(srcNode, destNode));
+        } while (invalidDestNode(srcNode, destNode) || destNode.isRoot());
 
         Node destNodeP = destNode.getParent();
         double t_destNode = destNode.getHeight();
@@ -75,149 +75,147 @@ public class QuasiSpeciesWilsonBaldingEasy extends QuasiSpeciesTreeOperator{
         double toldQSstart=0;
         double tnewQSstart=0;
 
-        // Handle special cases involving root:
-        if (destNode.isRoot()) {
-            // FORWARD ROOT MOVE
-
-            double logHastingsRatio = 0.0;
-
-            // Find current boundaries for haplotype start times
-            double haploStartMin = t_srcNode;
-            double haploStartMax = t_srcNodeP;
-
-            // Record srcNode grandmother height:
-            double t_srcNodeG = srcNodeP.getParent().getHeight();
-
-            // Choose new root height:
-            double newTime = t_destNode+Randomizer.nextExponential(1.0 / (alpha * t_destNode));
-
-            if (srcHaplo != -1){
-                QuasiSpeciesNode node = (QuasiSpeciesNode) qsTree.getNode(srcHaplo);
-
-                // scale the haplotype
-                if (node.getAttachmentTimesList().length > 1) {
-                    double logHastingsRatioContribution = scaleThisHaplo(node, newTime, haploStartMin, node.getAttachmentTimesList()[1],
-                                                                               haploStartMax, haploStartMin, -1);
-                    if (logHastingsRatioContribution == Double.NEGATIVE_INFINITY)
-                        return Double.NEGATIVE_INFINITY;
-                    else logHastingsRatio += logHastingsRatioContribution;
-                }
-
-                tnewQSstart = node.getAttachmentTimesList()[0];
-
-                // Ensure BEAST knows to recalculate affected likelihood:
-                node.makeDirty(QuasiSpeciesTree.IS_FILTHY);
-            }
-
-            // Implement tree changes:
-            QuasiSpeciesNode correctTreeFromThisNode1 = disconnectBranch((QuasiSpeciesNode) srcNode, srcHaplo);
-            QuasiSpeciesNode correctTreeFromThisNode2 = connectBranchToRoot((QuasiSpeciesNode) srcNode,
-                    (QuasiSpeciesNode) destNode, newTime, srcHaplo, tnewQSstart);
-            qsTree.setRoot((QuasiSpeciesNode) srcNodeP);
-
-            // Recalculate continuingHaplo and HaploAbove arrays
-            recalculateParentHaploAndCorrectContinuingHaploName(-1, (QuasiSpeciesNode) srcNodeP);
-            // in any case (changed or not the aboveNodeHaplo/parentHaplo array) recalculate countPossibleStartBranches
-            qsTree.countAndSetPossibleStartBranches();
-
-            // HR contribution of topology and node height changes:
-            // P(moving back)=1/(time span moving back)
-            // P(moving forth)=(1/(alpha*t_destNode)*exp(-1/(alpha*t_destNode)*(newTime-t_destNode))) // exponentially distr
-            // HR=P(back)/P(forth)=(alpha*t_destNode)*exp(1/(alpha*t_destNode)*(newTime-t_destNode))/(time span moving back)
-            // log(HR)=log(alpha*t_destNode)+(1/(alpha*t_destNode)*(newTime-t_destNode))-log(time span moving back)
-            logHastingsRatio += Math.log(alpha * t_destNode) + (1.0 / alpha) * (newTime / t_destNode - 1.0)
-                              - Math.log(t_srcNodeG - Math.max(t_srcNode, t_srcNodeS));
-
-            if ((origin.getValue() - Math.max(t_srcNode, t_destNode)) == 0 || (t_srcNodeG - Math.max(t_srcNode, t_srcNodeS)) == 0) {
-                // This happens when some branch lengths are zero.
-                // If oldRange = 0, hastingsRatio == Double.POSITIVE_INFINITY and
-                // node i can be catapulted anywhere in the tree, resulting in
-                // very bad trees that are always accepted.
-                // For symmetry, newRange = 0 should therefore be ruled out as well
-                //                return Double.NEGATIVE_INFINITY;
-                throw new IllegalStateException("problem in hereeeeee: QuasiSpeciesWilsonBaldingEasy - some branch lengths are 0?");
-            }
-
-            // RETURN log(HASTINGS RATIO)
-            return logHastingsRatio;
-        }
-
-        if (srcNodeP.isRoot()) {
-            // BACKWARD ROOT MOVE
-
-            double logHastingsRatio = 0.0;
-
-            // Find current boundaries for haplotype start times
-            double haploStartMin = t_srcNode;
-            double haploStartMax = t_srcNodeP;
-
-            // Record old srcNode parent height
-            double oldTime = t_srcNodeP;
-
-            // Choose height of new attachment point:
-            double min_newTime = Math.max(t_srcNode, t_destNode);
-            double t_destNodeP = destNodeP.getHeight();
-            double span = t_destNodeP - min_newTime;
-            double newTime = min_newTime + span * Randomizer.nextDouble();
-
-            if (srcHaplo != -1){
-                QuasiSpeciesNode node = (QuasiSpeciesNode) qsTree.getNode(srcHaplo);
-
-                // scale the haplotype
-                if (node.getAttachmentTimesList().length > 1) {
-                    double logHastingsRatioContribution = scaleThisHaplo(node, newTime, haploStartMin, node.getAttachmentTimesList()[1],
-                                                                               haploStartMax, haploStartMin, -1);
-                    if (logHastingsRatioContribution == Double.NEGATIVE_INFINITY)
-                        return Double.NEGATIVE_INFINITY;
-                    else logHastingsRatio += logHastingsRatioContribution;
-                }
-
-                tnewQSstart = node.getAttachmentTimesList()[0];
-
-                // Ensure BEAST knows to recalculate affected likelihood:
-                node.makeDirty(QuasiSpeciesTree.IS_FILTHY);
-            }
-
-            // Implement tree changes:
-            QuasiSpeciesNode correctTreeFromThisNode1 = disconnectBranchFromRoot((QuasiSpeciesNode) srcNode, srcHaplo);
-            QuasiSpeciesNode correctTreeFromThisNode2 = connectBranch((QuasiSpeciesNode) srcNode,
-                    (QuasiSpeciesNode) destNode, newTime, srcHaplo, tnewQSstart);
-            qsTree.setRoot((QuasiSpeciesNode) srcNodeS);
-
-            // Recalculate continuingHaplo and HaploAbove arrays
-            recalculateParentHaploAndCorrectContinuingHaploName(-1, (QuasiSpeciesNode) qsTree.getRoot());
-            // in any case (changed or not the aboveNodeHaplo/parentHaplo array) recalculate countPossibleStartBranches
-            qsTree.countAndSetPossibleStartBranches();
-
-            // Return HR:
-            // P(moving back)=(1/(alpha*t_srcNodeS)*exp(-1/(alpha*t_srcNodeS)*(oldTime-srcNodeS))) // exponentially distr
-            // P(moving forth)=1/(time span moving forth)
-            // HR=P(back)/P(forth)=(time span moving forth)/(alpha*t_srcNodeS)*exp(1/(alpha*t_srcNodeS)*(oldTime-t_srcNodeS))
-            // log(HR)=log(time span moving forth)-log(alpha*t_srcNodeS)-(1/(alpha*t_srcNodeS)*(oldTime-t_srcNodeS))
-            logHastingsRatio += Math.log(t_destNodeP - Math.max(t_srcNode, t_destNode))
-                              - Math.log(alpha * t_srcNodeS) - (1.0 / alpha) * (oldTime / t_srcNodeS - 1.0);
-            if ((t_destNodeP - Math.max(t_srcNode, t_destNode)) == 0 || (origin.getValue() - t_srcNodeS) == 0) {
-                // This happens when some branch lengths are zero.
-                // If oldRange = 0, hastingsRatio == Double.POSITIVE_INFINITY and
-                // node i can be catapulted anywhere in the tree, resulting in
-                // very bad trees that are always accepted.
-                // For symmetry, newRange = 0 should therefore be ruled out as well
-                //                return Double.NEGATIVE_INFINITY;
-                throw new IllegalStateException("problem in hereeeeee: QuasiSpeciesWilsonBaldingEasy - some branch lengths are 0?");
-
-            }
-
-            // RETURN log(HASTINGS RATIO)
-            return logHastingsRatio;
-        }
+//        // Handle special cases involving root:
+//        if (destNode.isRoot()) {
+//            // FORWARD ROOT MOVE
+//
+//            double logHastingsRatio = 0.0;
+//
+//            // Record srcNode grandmother height:
+//            double t_srcNodeG = srcNodeP.getParent().getHeight();
+//
+//            // Choose new root height:
+//            double newTime = t_destNode+Randomizer.nextExponential(1.0 / (alpha * t_destNode));
+//
+//            if (srcHaplo != -1){
+//                QuasiSpeciesNode node = (QuasiSpeciesNode) qsTree.getNode(srcHaplo);
+//
+//                // scale the haplotype
+//                if (node.getAttachmentTimesList().length > 1) {
+//
+//                    // Find current boundaries for haplotype start times
+//                    double haploStartMin = t_srcNode;
+//                    double haploStartMax = t_srcNodeP;
+//
+//                    double logHastingsRatioContribution = scaleThisHaplo(node, newTime, haploStartMin, node.getAttachmentTimesList()[1],
+//                                                                               haploStartMax, haploStartMin, -1);
+//                    if (logHastingsRatioContribution == Double.NEGATIVE_INFINITY)
+//                        return Double.NEGATIVE_INFINITY;
+//                    else logHastingsRatio += logHastingsRatioContribution;
+//                }
+//
+//                tnewQSstart = node.getAttachmentTimesList()[0];
+//
+//                // Ensure BEAST knows to recalculate affected likelihood:
+//                node.makeDirty(QuasiSpeciesTree.IS_FILTHY);
+//            }
+//
+//            // Implement tree changes:
+//            QuasiSpeciesNode correctTreeFromThisNode1 = disconnectBranch((QuasiSpeciesNode) srcNode, srcHaplo);
+//            QuasiSpeciesNode correctTreeFromThisNode2 = connectBranchToRoot((QuasiSpeciesNode) srcNode,
+//                    (QuasiSpeciesNode) destNode, newTime, srcHaplo, tnewQSstart);
+//            qsTree.setRoot((QuasiSpeciesNode) srcNodeP);
+//
+//            // Recalculate continuingHaplo and HaploAbove arrays
+//            recalculateParentHaploAndCorrectContinuingHaploName(-1, (QuasiSpeciesNode) srcNodeP);
+//            // in any case (changed or not the aboveNodeHaplo/parentHaplo array) recalculate countPossibleStartBranches
+//            qsTree.countAndSetPossibleStartBranches();
+//
+//            // HR contribution of topology and node height changes:
+//            // P(moving back)=1/(time span moving back)
+//            // P(moving forth)=(1/(alpha*t_destNode)*exp(-1/(alpha*t_destNode)*(newTime-t_destNode))) // exponentially distr
+//            // HR=P(back)/P(forth)=(alpha*t_destNode)*exp(1/(alpha*t_destNode)*(newTime-t_destNode))/(time span moving back)
+//            // log(HR)=log(alpha*t_destNode)+(1/(alpha*t_destNode)*(newTime-t_destNode))-log(time span moving back)
+//            logHastingsRatio += Math.log(alpha * t_destNode) + (1.0 / alpha) * (newTime / t_destNode - 1.0)
+//                              - Math.log(t_srcNodeG - Math.max(t_srcNode, t_srcNodeS));
+//
+//            if ((origin.getValue() - Math.max(t_srcNode, t_destNode)) == 0 || (t_srcNodeG - Math.max(t_srcNode, t_srcNodeS)) == 0) {
+//                // This happens when some branch lengths are zero.
+//                // If oldRange = 0, hastingsRatio == Double.POSITIVE_INFINITY and
+//                // node i can be catapulted anywhere in the tree, resulting in
+//                // very bad trees that are always accepted.
+//                // For symmetry, newRange = 0 should therefore be ruled out as well
+//                //                return Double.NEGATIVE_INFINITY;
+//                throw new IllegalStateException("problem in hereeeeee: QuasiSpeciesWilsonBaldingEasy - some branch lengths are 0?");
+//            }
+//
+//            // RETURN log(HASTINGS RATIO)
+//            return logHastingsRatio;
+//        }
+//
+//        if (srcNodeP.isRoot()) {
+//            // BACKWARD ROOT MOVE
+//
+//            double logHastingsRatio = 0.0;
+//
+//            // Record old srcNode parent height
+//            double oldTime = t_srcNodeP;
+//
+//            // Choose height of new attachment point:
+//            double min_newTime = Math.max(t_srcNode, t_destNode);
+//            double t_destNodeP = destNodeP.getHeight();
+//            double span = t_destNodeP - min_newTime;
+//            double newTime = min_newTime + span * Randomizer.nextDouble();
+//
+//            if (srcHaplo != -1){
+//                QuasiSpeciesNode node = (QuasiSpeciesNode) qsTree.getNode(srcHaplo);
+//
+//                // scale the haplotype
+//                if (node.getAttachmentTimesList().length > 1) {
+//
+//                    // Find current boundaries for haplotype start times
+//                    double haploStartMin = t_srcNode;
+//                    double haploStartMax = t_srcNodeP;
+//
+//                    double logHastingsRatioContribution = scaleThisHaplo(node, newTime, haploStartMin, node.getAttachmentTimesList()[1],
+//                                                                               haploStartMax, haploStartMin, -1);
+//                    if (logHastingsRatioContribution == Double.NEGATIVE_INFINITY)
+//                        return Double.NEGATIVE_INFINITY;
+//                    else logHastingsRatio += logHastingsRatioContribution;
+//                }
+//
+//                tnewQSstart = node.getAttachmentTimesList()[0];
+//
+//                // Ensure BEAST knows to recalculate affected likelihood:
+//                node.makeDirty(QuasiSpeciesTree.IS_FILTHY);
+//            }
+//
+//            // Implement tree changes:
+//            QuasiSpeciesNode correctTreeFromThisNode1 = disconnectBranchFromRoot((QuasiSpeciesNode) srcNode, srcHaplo);
+//            QuasiSpeciesNode correctTreeFromThisNode2 = connectBranch((QuasiSpeciesNode) srcNode,
+//                    (QuasiSpeciesNode) destNode, newTime, srcHaplo, tnewQSstart);
+//            qsTree.setRoot((QuasiSpeciesNode) srcNodeS);
+//
+//            // Recalculate continuingHaplo and HaploAbove arrays
+//            recalculateParentHaploAndCorrectContinuingHaploName(-1, (QuasiSpeciesNode) qsTree.getRoot());
+//            // in any case (changed or not the aboveNodeHaplo/parentHaplo array) recalculate countPossibleStartBranches
+//            qsTree.countAndSetPossibleStartBranches();
+//
+//            // Return HR:
+//            // P(moving back)=(1/(alpha*t_srcNodeS)*exp(-1/(alpha*t_srcNodeS)*(oldTime-srcNodeS))) // exponentially distr
+//            // P(moving forth)=1/(time span moving forth)
+//            // HR=P(back)/P(forth)=(time span moving forth)/(alpha*t_srcNodeS)*exp(1/(alpha*t_srcNodeS)*(oldTime-t_srcNodeS))
+//            // log(HR)=log(time span moving forth)-log(alpha*t_srcNodeS)-(1/(alpha*t_srcNodeS)*(oldTime-t_srcNodeS))
+//            logHastingsRatio += Math.log(t_destNodeP - Math.max(t_srcNode, t_destNode))
+//                              - Math.log(alpha * t_srcNodeS) - (1.0 / alpha) * (oldTime / t_srcNodeS - 1.0);
+//            if ((t_destNodeP - Math.max(t_srcNode, t_destNode)) == 0 || (origin.getValue() - t_srcNodeS) == 0) {
+//                // This happens when some branch lengths are zero.
+//                // If oldRange = 0, hastingsRatio == Double.POSITIVE_INFINITY and
+//                // node i can be catapulted anywhere in the tree, resulting in
+//                // very bad trees that are always accepted.
+//                // For symmetry, newRange = 0 should therefore be ruled out as well
+//                //                return Double.NEGATIVE_INFINITY;
+//                throw new IllegalStateException("problem in hereeeeee: QuasiSpeciesWilsonBaldingEasy - some branch lengths are 0?");
+//
+//            }
+//
+//            // RETURN log(HASTINGS RATIO)
+//            return logHastingsRatio;
+//        }
 
         // NON-ROOT MOVE
 
         double logHastingsRatio = 0.0;
-
-        // Find current boundaries for haplotype start times
-        double haploStartMin = t_srcNode;
-        double haploStartMax = t_srcNodeP;
 
         // Record srcNode grandmother height:
         double t_srcNodeG = srcNodeP.getParent().getHeight();
@@ -233,6 +231,11 @@ public class QuasiSpeciesWilsonBaldingEasy extends QuasiSpeciesTreeOperator{
 
             // scale the haplotype
             if (node.getAttachmentTimesList().length > 1) {
+
+                // Find current boundaries for haplotype start times
+                double haploStartMin = t_srcNode;
+                double haploStartMax = t_srcNodeP;
+
                 double logHastingsRatioContribution = scaleThisHaplo(node, newTime, haploStartMin, node.getAttachmentTimesList()[1],
                                                                            haploStartMax, haploStartMin, -1);
                 if (logHastingsRatioContribution == Double.NEGATIVE_INFINITY)

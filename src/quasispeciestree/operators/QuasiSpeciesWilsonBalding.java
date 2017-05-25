@@ -93,11 +93,7 @@ public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
 //
 //            double logHastingsRatio = 0.0;
 //
-//            // Find current boundaries for haplotype start times
 //            QuasiSpeciesNode node = (QuasiSpeciesNode) qsTree.getNode(srcHaplo);
-//
-//            double haploStartMin = node.getHeight();
-//            double haploStartMax = getMaxPossibleHaploAttachTime((QuasiSpeciesNode) srcNode, srcHaplo);
 //
 //            // Record srcNode grandmother height:
 //            double t_srcNodeG = srcNodeP.getParent().getHeight();
@@ -106,18 +102,26 @@ public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
 //            double newTime = t_destNode+Randomizer.nextExponential(1.0 / (alpha * t_destNode));
 //            //double newTime = Randomizer.uniform(t_destNode,origin.getValue());
 //
-//            // Choose attachment point for the moved haplotype - may not necessarily be the origin height
-//            ArrayList haploStartMaxNewArray = getMaxPossibleHaploAttachTime((QuasiSpeciesNode) destNode, srcHaplo, newTime);
-//            double haploStartMaxNew = (double) haploStartMaxNewArray.get(1);
-//
 //            // scale the haplotype
 //            if (node.getAttachmentTimesList().length > 1) {
+//
+//                // Find current boundaries for haplotype start times
+//                double haploStartMin = node.getHeight();
+//                double haploStartMax = getMaxPossibleHaploAttachTime((QuasiSpeciesNode) srcNode, srcHaplo);
+//
+//                // Choose attachment point for the moved haplotype - may not necessarily be the origin height
+//                ArrayList haploStartMaxNewArray = getMaxPossibleHaploAttachTime((QuasiSpeciesNode) destNode, srcHaplo, newTime);
+//                double haploStartMaxNew = (double) haploStartMaxNewArray.get(1);
+//
 //                double logHastingsRatioContribution = scaleThisHaplo(node, haploStartMaxNew, haploStartMin, 0,
 //                                                                           haploStartMax, haploStartMin, 0);
 //                if (logHastingsRatioContribution == Double.NEGATIVE_INFINITY)
 //                    return Double.NEGATIVE_INFINITY;
 //                else
 //                    logHastingsRatio += logHastingsRatioContribution;
+//
+//                // Ensure BEAST knows to recalculate affected likelihood:
+//                node.makeDirty(QuasiSpeciesTree.IS_FILTHY);
 //            }
 //
 //            // Implement tree changes:
@@ -168,9 +172,6 @@ public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
 //                throw new IllegalStateException("problem in hereeeeee: QuasiSpeciesWilsonBalding - some branch lengths are 0?");
 //            }
 //
-//            // Ensure BEAST knows to recalculate affected likelihood:
-//            node.makeDirty(QuasiSpeciesTree.IS_FILTHY);
-//
 //            // RETURN log(HASTINGS RATIO)
 //            return logHastingsRatio;
 //        }
@@ -180,11 +181,7 @@ public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
 //
 //            double logHastingsRatio = 0.0;
 //
-//            // Find current boundaries for haplotype start times
 //            QuasiSpeciesNode node = (QuasiSpeciesNode) qsTree.getNode(srcHaplo);
-//
-//            double haploStartMin = node.getHeight();
-//            double haploStartMax = getMaxPossibleHaploAttachTime((QuasiSpeciesNode) srcNode, srcHaplo);
 //
 //            // Record old srcNode parent height
 //            double oldTime = t_srcNodeP;
@@ -195,18 +192,26 @@ public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
 //            double span = t_destNodeP - min_newTime;
 //            double newTime = min_newTime + span * Randomizer.nextDouble();
 //
-//            // Choose attachment point for the moved haplotype
-//            ArrayList haploStartMaxNewArray = getMaxPossibleHaploAttachTime((QuasiSpeciesNode) destNode, srcHaplo, newTime);
-//            double haploStartMaxNew = (double) haploStartMaxNewArray.get(1);
-//
 //            // scale the haplotype
 //            if (node.getAttachmentTimesList().length > 1) {
+//
+//                // Find current boundaries for haplotype start times
+//                double haploStartMin = node.getHeight();
+//                double haploStartMax = getMaxPossibleHaploAttachTime((QuasiSpeciesNode) srcNode, srcHaplo);
+//
+//                // Choose attachment point for the moved haplotype
+//                ArrayList haploStartMaxNewArray = getMaxPossibleHaploAttachTime((QuasiSpeciesNode) destNode, srcHaplo, newTime);
+//                double haploStartMaxNew = (double) haploStartMaxNewArray.get(1);
+//
 //                double logHastingsRatioContribution = scaleThisHaplo(node, haploStartMaxNew, haploStartMin, 0,
 //                                                                           haploStartMax, haploStartMin, 0);
 //                if (logHastingsRatioContribution == Double.NEGATIVE_INFINITY)
 //                    return Double.NEGATIVE_INFINITY;
 //                else
 //                    logHastingsRatio += logHastingsRatioContribution;
+//
+//                // Ensure BEAST knows to recalculate affected likelihood:
+//                node.makeDirty(QuasiSpeciesTree.IS_FILTHY);
 //            }
 //
 //            // Implement tree changes:
@@ -257,9 +262,6 @@ public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
 //
 //            }
 //
-//            // Ensure BEAST knows to recalculate affected likelihood:
-//            node.makeDirty(QuasiSpeciesTree.IS_FILTHY);
-//
 //            // RETURN log(HASTINGS RATIO)
 //            return logHastingsRatio;
 //        }
@@ -268,11 +270,7 @@ public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
 
         double logHastingsRatio = 0.0;
 
-        // Find current boundaries for haplotype start times
         QuasiSpeciesNode node = (QuasiSpeciesNode) qsTree.getNode(srcHaplo);
-
-        double haploStartMin = node.getHeight();
-        double haploStartMax = getMaxPossibleHaploAttachTime((QuasiSpeciesNode) srcNode, srcHaplo);
 
         // Record srcNode grandmother height:
         double t_srcNodeG = srcNodeP.getParent().getHeight();
@@ -283,18 +281,26 @@ public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
         double span = t_destNodeP - min_newTime;
         double newTime = min_newTime + span * Randomizer.nextDouble();
 
-        // Choose attachment point for the moved haplotype
-        ArrayList haploStartMaxNewArray = getMaxPossibleHaploAttachTime((QuasiSpeciesNode) destNode, srcHaplo, newTime);
-        double haploStartMaxNew = (double) haploStartMaxNewArray.get(1);
-
         // scale the haplotype
         if (node.getAttachmentTimesList().length > 1) {
+
+            // Find current boundaries for haplotype start times
+            double haploStartMin = node.getHeight();
+            double haploStartMax = getMaxPossibleHaploAttachTime((QuasiSpeciesNode) srcNode, srcHaplo);
+
+            // Choose attachment point for the moved haplotype
+            ArrayList haploStartMaxNewArray = getMaxPossibleHaploAttachTime((QuasiSpeciesNode) destNode, srcHaplo, newTime);
+            double haploStartMaxNew = (double) haploStartMaxNewArray.get(1);
+
             double logHastingsRatioContribution = scaleThisHaplo(node, haploStartMaxNew, haploStartMin, 0,
                                                                        haploStartMax, haploStartMin, 0);
             if (logHastingsRatioContribution == Double.NEGATIVE_INFINITY)
                 return Double.NEGATIVE_INFINITY;
             else
                 logHastingsRatio += logHastingsRatioContribution;
+
+            // Ensure BEAST knows to recalculate affected likelihood:
+            node.makeDirty(QuasiSpeciesTree.IS_FILTHY);
         }
 
         // Implement tree changes:
@@ -375,9 +381,6 @@ public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
             // For symmetry, newRange = 0 should therefore be ruled out as well
             throw new IllegalStateException("problem in hereeeeee: QuasiSpeciesWilsonBalding - some branch lengths are 0?");
         }
-
-        // Ensure BEAST knows to recalculate affected likelihood:
-        node.makeDirty(QuasiSpeciesTree.IS_FILTHY);
 
         // RETURN log(HASTINGS RATIO)
         return logHastingsRatio;
