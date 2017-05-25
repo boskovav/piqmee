@@ -227,6 +227,7 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
                 else {
                     // check at which parent it arises
                     QuasiSpeciesNode nodeAbove = parent;
+                    nodeAbove.setContinuingHaploName(-1);
                     while (nodeAbove.getHaploAboveName() != haplotype){
                         nodeAbove = (QuasiSpeciesNode) nodeAbove.getParent();
                         nodeAbove.setContinuingHaploName(-1);
