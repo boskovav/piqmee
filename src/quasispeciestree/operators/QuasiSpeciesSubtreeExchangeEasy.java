@@ -20,9 +20,14 @@ public class QuasiSpeciesSubtreeExchangeEasy extends QuasiSpeciesTreeOperator{
     @Override
     public void initAndValidate() {
         super.initAndValidate();
-        if (qsTree.getLeafNodeCount() < 4)
+        if (qsTree.getLeafNodeCount() < 3)
             throw new IllegalArgumentException("QuasiSpeciesSubtreeExchange operator cannot be " +
-                    "used since there are only 4 tips in the tree! Remove this " +
+                    "used since there are only 2 tips in the tree! Remove this " +
+                    "operator from your XML file.");
+
+        if (qsTree.getLeafNodeCount() < 4 && isNarrowInput.get() == false)
+            throw new IllegalArgumentException("QuasiSpeciesSubtreeExchange wide version operator cannot be " +
+                    "used since there are only 3 tips in the tree! Remove this " +
                     "operator from your XML file.");
     }
 
@@ -35,20 +40,17 @@ public class QuasiSpeciesSubtreeExchangeEasy extends QuasiSpeciesTreeOperator{
 
         Node srcNode, srcNodeParent, destNode, destNodeParent;
 
-        // Narrow exchange selection:
+        int numberofnodesforwardwide = 0;
 
+        // Narrow exchange selection:
         if (isNarrowInput.get()) {
-            // check that this operator can actually perform a move
-            int cousinhaplobelowparentnode = 0;
-            for (int i = 0; i < qsTree.getNodeCount(); i++){
-                srcNode = qsTree.getNode(i);
-                if (isaValidNodeForNarrow(srcNode)){
-                    cousinhaplobelowparentnode = 1;
-                    break;
-                }
-            }
-            if (cousinhaplobelowparentnode == 0)
+            int numberofnodesforward = countpossiblesrcNodes();
+
+            if (numberofnodesforward == 0)
                 return Double.NEGATIVE_INFINITY;
+
+            logHastingsRatio += Math.log(numberofnodesforward);
+
             // select a node for narrow exchange
             do {
                 srcNode = qsTree.getNode(Randomizer.nextInt(qsTree.getNodeCount()));
@@ -62,20 +64,25 @@ public class QuasiSpeciesSubtreeExchangeEasy extends QuasiSpeciesTreeOperator{
 
         else {
             // check that this operator can actually perform a move
-            int haplobelowparentnode = 0;
             for (int i = 0; i < qsTree.getNodeCount(); i++){
                 for (int j = i + 1; j < qsTree.getNodeCount(); j++) {
                     srcNode = qsTree.getNode(i);
                     destNode = qsTree.getNode(j);
                     if (isaValidNodePairForWide(srcNode, destNode)) {
-                        haplobelowparentnode = 1;
+                        numberofnodesforwardwide += 1;
+                        break;
+                    }
+                    srcNode = qsTree.getNode(j);
+                    destNode = qsTree.getNode(i);
+                    if (isaValidNodePairForWide(srcNode, destNode)) {
+                        numberofnodesforwardwide += 1;
                         break;
                     }
                 }
-                if (haplobelowparentnode==1)
+                if (numberofnodesforwardwide==1)
                     break;
             }
-            if (haplobelowparentnode == 0)
+            if (numberofnodesforwardwide == 0)
                 return Double.NEGATIVE_INFINITY;
             // select a node for wide exchange
             do {
@@ -112,8 +119,54 @@ public class QuasiSpeciesSubtreeExchangeEasy extends QuasiSpeciesTreeOperator{
         // in any case (changed or not the aboveNodeHaplo/parentHaplo array) recalculate countPossibleStartBranches
         qsTree.countAndSetPossibleStartBranches();
 
+        if (isNarrowInput.get()) {
+            int numberofnodesback = countpossiblesrcNodes();
+            logHastingsRatio -= Math.log(numberofnodesback);
+        }
+
+//        if (! isNarrowInput.get()){
+//            int numberofnodesforwardwideback = 0;
+//            for (int i = 0; i < qsTree.getNodeCount(); i++){
+//                for (int j = i + 1; j < qsTree.getNodeCount(); j++) {
+//                    srcNode = qsTree.getNode(i);
+//                    destNode = qsTree.getNode(j);
+//                    if (isaValidNodePairForWide(srcNode, destNode)) {
+//                        numberofnodesforwardwideback += 1;
+//                    }
+//                    srcNode = qsTree.getNode(j);
+//                    destNode = qsTree.getNode(i);
+//                    if (isaValidNodePairForWide(srcNode, destNode)) {
+//                        numberofnodesforwardwideback += 1;
+//                    }
+//                }
+//            }
+//            if (numberofnodesforwardwideback != numberofnodesforwardwide){
+//                System.out.println("QuasiSpeciesSubtreeExchangeEasy: wide : number of possible forth and back moves is not the same");
+//                System.out.println(numberofnodesforwardwide);
+//                System.out.println(numberofnodesforwardwide);
+//            }
+//        }
+
         // RETURN log(HASTINGS RATIO)
         return logHastingsRatio;
+    }
+
+    /**
+     * Function to decide if the source node is a valid node for narrow easy exchange
+     *
+     * @return  number of possible srcNodes
+     */
+    private int countpossiblesrcNodes() {
+        // check that this operator can actually perform a move and count number of possible srcNodes
+        Node srcNode;
+        int numberofnodes = 0;
+        for (int i = 0; i < qsTree.getNodeCount(); i++){
+            srcNode = qsTree.getNode(i);
+            if (isaValidNodeForNarrow(srcNode)){
+                numberofnodes += 1;
+            }
+        }
+        return numberofnodes;
     }
 
     /**
@@ -132,12 +185,12 @@ public class QuasiSpeciesSubtreeExchangeEasy extends QuasiSpeciesTreeOperator{
         Node destNode = getOtherChild(srcNodeParent.getParent(), srcNodeParent);
         int destHaplo = ((QuasiSpeciesNode) destNode).getHaploAboveName();
 
-        if ( (srcParentHaplo == -1
-                && (destHaplo == -1 || ((QuasiSpeciesNode) qsTree.getNode(destHaplo)).getAttachmentTimesList()[0] < srcNodeParent.getHeight()) )
-            ||
-             (srcParentHaplo == ((QuasiSpeciesNode)getOtherChild(srcNodeParent, srcNode)).getContinuingHaploName()
-                && (destHaplo == ((QuasiSpeciesNode) destNode).getContinuingHaploName()
-                && (destHaplo == -1 || ((QuasiSpeciesNode) qsTree.getNode(destHaplo)).getAttachmentTimesList()[0] < srcNodeParent.getHeight())) )
+        if ( (destHaplo == -1 || ((QuasiSpeciesNode) qsTree.getNode(destHaplo)).getAttachmentTimesList()[0] < srcNodeParent.getHeight())
+             &&
+                (srcParentHaplo == -1
+                ||
+                (srcParentHaplo == ((QuasiSpeciesNode)getOtherChild(srcNodeParent, srcNode)).getContinuingHaploName()
+                && (destHaplo == ((QuasiSpeciesNode) destNode).getContinuingHaploName())) )
             )
             return true;
         else

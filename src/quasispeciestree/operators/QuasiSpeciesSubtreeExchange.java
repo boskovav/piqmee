@@ -20,9 +20,14 @@ public class QuasiSpeciesSubtreeExchange extends QuasiSpeciesTreeOperator{
     @Override
     public void initAndValidate() {
         super.initAndValidate();
-        if (qsTree.getLeafNodeCount() < 4)
+        if (qsTree.getLeafNodeCount() < 3)
             throw new IllegalArgumentException("QuasiSpeciesSubtreeExchange operator cannot be " +
-                    "used since there are only 4 tips in the tree! Remove this " +
+                    "used since there are only 2 tips in the tree! Remove this " +
+                    "operator from your XML file.");
+
+        if (qsTree.getLeafNodeCount() < 4 && isNarrowInput.get() == false)
+            throw new IllegalArgumentException("QuasiSpeciesSubtreeExchange wide version operator cannot be " +
+                    "used since there are only 3 tips in the tree! Remove this " +
                     "operator from your XML file.");
     }
 
@@ -129,7 +134,7 @@ public class QuasiSpeciesSubtreeExchange extends QuasiSpeciesTreeOperator{
                     tbottomsrcback = -1;
                 }
                 // else we have a src haplotype above mrca and dest haplo below but without duplicate
-                // so keep everything as it is - no not scale haplo, only change the tree
+                // so keep everything as it is - do not scale haplo, only change the tree
                 else
                     doscale = false;
             }
@@ -146,47 +151,56 @@ public class QuasiSpeciesSubtreeExchange extends QuasiSpeciesTreeOperator{
                     tbottomdestback = -1;
                 }
                 // else we have a dest haplotype above mrca and src haplo below but without duplicate
-                // so keep everything as it is - no not scale haplo, only change the tree
+                // so keep everything as it is - do not scale haplo, only change the tree
                 else
                     doscale = false;
             }
         }
 
-        // set all the nodes where src or dest haplo pass to -1 and set above haplo for a node where they arise to -1
-        QuasiSpeciesNode srcNodeSister = (QuasiSpeciesNode) getOtherChild(srcNodeParent, srcNode);
-        QuasiSpeciesNode correctTreeFromThisNodeSrc1 = getQuasiSpeciesNodeBelowHaploDetached((QuasiSpeciesNode) srcNode,
-                srcHaplo, (QuasiSpeciesNode) srcNodeParent, srcNodeSister, srcNodeParent.isRoot());
-        QuasiSpeciesNode destNodeSister = (QuasiSpeciesNode) getOtherChild(destNodeParent, destNode);
-        QuasiSpeciesNode correctTreeFromThisNodeDest1 = getQuasiSpeciesNodeBelowHaploDetached((QuasiSpeciesNode) destNode,
-                destHaplo, (QuasiSpeciesNode) destNodeParent, destNodeSister, destNodeParent.isRoot());
+        if (doscale) {
+            // set all the nodes where src or dest haplo pass to -1 and set above haplo for a node where they arise to -1
+            if (srcnodehaplo.getAttachmentTimesList().length > 1) {
+                QuasiSpeciesNode srcNodeSister = (QuasiSpeciesNode) getOtherChild(srcNodeParent, srcNode);
+                QuasiSpeciesNode correctTreeFromThisNodeSrc1 = getQuasiSpeciesNodeBelowHaploDetached((QuasiSpeciesNode) srcNode,
+                    srcHaplo, (QuasiSpeciesNode) srcNodeParent, srcNodeSister, srcNodeParent.isRoot());
+            }
+            if (destnodehaplo.getAttachmentTimesList().length > 1) {
+                QuasiSpeciesNode destNodeSister = (QuasiSpeciesNode) getOtherChild(destNodeParent, destNode);
+                QuasiSpeciesNode correctTreeFromThisNodeDest1 = getQuasiSpeciesNodeBelowHaploDetached((QuasiSpeciesNode) destNode,
+                    destHaplo, (QuasiSpeciesNode) destNodeParent, destNodeSister, destNodeParent.isRoot());
+            }
+        }
 
         // Make changes to tree topology:
         replace(srcNodeParent, srcNode, destNode);
         replace(destNodeParent, destNode, srcNode);
 
         if (doscale) {
-            // scale src haplo
-            double logHastingsRatioContribution = scaleThisHaplo(srcnodehaplo, destHaploStartMax, srcHaploStartMin, tbottomsrcforward,
-                                                                               srcHaploStartMax, srcHaploStartMinBack, tbottomsrcback);
-            if (logHastingsRatioContribution == Double.NEGATIVE_INFINITY)
-                return Double.NEGATIVE_INFINITY;
-            else
-                logHastingsRatio += logHastingsRatioContribution;
+            if (srcnodehaplo.getAttachmentTimesList().length > 1) {
+                // scale src haplo
+                double logHastingsRatioContribution = scaleThisHaplo(srcnodehaplo, destHaploStartMax, srcHaploStartMin, tbottomsrcforward, srcHaploStartMax, srcHaploStartMinBack, tbottomsrcback);
+                if (logHastingsRatioContribution == Double.NEGATIVE_INFINITY)
+                    return Double.NEGATIVE_INFINITY;
+                else
+                    logHastingsRatio += logHastingsRatioContribution;
 
-            // also scale dest haplo
-            logHastingsRatioContribution = scaleThisHaplo(destnodehaplo, srcHaploStartMax, destHaploStartMin, tbottomdestforward,
-                                                                         destHaploStartMax, destHaploStartMinBack, tbottomdestback);
-            if (logHastingsRatioContribution == Double.NEGATIVE_INFINITY)
-                return Double.NEGATIVE_INFINITY;
-            else
-                logHastingsRatio += logHastingsRatioContribution;
+                // set above haplo for a node where src and dest haplo arise to srcHaplo and destHaplo respectively
+                QuasiSpeciesNode correctTreeFromThisNodeSrc2 = getQuasiSpeciesNodeBelowHaploAttached(destNodeParent.getHeight(),
+                        srcHaplo, srcnodehaplo.getAttachmentTimesList()[0], (QuasiSpeciesNode) destNodeParent, destNodeParent.isRoot());
+            }
+            if (destnodehaplo.getAttachmentTimesList().length > 1) {
+                // also scale dest haplo
+                double logHastingsRatioContribution = scaleThisHaplo(destnodehaplo, srcHaploStartMax, destHaploStartMin, tbottomdestforward, destHaploStartMax, destHaploStartMinBack, tbottomdestback);
+                if (logHastingsRatioContribution == Double.NEGATIVE_INFINITY)
+                    return Double.NEGATIVE_INFINITY;
+                else
+                    logHastingsRatio += logHastingsRatioContribution;
+
+                // set above haplo for a node where src and dest haplo arise to srcHaplo and destHaplo respectively
+                QuasiSpeciesNode correctTreeFromThisNodeDest2 = getQuasiSpeciesNodeBelowHaploAttached(srcNodeParent.getHeight(),
+                        destHaplo, destnodehaplo.getAttachmentTimesList()[0], (QuasiSpeciesNode) srcNodeParent, srcNodeParent.isRoot());
+            }
         }
-
-        // set above haplo for a node where src and dest haplo arise to srcHaplo and destHaplo respectively
-        QuasiSpeciesNode correctTreeFromThisNodeSrc2 = getQuasiSpeciesNodeBelowHaploAttached(destNodeParent.getHeight(),
-                srcHaplo, srcnodehaplo.getAttachmentTimesList()[0], (QuasiSpeciesNode) destNodeParent, destNodeParent.isRoot());
-        QuasiSpeciesNode correctTreeFromThisNodeDest2 = getQuasiSpeciesNodeBelowHaploAttached(srcNodeParent.getHeight(),
-                destHaplo, destnodehaplo.getAttachmentTimesList()[0], (QuasiSpeciesNode) srcNodeParent, srcNodeParent.isRoot());
 
         // Recalculate continuingHaplo and HaploAbove arrays
         recalculateParentHaploAndCorrectContinuingHaploName(-1, (QuasiSpeciesNode) qsTree.getRoot());
