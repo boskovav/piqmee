@@ -418,7 +418,7 @@ public abstract class QuasiSpeciesTreeOperator extends Operator {
                 }
                 // set the aboveNodeHaplo for the node above which the haplotype moved arises to haplotypeNumber
                 nodeBelowHaploMoved.setHaploAboveName(haplotype);
-                nodeBelowHaploMoved = parent;
+                //nodeBelowHaploMoved = parent;
             }
         }
         return nodeBelowHaploMoved;
