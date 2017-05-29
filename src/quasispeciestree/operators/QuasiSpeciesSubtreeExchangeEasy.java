@@ -87,12 +87,9 @@ public class QuasiSpeciesSubtreeExchangeEasy extends QuasiSpeciesTreeOperator{
             // select a node for wide exchange
             do {
                 srcNode = qsTree.getNode(Randomizer.nextInt(qsTree.getNodeCount()));
-            } while ( !isaValidSrcNodeForWide(srcNode) );
-            srcNodeParent = srcNode.getParent();
-
-            do {
                 destNode = qsTree.getNode(Randomizer.nextInt(qsTree.getNodeCount()));
-            } while( !isaValidDestNodeForWide(srcNode, srcNodeParent, destNode) );
+            } while( !isaValidNodePairForWide(srcNode, destNode) );
+            srcNodeParent = srcNode.getParent();
             destNodeParent = destNode.getParent();
 
             // Reject if substitution would result in negative branch lengths:
