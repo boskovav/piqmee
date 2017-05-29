@@ -191,7 +191,7 @@ public class QuasiSpeciesTree extends Tree {
         for (int i = 1; i < temptiptimes.length; i++) {
             tempqstimes[currentPosition] = maxTimeArray[i-1];
             currentPosition++;
-            for (int j = 0; j < temptiptimescount[i]; j++) {
+            for (int j = 0; j < temptiptimescount[i] - 1; j++) {
                 tempqstimes[currentPosition] = maxTimeArray[i-1] - (j + 1) * ((maxTimeArray[i-1] - temptiptimes[i]) / (1 + temptiptimescount[i]));
                 currentPosition++;
             }
