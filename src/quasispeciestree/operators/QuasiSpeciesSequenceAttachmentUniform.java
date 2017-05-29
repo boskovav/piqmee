@@ -83,23 +83,34 @@ public class QuasiSpeciesSequenceAttachmentUniform extends QuasiSpeciesTreeOpera
         else
             tmin = tempqstimes[changeIdx + 1];
         // check if changeIdx points to the attach time that needs to be above some tip time
-        int currentPosition = tempqstimes.length-1-(temptiptimescount[0]-1);
+        //  get the minIdxHard
         int tminIdxHard = tempqstimes.length;
         double tminHard = temptiptimes[0];
+        // go through the tempqstimes array and identify where we are in terms of temptiptimes array
+        //  at the same time, keep ascertaining the hard lower bound
+        int currentPosition = tempqstimes.length-1-(temptiptimescount[0]-1);
         for (int i = 1; i < temptiptimes.length; i++){
+            // moved attach time is below the next  boundary, so keep the previous tminHard and tminIdxHard
             if (changeIdx > currentPosition)
                 break;
+            // has there been a move before this move, that positioned the attachment time below the tip time?
             else if (tempqstimes[currentPosition] < temptiptimes[i])
                 throw new IllegalStateException("QuasiSpeciesSequenceAttachmentUniform: seems like the attachment time is below its tip.");
-            else if (currentPosition == tempqstimes.length - 1)
+            // if there is only one sequence at the most recent time point and all the other duplicates are older
+            // then the tminHard is in fact the next most recent tip sampling time after the most recent time point
+            else if (currentPosition == tempqstimes.length - 1) {
+                tminIdxHard = currentPosition;
                 tminHard = temptiptimes[i];
+            }
+            // if we are not running over the array bounds (i.e. if we are not looking at the last attachment point)
+            // and if the attachment time just after the current one is below the tip boundary, set the new tminHard
             else if (currentPosition != tempqstimes.length - 1 && tempqstimes[currentPosition + 1] < temptiptimes[i]) {
                 tminIdxHard = currentPosition;
                 tminHard = temptiptimes[i];
             }
             currentPosition -= temptiptimescount[i];
         }
-        if (changeIdx == tminIdxHard - 1) {
+        if (changeIdx == tminIdxHard) {
             if (tmin < tminHard)
                 tmin = tminHard;
         }

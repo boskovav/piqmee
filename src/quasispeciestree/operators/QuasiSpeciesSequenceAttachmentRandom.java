@@ -82,12 +82,20 @@ public class QuasiSpeciesSequenceAttachmentRandom extends QuasiSpeciesTreeOperat
         //  at the same time, keep ascertaining the hard lower bound
         int currentPosition = tempqstimes.length-1-(temptiptimescount[0]-1);
         for (int i = 1; i < temptiptimes.length; i++) {
+            // moved attach time is below the next  boundary, so keep the previous tminHard and tminIdxHard
             if (changeIdx > currentPosition)
                 break;
+            // has there been a move before this move, that positioned the attachment time below the tip time?
             else if (tempqstimes[currentPosition] < temptiptimes[i])
                 throw new IllegalStateException("QuasiSpeciesSequenceAttachmentRandom: seems like the attachment time is below its tip.");
-            else if (currentPosition == tempqstimes.length - 1)
+            // if there is only one sequence at the most recent time point and all the other duplicates are older
+            // then the tminHard is in fact the next most recent tip sampling time after the most recent time point
+            else if (currentPosition == tempqstimes.length - 1) {
+                tminIdxHard = currentPosition;
                 tminHard = temptiptimes[i];
+            }
+            // if we are not running over the array bounds (i.e. if we are not looking at the last attachment point)
+            // and if the attachment time just after the current one is below the tip boundary, set the new tminHard
             else if (currentPosition != tempqstimes.length - 1 && tempqstimes[currentPosition + 1] < temptiptimes[i]) {
                 tminIdxHard = currentPosition;
                 tminHard = temptiptimes[i];
@@ -95,14 +103,17 @@ public class QuasiSpeciesSequenceAttachmentRandom extends QuasiSpeciesTreeOperat
             currentPosition -= temptiptimescount[i];
         }
 
-        // choose new max index between 0 - tminIdxHard  of this haplotype
-        // here we do not allow the event to be repositioned to the interval delimited by itself
+        // throw error if the algo did something stupid
         if (tminIdxHard > tempqstimes.length)
             throw new IllegalStateException("QuasiSpeciesSequenceAttachmentRandom: tminIdxHard is the roof for the move?");
+
+        // choose new max index between 0 - tminIdxHard  of this haplotype
+        //          -- no contribution to HR since tminIdxHard will be the same on forward and backward move
+        // here we do not allow the event to be repositioned to the interval delimited by itself
         do {
             tmaxIdx = Randomizer.nextInt(tempqstimes.length);
         }
-        while (tmaxIdx == changeIdx || tmaxIdx >= tminIdxHard);
+        while (tmaxIdx == changeIdx || tmaxIdx > tminIdxHard);
 
         ArrayList haploStartMaxNewArray = getMaxPossibleHaploAttachTime(node, node.getNr(), 0);
         int parentHaplo = (int) haploStartMaxNewArray.get(2);
@@ -117,14 +128,13 @@ public class QuasiSpeciesSequenceAttachmentRandom extends QuasiSpeciesTreeOperat
         else
             tminIdx = tmaxIdx + 1;
 
-        if (tminIdx == tminIdxHard)
+        // check if the new interval coincides with the tminHard/tminIdxHard
+        if (tmaxIdx == tminIdxHard || (tmaxIdx == tminIdxHard - 1  && tminIdx == tminIdxHard + 1))
             tmin = tminHard;
         else if (tminIdx == tempqstimes.length)
             tmin = node.getHeight();
         else if (tminIdx > tempqstimes.length)
             throw new IllegalStateException("QuasiSpeciesSequenceAttachmentRandom: seems like the tminIdx was chosen wrongly.");
-        else if (tminIdx == tminIdxHard + 1)
-            tmin = tminHard;
         else if (tminIdx > tminIdxHard + 1)
             throw new IllegalStateException("QuasiSpeciesSequenceAttachmentRandom: seems like the tminIdx was chosen wrongly (2).");
         else
@@ -136,10 +146,8 @@ public class QuasiSpeciesSequenceAttachmentRandom extends QuasiSpeciesTreeOperat
             if (changeIdx == 1)
                 // if (changeIdx + 1 == tempqstimes.length)  -- this condition does not matter now
                 logHastingsRatio -= Math.log((double) haploStartMaxNewArray.get(1) - tminHard);
-            else if (changeIdx + 1 == tempqstimes.length)
-                logHastingsRatio -= Math.log(tempqstimes[changeIdx - 1] - tminHard);
             else
-                logHastingsRatio -= Math.log(tempqstimes[changeIdx-1] - tminHard);
+                logHastingsRatio -= Math.log(tempqstimes[changeIdx - 1] - tminHard);
         }
         else if (changeIdx == 1){
             if (changeIdx + 1 == tempqstimes.length)
