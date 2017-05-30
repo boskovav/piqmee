@@ -19,6 +19,9 @@ public class QuasiSpeciesClusterTree extends QuasiSpeciesTree implements StateNo
     final public Input<Alignment> dataInput = new Input<>("data",
             "Alignment data used for calculating distances for clustering",
             Input.Validate.REQUIRED);
+    public Input<Boolean> collapseIdenticalSequencesInput = new Input<>("collapseIdenticalSequences",
+            "Should nodes that have identical sequences be collapsed to one haplotype? " +
+                    "Default true.", true);
 
     public QuasiSpeciesClusterTree() {
 
@@ -40,9 +43,9 @@ public class QuasiSpeciesClusterTree extends QuasiSpeciesTree implements StateNo
             throw new RuntimeException("The data input needs to be specified");
 
         if (haplotypeCountsInput.get() != null)
-            initFromUniqueHaploTree(inputTree, dataInput.get());
+            initFromUniqueHaploTree(inputTree, dataInput.get(),collapseIdenticalSequencesInput.get());
         else
-            initFromFullTree(inputTree, dataInput.get());
+            initFromFullTree(inputTree, dataInput.get(),collapseIdenticalSequencesInput.get());
     }
 
     @Override

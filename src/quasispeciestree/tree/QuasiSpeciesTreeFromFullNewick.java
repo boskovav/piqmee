@@ -22,6 +22,9 @@ public class QuasiSpeciesTreeFromFullNewick extends QuasiSpeciesTree implements 
             "Tree in Newick format.", Input.Validate.REQUIRED);
     public Input<Boolean> adjustTipHeightsInput = new Input<>("adjustTipHeights",
             "Adjust tip heights in tree? Default true.", true);
+    public Input<Boolean> collapseIdenticalSequencesInput = new Input<>("collapseIdenticalSequences",
+            "Should nodes that have identical sequences be collapsed to one haplotype? " +
+                    "Default true.", true);
 
     public QuasiSpeciesTreeFromFullNewick() {
 
@@ -42,7 +45,7 @@ public class QuasiSpeciesTreeFromFullNewick extends QuasiSpeciesTree implements 
         if (dataInput.get() == null)
             throw new RuntimeException("The data input needs to be specified");
 
-        initFromFullTree(inputTree,dataInput.get());
+        initFromFullTree(inputTree,dataInput.get(),collapseIdenticalSequencesInput.get());
 
     }
 

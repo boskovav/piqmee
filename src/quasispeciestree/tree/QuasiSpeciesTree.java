@@ -832,7 +832,7 @@ public class QuasiSpeciesTree extends Tree {
      *
      * @param uniqueHaploTree
      */
-    public void initFromUniqueHaploTree(Tree uniqueHaploTree, Alignment data){
+    public void initFromUniqueHaploTree(Tree uniqueHaploTree, Alignment data, boolean collapseIdentical){
 
         // In unique haplo tree, there can still be duplicate sequences, if found at different points in time
         // Get the distances for the sequences:
@@ -847,7 +847,7 @@ public class QuasiSpeciesTree extends Tree {
         setHaploCounts(haplotypeCountsInput.get(),uniqueHaploTree);
 
         ArrayList result = processNextNodeOfFullNewickTree(
-                uniqueHaploTree.getRoot(),qsTips,qsInternalNodes,distanceMatrix,haplotypesSeen);
+                uniqueHaploTree.getRoot(),qsTips,qsInternalNodes,distanceMatrix,haplotypesSeen,collapseIdentical);
 
         // renumber tips to match the number of tips in the qsTree (so far matching fullTree node numbers)
         // need to match the tip times and attach time and haplo count lists!! -- this should not affect the order
@@ -900,7 +900,7 @@ public class QuasiSpeciesTree extends Tree {
      *
      * @param fullTree
      */
-    public void initFromFullTree(Tree fullTree, Alignment data){
+    public void initFromFullTree(Tree fullTree, Alignment data, boolean collapseIdentical){
 
         // Get the distances for the sequences:
         double[][] distanceMatrix = getSequenceDistances(data, fullTree);
@@ -911,7 +911,7 @@ public class QuasiSpeciesTree extends Tree {
         List<QuasiSpeciesNode> qsInternalNodes = new ArrayList<>();
 
         ArrayList result = processNextNodeOfFullNewickTree(fullTree.getRoot(),qsTips,qsInternalNodes,
-                                                            distanceMatrix,haplotypesSeen);
+                                                            distanceMatrix,haplotypesSeen,collapseIdentical);
 
         // renumber tips to match the number of tips in the qsTree (so far matching fullTree node numbers)
         // need to match the tip times and attach time and haplo count lists!! -- this should not affect the order
@@ -966,7 +966,7 @@ public class QuasiSpeciesTree extends Tree {
      */
     private ArrayList processNextNodeOfFullNewickTree(
             Node node, List<QuasiSpeciesNode> qsTips, List<QuasiSpeciesNode> qsInternalNodes,
-            double[][] distanceMatrix, ArrayList haplotypesSeen){
+            double[][] distanceMatrix, ArrayList haplotypesSeen, boolean collapseIdentical){
 
         QuasiSpeciesNode returnNode = null;
         ArrayList haplotypesAtThisNode = new ArrayList();
@@ -976,7 +976,7 @@ public class QuasiSpeciesTree extends Tree {
         int fakeHaplo = -1;
         // for leaf nodes check if the sequence has been seen at another node already
         // pass on to the parent the info on which haplo is at the tip
-        if (node.isLeaf()){
+        if (node.isLeaf() && collapseIdentical==true){
             boolean skip = false;
             // check if the sequence has been seen already
             for (int i = 0; i < haplotypesSeen.size(); i++) {
@@ -1073,9 +1073,9 @@ public class QuasiSpeciesTree extends Tree {
         }
         else {
             ArrayList leftOut = processNextNodeOfFullNewickTree(node.getLeft(),qsTips,qsInternalNodes,
-                                                                distanceMatrix,haplotypesSeen);
+                                                                distanceMatrix,haplotypesSeen,collapseIdentical);
             ArrayList rightOut = processNextNodeOfFullNewickTree(node.getRight(),qsTips,qsInternalNodes,
-                                                                 distanceMatrix,haplotypesSeen);
+                                                                 distanceMatrix,haplotypesSeen,collapseIdentical);
             QuasiSpeciesNode leftNode = (QuasiSpeciesNode) leftOut.get(0);
             QuasiSpeciesNode rightNode = (QuasiSpeciesNode) rightOut.get(0);
             ArrayList leftHaplo = (ArrayList) leftOut.get(1);
@@ -1096,13 +1096,13 @@ public class QuasiSpeciesTree extends Tree {
                 }
             }
             //case 1
-            if (sameHaploLeftRight.size() > 1){
+            if (sameHaploLeftRight.size() > 1 && collapseIdentical){
                 throw new IllegalArgumentException("The input tree is not recursively monophyletic and therefore" +
                                                    " cannot be converted to a quasi-species tree. Try to input a" +
                                                    " different tree. Alternatively, input sequences only.");
             }
             //case 2
-            else if(sameHaploLeftRight.size() == 1){
+            else if(sameHaploLeftRight.size() == 1 && collapseIdentical){
                 // since the sequence has been seen already, assign the attachment haplo time to array
                 int haplo = (int) sameHaploLeftRight.get(0);
                 QuasiSpeciesNode tip = null;

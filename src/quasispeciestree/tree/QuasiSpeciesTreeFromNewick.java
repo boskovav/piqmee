@@ -22,6 +22,9 @@ public class QuasiSpeciesTreeFromNewick extends QuasiSpeciesTree implements Stat
             "Tree in Newick format.", Validate.REQUIRED);
     public Input<Boolean> adjustTipHeightsInput = new Input<>("adjustTipHeights",
             "Adjust tip heights in tree? Default true.", true);
+    public Input<Boolean> collapseIdenticalSequencesInput = new Input<>("collapseIdenticalSequences",
+            "Should nodes that have identical sequences be collapsed to one haplotype? " +
+                    "Default true.", true);
 
     @Override
     public void initAndValidate(){
@@ -36,7 +39,7 @@ public class QuasiSpeciesTreeFromNewick extends QuasiSpeciesTree implements Stat
         if (dataInput.get() == null)
             throw new RuntimeException("The data input needs to be specified");
 
-        initFromUniqueHaploTree(inputTree, dataInput.get());
+        initFromUniqueHaploTree(inputTree, dataInput.get(),collapseIdenticalSequencesInput.get());
     }
 
     @Override
