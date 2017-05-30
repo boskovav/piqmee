@@ -976,71 +976,67 @@ public class QuasiSpeciesTree extends Tree {
         int fakeHaplo = -1;
         // for leaf nodes check if the sequence has been seen at another node already
         // pass on to the parent the info on which haplo is at the tip
-        if (node.isLeaf() && collapseIdentical==true){
+        if (node.isLeaf()){
             boolean skip = false;
             // check if the sequence has been seen already
-            for (int i = 0; i < haplotypesSeen.size(); i++) {
-                if (distanceMatrix[node.getNr()][(int) haplotypesSeen.get(i)] == 0) {
-                    QuasiSpeciesNode seenNode = qsTips.get(i);
-                    // check if the time of the tip is less than the uniqueHaploTree tip
-                    // if not, rewrite the info on the uniqueHaploTree tip
-                    if (node.getHeight() < seenNode.getHeight()) {
-                        seenNode.setHeight(node.getHeight());
-                        seenNode.setID(String.valueOf(node.getID()));
-                    }
-                    // to robustly always pick the same node as the unique haplo node even after restart from state file
-                    else if (!Pattern.compile("^t").matcher(seenNode.getID()).find()
-                            && Pattern.compile("^t").matcher(node.getID()).find()){
-                        seenNode.setID(String.valueOf(node.getID()));
-                    }
-                    // if the tips do not start with t - then keep always the tip with smallest number
-                    else if (seenNode.getID().compareTo(node.getID())>0){
-                        seenNode.setID(String.valueOf(node.getID()));
-                    }
-                    // since the sequence has been seen already, assign the tip time to array
-                    double[] tipTimesListTmp = seenNode.getTipTimesList();
-                    int[] tipTimesCountListTmp = seenNode.getTipTimesCountList();
-                    if (haplotypeCounts.size() != 0) {
-                        // throw an error if if tip has already been found with same seq and at the same time...
-                        // the user wants to use full tree? or did not correctly merge duplicate sequences?
-                        for (int j = 0; j < tipTimesListTmp.length; j++) {
-                            // check if the tips with the same sequence that have been seen had also the current node's sampling time
-                            if (tipTimesListTmp[j] == node.getHeight()) {
-                                throw new IllegalArgumentException("There are at least two tips with the same " +
-                                        "sequence and same sampling time. If you want to input tree with all " +
-                                        "sequences as tips, please use class quasispeciestree.tree.QuasiSpeciesTreeFromFullNewick; " +
-                                        "otherwise please remove duplicates and use haplotypeCounts traitset " +
-                                        "to annotate the duplicate counts");
-                            }
+            if (collapseIdentical==true) {
+                for (int i = 0; i < haplotypesSeen.size(); i++) {
+                    if (distanceMatrix[node.getNr()][(int) haplotypesSeen.get(i)] == 0) {
+                        QuasiSpeciesNode seenNode = qsTips.get(i);
+                        // check if the time of the tip is less than the uniqueHaploTree tip
+                        // if not, rewrite the info on the uniqueHaploTree tip
+                        if (node.getHeight() < seenNode.getHeight()) {
+                            seenNode.setHeight(node.getHeight());
+                            seenNode.setID(String.valueOf(node.getID()));
                         }
-                        // if with different time, add to tip times and counts
-                        // expand the TipTimesList and add a new value
-                        addNewTimesAndCountEntry(seenNode, tipTimesListTmp, tipTimesCountListTmp, node.getHeight(), getHaplotypeCounts(node));
-                    }
-                    else {
-                        // since we are assigning from the full tree, we need to check if we have
-                        //  already observed the same time for another already processed tip
-                        boolean haploSeen = false;
-                        for (int j = 0; j < tipTimesListTmp.length; j++){
-                            // if yes, just increase the corresponding timecount array by one
-                            if (tipTimesListTmp[j] == node.getHeight()) {
-                                tipTimesCountListTmp[j] += 1;
-                                haploSeen = true;
-                                break;
-                            }
+                        // to robustly always pick the same node as the unique haplo node even after restart from state file
+                        else if (!Pattern.compile("^t").matcher(seenNode.getID()).find() && Pattern.compile("^t").matcher(node.getID()).find()) {
+                            seenNode.setID(String.valueOf(node.getID()));
                         }
-                        // if not create a new entry
-                        if (!haploSeen){
+                        // if the tips do not start with t - then keep always the tip with smallest number
+                        else if (seenNode.getID().compareTo(node.getID()) > 0) {
+                            seenNode.setID(String.valueOf(node.getID()));
+                        }
+                        // since the sequence has been seen already, assign the tip time to array
+                        double[] tipTimesListTmp = seenNode.getTipTimesList();
+                        int[] tipTimesCountListTmp = seenNode.getTipTimesCountList();
+                        if (haplotypeCounts.size() != 0) {
+                            // throw an error if if tip has already been found with same seq and at the same time...
+                            // the user wants to use full tree? or did not correctly merge duplicate sequences?
+                            for (int j = 0; j < tipTimesListTmp.length; j++) {
+                                // check if the tips with the same sequence that have been seen had also the current node's sampling time
+                                if (tipTimesListTmp[j] == node.getHeight()) {
+                                    throw new IllegalArgumentException("There are at least two tips with the same " + "sequence and same sampling time. If you want to input tree with all " + "sequences as tips, please use class quasispeciestree.tree.QuasiSpeciesTreeFromFullNewick; " + "otherwise please remove duplicates and use haplotypeCounts traitset " + "to annotate the duplicate counts");
+                                }
+                            }
+                            // if with different time, add to tip times and counts
                             // expand the TipTimesList and add a new value
-                            addNewTimesAndCountEntry(seenNode, tipTimesListTmp, tipTimesCountListTmp, node.getHeight(), 1);
+                            addNewTimesAndCountEntry(seenNode, tipTimesListTmp, tipTimesCountListTmp, node.getHeight(), getHaplotypeCounts(node));
+                        } else {
+                            // since we are assigning from the full tree, we need to check if we have
+                            //  already observed the same time for another already processed tip
+                            boolean haploSeen = false;
+                            for (int j = 0; j < tipTimesListTmp.length; j++) {
+                                // if yes, just increase the corresponding timecount array by one
+                                if (tipTimesListTmp[j] == node.getHeight()) {
+                                    tipTimesCountListTmp[j] += 1;
+                                    haploSeen = true;
+                                    break;
+                                }
+                            }
+                            // if not create a new entry
+                            if (!haploSeen) {
+                                // expand the TipTimesList and add a new value
+                                addNewTimesAndCountEntry(seenNode, tipTimesListTmp, tipTimesCountListTmp, node.getHeight(), 1);
+                            }
                         }
+                        skip = true;
+                        haplotypesAtThisNode.add(haplotypesSeen.get(i));
+                        // make this node to be a "fake" node
+                        returnNode = null;
+                        fakeHaplo = i;
+                        break;
                     }
-                    skip = true;
-                    haplotypesAtThisNode.add(haplotypesSeen.get(i));
-                    // make this node to be a "fake" node
-                    returnNode = null;
-                    fakeHaplo = i;
-                    break;
                 }
             }
             if (!skip) {
