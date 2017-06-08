@@ -46,6 +46,9 @@ public class QuasiSpeciesWilsonBaldingEasy extends QuasiSpeciesTreeOperator{
     @Override
     public double proposal() {
 
+        // count number of pairs valid for WB (may not be the same back and forth without root moves)
+        int numberofpairs = countValidPairsForWBEasy();
+
         // Select source node:
         Node srcNode;
         do {
@@ -273,6 +276,14 @@ public class QuasiSpeciesWilsonBaldingEasy extends QuasiSpeciesTreeOperator{
             throw new IllegalStateException("problem in hereeeeee: QuasiSpeciesWilsonBaldingEasy - some branch lengths are 0?");
         }
 
+        // count number of pairs valid for WB (may not be the same back and forth without root moves)
+        int numberofpairsback = countValidPairsForWBEasy();
+
+        if (numberofpairs != numberofpairsback){
+            logHastingsRatio += Math.log(numberofpairs);
+            logHastingsRatio -= Math.log(numberofpairsback);
+        }
+
         // RETURN log(HASTINGS RATIO)
         return logHastingsRatio;
     }
@@ -306,6 +317,10 @@ public class QuasiSpeciesWilsonBaldingEasy extends QuasiSpeciesTreeOperator{
                 return true;
         }
 
+        // avoid root moves
+        if (srcNode.getParent().isRoot())
+            return true;
+
         return false;
     }
 
@@ -331,6 +346,35 @@ public class QuasiSpeciesWilsonBaldingEasy extends QuasiSpeciesTreeOperator{
         if (destNodeP != null && (destNodeP.getHeight() <= srcNode.getHeight()))
             return true;
 
+        // avoid root moves
+        if (destNode.isRoot())
+            return true;
+
         return false;
+    }
+
+    /**
+     * Function to count how many valid source and destination node pairs there are for wilson-balding operator
+     *
+     */
+    private int countValidPairsForWBEasy() {
+        int count = 0;
+        for (int i = 0; i < qsTree.getNodeCount(); i++) {
+            for (int j = i + 1; j < qsTree.getNodeCount(); j++) {
+                Node srcNode = qsTree.getNode(i);
+                Node destNode = qsTree.getNode(j);
+                if (!invalidSrcNode(srcNode) && !invalidDestNode(srcNode, destNode)
+//                        && !(((QuasiSpeciesNode) srcNode).getContinuingHaploName() != ((QuasiSpeciesNode) srcNode).getHaploAboveName())
+                        )
+                    count += 1;
+                srcNode = qsTree.getNode(j);
+                destNode = qsTree.getNode(i);
+                if (!invalidSrcNode(srcNode) && !invalidDestNode(srcNode, destNode)
+//                        && !(((QuasiSpeciesNode) srcNode).getContinuingHaploName() != ((QuasiSpeciesNode) srcNode).getHaploAboveName())
+                        )
+                    count += 1;
+            }
+        }
+        return count;
     }
 }
