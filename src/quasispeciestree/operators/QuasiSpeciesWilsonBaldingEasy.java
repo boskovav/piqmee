@@ -364,13 +364,13 @@ public class QuasiSpeciesWilsonBaldingEasy extends QuasiSpeciesTreeOperator{
                 Node srcNode = qsTree.getNode(i);
                 Node destNode = qsTree.getNode(j);
                 if (!invalidSrcNode(srcNode) && !invalidDestNode(srcNode, destNode)
-                        && !(((QuasiSpeciesNode) srcNode).getContinuingHaploName() != ((QuasiSpeciesNode) srcNode).getHaploAboveName())
+                        && ((QuasiSpeciesNode) srcNode).getContinuingHaploName() == ((QuasiSpeciesNode) srcNode).getHaploAboveName()
                         )
                     count += 1;
                 srcNode = qsTree.getNode(j);
                 destNode = qsTree.getNode(i);
                 if (!invalidSrcNode(srcNode) && !invalidDestNode(srcNode, destNode)
-                        && !(((QuasiSpeciesNode) srcNode).getContinuingHaploName() != ((QuasiSpeciesNode) srcNode).getHaploAboveName())
+                        && ((QuasiSpeciesNode) srcNode).getContinuingHaploName() == ((QuasiSpeciesNode) srcNode).getHaploAboveName()
                         )
                     count += 1;
             }
