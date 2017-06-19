@@ -22,10 +22,6 @@ import java.util.ArrayList;
 @Citation("Boskova, V., Stadler, T., Quasispecies algorithm")
 public class BirthDeathSkylineQuasiSpeciesModel extends BirthDeathSkylineModel{
 
-//    final public Input<QuasiSpeciesTree> qsTreeInput = new Input<QuasiSpeciesTree>(
-//            "quasiSpeciesTree", "Quasi-Species tree over which to calculate a prior or likelihood",
-//            Input.Validate.REQUIRED);
-
     // Empty constructor as required:
     public BirthDeathSkylineQuasiSpeciesModel() { };
 
@@ -45,9 +41,7 @@ public class BirthDeathSkylineQuasiSpeciesModel extends BirthDeathSkylineModel{
      * @return negative infinity if tips are found at a time when rho is zero, zero otherwise.
      */
     @Override
-    public double computeN(TreeInterface tree) {
-
-//        double superReturn = super.computeN(tree);
+    protected double computeN(TreeInterface tree) {
 
         isRhoTip = new ArrayList<Boolean>(tree.getLeafNodeCount());
 
