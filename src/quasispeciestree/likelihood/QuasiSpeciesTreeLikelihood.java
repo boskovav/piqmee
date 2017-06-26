@@ -50,6 +50,8 @@ public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
     protected SubstitutionModel substitutionModel;
     protected SiteModel.Base siteModel;
     protected BranchRateModel.Base branchRateModel;
+    protected double[] branchLengths;
+    protected double[] storedBranchLengths;
     protected double[] patternLogLikelihoods;
     protected double[] rootPartials;
     protected double[] originPartials;
@@ -67,6 +69,8 @@ public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
      * Memory for substitution rates QS.
      */
     double[] rates;
+    double[] storedRates;
+    double[] tmpevectimesevals;
     /**
      * flag to indicate ascertainment correction should be applied *
      */
@@ -124,6 +128,8 @@ public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
         }
         // the entries corresponding to node number, store the branch length above the node
         // the entries corresponding to the node number + node count store the branch lengths above the QS origin, wherever this may be
+        branchLengths = new double[nodeCount+leafNodeCount];
+        storedBranchLengths = new double[nodeCount+leafNodeCount];
 
         int patterns = alignment.getPatternCount();
 //        if (nStates == 4) {
@@ -153,27 +159,39 @@ public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
         probabilities = new double[(nStates + 1) * (nStates + 1)];
         Arrays.fill(probabilities, 1.0);
 
+        rates = new double[nStates];
+        storedRates = new double [nStates];
+        tmpevectimesevals = new double[nStates * nStates];
+        getNoChangeRates(rates);
+
+        if (alignment.isAscertained) {
+            useAscertainedSitePatterns = true;
+        }
+    }
+
+    /**
+     * Get the transition rates for the QS branches,
+     * i.e. the rate of no change, i.e. the diagonal entries in the rate matix
+     *
+     * @param rates the matrix where the new rates should be stored
+     *
+     */
+    void getNoChangeRates(double[] rates) {
         EigenDecomposition eigenDecomposition = substitutionModel.getEigenDecomposition(null);
         double[] evec = eigenDecomposition.getEigenVectors();
         double[] eval = eigenDecomposition.getEigenValues();
         double[] ievc = eigenDecomposition.getInverseEigenVectors();
-        rates = new double[nStates];
-        double[] tmpevectimesevals = new double[nStates * nStates];
-        for (int i = 0; i < nStates; i++){
-            for (int j = 0; j < nStates; j++){
+        for (int i = 0; i < nStates; i++) {
+            for (int j = 0; j < nStates; j++) {
                 tmpevectimesevals[i * nStates + j] = evec[i * nStates + j] * eval[j];
             }
         }
-        for (int i = 0; i < nStates; i++){
+        for (int i = 0; i < nStates; i++) {
             rates[i] = 0;
-            for (int j = 0; j < nStates; j++){
+            for (int j = 0; j < nStates; j++) {
                 rates[i] += tmpevectimesevals[i * nStates + j] * ievc[j * nStates + i];
             }
-//            System.out.println(rates[i]);
-        }
-
-        if (alignment.isAscertained) {
-            useAscertainedSitePatterns = true;
+            //            System.out.println(rates[i]);
         }
     }
 
@@ -334,6 +352,9 @@ public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
 //        }
         final TreeInterface tree = treeInput.get();
 
+        if (siteModel.isDirtyCalculation())
+            getNoChangeRates(rates);
+
         try {
             if (traverse((QuasiSpeciesNode) tree.getRoot()) != QuasiSpeciesTree.IS_CLEAN)
                 calcLogP();
@@ -418,6 +439,8 @@ public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
             likelihoodCore.store();
         }
         super.store();
+        System.arraycopy(branchLengths, 0, storedBranchLengths, 0, branchLengths.length);
+        System.arraycopy(rates, 0, storedRates, 0, rates.length);
     }
 
     @Override
@@ -431,6 +454,12 @@ public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
             likelihoodCore.restore();
         }
         super.restore();
+        double[] tmp = branchLengths;
+        branchLengths = storedBranchLengths;
+        storedBranchLengths = tmp;
+        tmp = rates;
+        rates = storedRates;
+        storedRates = tmp;
     }
 
     /**
@@ -491,7 +520,8 @@ public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
         // First update the transition probability matrix(ices) for this branch
         // Update the transition probability for the branches that do not evolve
         // if the node is at tip, it holds the probability that the sequence does not change from the tip to the start of the haplo
-        if (node.isLeaf() && update != Tree.IS_CLEAN){
+        if (node.isLeaf() && (update != Tree.IS_CLEAN  || branchTime != branchLengths[nodeIndex])){
+            branchLengths[nodeIndex] = branchTime;
             likelihoodCore.setNodeMatrixForUpdate(nodeIndex);
             for (int i = 0; i < siteModel.getCategoryCount(); i++) {
                 final double jointBranchRate = siteModel.getRateForCategory(i, node) * branchRate;
@@ -505,7 +535,8 @@ public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
             update |= Tree.IS_DIRTY;
         }
         // Update the transition probability for the partial branches (internal node to QS start)
-        if (node.getHaploAboveName() != -1 && update != Tree.IS_CLEAN) {
+        if (node.getHaploAboveName() != -1 && (update != Tree.IS_CLEAN || partBranchTime != branchLengths[nodeCount + node.getHaploAboveName()])) {
+            branchLengths[nodeCount + node.getHaploAboveName()] = partBranchTime;
             final Node parent = node.getParent();
             likelihoodCore.setNodeMatrixForUpdate(nodeCount + node.getHaploAboveName());
             for (int i = 0; i < siteModel.getCategoryCount(); i++) {
@@ -520,7 +551,8 @@ public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
         }
         //Update the transition probability matrix(ices) for all other branches
         //if (!node.isRoot() && (update != Tree.IS_CLEAN || branchTime != m_StoredBranchLengths[nodeIndex])) {
-        else if (!node.isRoot() && ! node.isLeaf() && update != Tree.IS_CLEAN ) {
+        else if (!node.isRoot() && ! node.isLeaf() && (update != Tree.IS_CLEAN || branchTime != branchLengths[nodeIndex])) {
+            branchLengths[nodeIndex] = branchTime;
             final Node parent = node.getParent();
             likelihoodCore.setNodeMatrixForUpdate(nodeIndex);
             for (int i = 0; i < siteModel.getCategoryCount(); i++) {
@@ -531,7 +563,8 @@ public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
             update |= Tree.IS_DIRTY;
         }
         //Update the transition probability matrix(ices) for root-origin branch
-        else if (node.isRoot() && update != Tree.IS_CLEAN) {
+        else if (node.isRoot() && (update != Tree.IS_CLEAN || branchTime != branchLengths[nodeIndex])) {
+            branchLengths[nodeIndex] = branchTime;
             likelihoodCore.setNodeMatrixForUpdate(nodeIndex);
             for (int i = 0; i < siteModel.getCategoryCount(); i++) {
                 final double jointBranchRate = siteModel.getRateForCategory(i, node) * branchRate;
