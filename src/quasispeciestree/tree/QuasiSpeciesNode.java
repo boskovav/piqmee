@@ -440,6 +440,7 @@ public class QuasiSpeciesNode extends Node {
                 tmpint = tipTimesCountList[j];
                 tipTimesCountList[j] = tipTimesCountList[k];
                 tipTimesCountList[k] = tmpint;
+                j=k;
                 k--;
             }
         }
