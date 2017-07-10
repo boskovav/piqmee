@@ -985,7 +985,7 @@ public class QuasiSpeciesTree extends Tree {
                         QuasiSpeciesNode seenNode = qsTips.get(i);
                         // check if the time of the tip is less than the uniqueHaploTree tip
                         // if not, rewrite the info on the uniqueHaploTree tip
-                        if (node.getHeight() < seenNode.getHeight()) {
+                        if ( (node.getHeight() - seenNode.getHeight()) < -1e-10) {
                             seenNode.setHeight(node.getHeight());
                             seenNode.setID(String.valueOf(node.getID()));
                         }
@@ -1018,7 +1018,7 @@ public class QuasiSpeciesTree extends Tree {
                             boolean haploSeen = false;
                             for (int j = 0; j < tipTimesListTmp.length; j++) {
                                 // if yes, just increase the corresponding timecount array by one
-                                if (tipTimesListTmp[j] == node.getHeight()) {
+                                if ( Math.abs(tipTimesListTmp[j] - node.getHeight()) < 1e-10) {
                                     tipTimesCountListTmp[j] += 1;
                                     haploSeen = true;
                                     break;
@@ -1081,7 +1081,8 @@ public class QuasiSpeciesTree extends Tree {
             // Case 1:  there is more than one QS identical throw exception = this is not a QS tree
             // Case 2:  both arrays have exactly one same QS this means we found a duplicate and need to record this time
             //            into attachmentTimesList
-            // Case 3:  this is a real QS tree node where several haplotypes meet -- check if any of haplo has been seen already
+            // Case 3:  this is a fake internal node where several fake haplo meet -- this option is not implemented yet - throw error
+            // Case 4:  this is a real QS tree node where several haplotypes meet -- check if any of haplo has been seen already
             //            if it has, assign the internal node to the existing branch of that haplo
             ArrayList sameHaploLeftRight = new ArrayList();
             for (int i = 0; i < leftHaplo.size(); i++){
@@ -1147,6 +1148,12 @@ public class QuasiSpeciesTree extends Tree {
                 }
             }
             //case 3
+            if (leftFakeHaplo != -1 && rightFakeHaplo != -1 && collapseIdentical){
+                throw new IllegalArgumentException("The input tree is not recursively monophyletic and therefore" +
+                        " cannot be converted to a quasi-species tree. Try to input a" +
+                        " different tree. Alternatively, input sequences only.");
+            }
+            //case 4
             else {
                 haplotypesAtThisNode = leftHaplo;
                 haplotypesAtThisNode.addAll(haplotypesAtThisNode.size(),rightHaplo);
