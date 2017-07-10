@@ -63,8 +63,8 @@ public class BirthDeathSkylineQuasiSpeciesModel extends BirthDeathSkylineModel{
 
                 for (int k = 0; k < totalIntervals; k++) {
 
-                    if (Math.abs(((times[totalIntervals - 1] - times[k]) - tipTimes[index])/maxdate) < 1e-9 ||
-                            (maxdate == 0 && Math.abs((times[totalIntervals - 1] - times[k]) - tipTimes[index]) < 1e-9)) {
+                    if (Math.abs(((times[totalIntervals - 1] - times[k]) - tipTimes[index])/maxdate) < 1e-10 ||
+                            (maxdate == 0 && Math.abs((times[totalIntervals - 1] - times[k]) - tipTimes[index]) < 1e-10)) {
                         if (rho[k] == 0 && psi[k] == 0) {
                             return Double.NEGATIVE_INFINITY;
                         }
