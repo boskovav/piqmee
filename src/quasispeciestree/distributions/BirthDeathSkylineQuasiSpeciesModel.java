@@ -36,6 +36,42 @@ public class BirthDeathSkylineQuasiSpeciesModel extends BirthDeathSkylineModel{
 
     }
 
+    /**
+     * Factorial calculation for counting number of possible full topologies QS tree represents
+     *
+     * @param number the number to calculate the factorial of
+     */
+    public static long logfactorial(int number) {
+        long result = 0;
+
+        for (int factor = 2; factor <= number; factor++) {
+            result += Math.log(factor);
+        }
+
+        return result;
+    }
+
+    /**
+     * Get number of full topologies the QS tree represents between time m and m-1
+     *
+     * @param numberOfLineages the number of lineages at time m (closer to the present)
+     * @param coalCounter number of coalescent events between times m and m-1
+     */
+    public double logNumerOfTrees(int numberOfLineages, int coalCounter) {
+        double result = 0;
+
+        result  = logfactorial(numberOfLineages)
+                + logfactorial(numberOfLineages - 1)
+                - Math.log(2) * (numberOfLineages - 1)
+                - logfactorial(numberOfLineages - coalCounter)
+                - logfactorial(numberOfLineages - coalCounter - 1)
+                + Math.log(2) * (numberOfLineages - coalCounter - 1);
+
+        return result;
+    }
+
+
+
     /*
      * Adds the number of qs duplicates to the count of tips at each of the contemporaneous sampling times ("rho" sampling time)
      * @return negative infinity if tips are found at a time when rho is zero, zero otherwise.
@@ -123,23 +159,26 @@ public class BirthDeathSkylineQuasiSpeciesModel extends BirthDeathSkylineModel{
             if (node.getHeight() >= time) count -= 1;
             // node.getHeight() should be the same as the tipTimes[0]
             else {
-                // start at position 1, since position 0 is the "fake" start of the haplo
-                int position = 1;
+                // start at position attachTimes.length-1 and stop at 1, since position 0 is the "fake" start of the haplo
+                int position = attachTimes.length-1;
                 if (tipTimes[0] < time){
-                    for (int l = position; l < position + tipTimeCounts[0] - 1 ; l++){
+                    // first - 1 for if tree last tips, only 2 internal nodes
+                    // second - 1 for the correct stopping point if there are two internal nodes out of 10,
+                    //      corresponding to the last 3 tips go from 9 to 10
+                    for (int l = position - (tipTimeCounts[0] - 1 - 1); l <= position  ; l++){
                         if (attachTimes[l] > time) count += 1;
                         else break;
                     }
                 }
-                position += tipTimeCounts[0] - 1;
+                position -= (tipTimeCounts[0] - 1);
                 for (int j = 1; j < tipTimes.length; j++) {
                     if (tipTimes[j] < time){
-                        for (int l = position; l < position + tipTimeCounts[j]; l++){
+                        for (int l = position - (tipTimeCounts[j] - 1); l <= position; l++){
                             if (attachTimes[l] > time) count += 1;
                             else break;
                         }
-                    }
-                    position += tipTimeCounts[j];
+                    } else break;
+                    position -= tipTimeCounts[j];
                 }
             }
         }
@@ -171,23 +210,26 @@ public class BirthDeathSkylineQuasiSpeciesModel extends BirthDeathSkylineModel{
             if (node.getHeight() >= time) count -= 1;
                 // node.getHeight() should be the same as the tipTimes[0]
             else {
-                // start at position 1, since position 0 is the "fake" start of the haplo
-                int position = 1;
+                // start at position attachTimes.length-1 and stop at 1, since position 0 is the "fake" start of the haplo
+                int position = attachTimes.length-1;
                 if (tipTimes[0] < time){
-                    for (int l = position; l < position + tipTimeCounts[0] - 1 ; l++){
+                    // first - 1 for if tree last tips, only 2 internal nodes
+                    // second - 1 for the correct stopping point if there are two internal nodes out of 10,
+                    //      corresponding to the last 3 tips go from 9 to 10
+                    for (int l = position - (tipTimeCounts[0] - 1 - 1); l <= position  ; l++){
                         if (attachTimes[l] > time) count += 1;
                         else break;
                     }
                 }
-                position += tipTimeCounts[0] - 1;
+                position -= (tipTimeCounts[0] - 1);
                 for (int j = 1; j < tipTimes.length; j++) {
                     if (tipTimes[j] < time){
-                        for (int l = position; l < position + tipTimeCounts[j]; l++){
+                        for (int l = position - (tipTimeCounts[j] - 1); l <= position; l++){
                             if (attachTimes[l] > time) count += 1;
                             else break;
                         }
-                    }
-                    position += tipTimeCounts[j];
+                    } else break;
+                    position -= tipTimeCounts[j];
                 }
             }
             if (Math.abs(tree.getNode(i).getHeight() - time) < 1e-10) {
@@ -270,7 +312,7 @@ public class BirthDeathSkylineQuasiSpeciesModel extends BirthDeathSkylineModel{
 
 
         // first product term in f[T] over all non-QS transmission times (for the tips sampled through time and at times of parameter change)
-        // to start with, get array containing possible number branches the haplotype can start from
+        // to start with, get array containing possible number of branches the true node can start from
         for (int i = 0; i < tree.getInternalNodeCount(); i++) {
             QuasiSpeciesNode node = (QuasiSpeciesNode) tree.getNode(nTips + i);
             double x = times[totalIntervals - 1] - node.getHeight();
@@ -282,7 +324,7 @@ public class BirthDeathSkylineQuasiSpeciesModel extends BirthDeathSkylineModel{
                         " = " + temp + "; interval = " + i);
                 if (Double.isInfinite(logP))
                     return logP;
-                // term for the Quasi-Species tree likelihood calculation counting possible QS start branches (gamma)
+                // term for the Quasi-Species tree likelihood calculation counting possible start branches (gamma)
                 temp = node.getStartBranchCounts();
                 logP += Math.log(temp);
                 if (printTempResults) System.out.println("1st pwd" +
@@ -296,7 +338,14 @@ public class BirthDeathSkylineQuasiSpeciesModel extends BirthDeathSkylineModel{
         for (Node node : tree.getExternalNodes()){
             int nQSTemp = qsTree.getHaplotypeCounts(node);
             double[] QSTimesTemp = ((QuasiSpeciesNode) node).getAttachmentTimesList();
-            for (int j = 1; j < nQSTemp; j++ ){
+            double[] QSTipTimesTemp = ((QuasiSpeciesNode) node).getTipTimesList();
+            int[] QSTipCountsTemp = ((QuasiSpeciesNode) node).getTipTimesCountList();
+            // start the tipTime pointer at 1 not 0, since we look at how many lineages coalesced between generation 0 and 1
+            int tipTimeIndex = 1;
+            int coalCounter = 0;
+            int numberOfLineages = QSTipCountsTemp[0];
+            double logNumberOfTrees = 0;
+            for (int j = nQSTemp - 1; j > 0 ; j-- ){
                 double x = times[totalIntervals - 1] - QSTimesTemp[j];
                 index = index(x);
                 // term for the Quasi-Species tree likelihood calculation counting possible attachment branches
@@ -309,10 +358,32 @@ public class BirthDeathSkylineQuasiSpeciesModel extends BirthDeathSkylineModel{
                 temp = Math.log(birth[index]) + log_q(index, times[index], x);
                 logP += temp;
                 if (printTempResults) System.out.println("1st pwd" +
-                        " = " + temp + "; QSinterval & QS attachment branches = " + node.getID() + " " +j);
+                        " = " + temp + "; QSinterval & QS attachment branches = " + node.getID() + " " + j);
                 if (Double.isInfinite(logP))
                     return logP;
+
+                // plus extra term for quasispecies model accounting for the fact that QS tree may represent several full trees
+                if (tipTimeIndex >= QSTipTimesTemp.length){
+                    coalCounter += 1;
+                    if (j == 1 && coalCounter > 0)
+                        logNumberOfTrees += logNumerOfTrees(numberOfLineages,coalCounter);
+                }
+                else if (QSTimesTemp[j] <= QSTipTimesTemp[tipTimeIndex]) {
+                    coalCounter += 1;
+                }
+                else {
+                    if (coalCounter > 0)
+                        logNumberOfTrees += logNumerOfTrees(numberOfLineages,coalCounter);
+                    numberOfLineages += QSTipCountsTemp[tipTimeIndex] - coalCounter;
+                    tipTimeIndex += 1;
+                    // one coal time is already above the limit of the next sampling time... so coalCounter is now set to 1
+                    coalCounter = 1;
+                }
             }
+
+            logP += logNumberOfTrees;
+            if (Double.isInfinite(logP))
+                return logP;
         }
 
         // middle product term in f[T]
