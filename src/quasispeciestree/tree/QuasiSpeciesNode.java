@@ -12,15 +12,6 @@ import java.util.Arrays;
 @Description("A node in a quasi-species phylogenetic tree.")
 public class QuasiSpeciesNode extends Node {
 
-    @Override
-    public void initAndValidate(){
-
-        super.initAndValidate();
-
-        if (isLeaf()) setContinuingHaploName(this.getNr());
-
-    }
-
     private int haploAboveName = -1;
     private int continuingHaploName = -1;
     private int startBranchCounts = 1;
@@ -33,6 +24,23 @@ public class QuasiSpeciesNode extends Node {
     // same order as tipTimesList count in tipTimesCountList[0] includes the real tip
     private int[] tipTimesCountList;
     private int parentHaplo = -1;
+
+    @Override
+    public void initAndValidate(){
+
+        super.initAndValidate();
+
+        if (isLeaf()) setContinuingHaploName(this.getNr());
+//        if (attachmentTimesList.length > 1){
+//
+//        }
+
+    }
+    //
+    //    public QuasiSpeciesNode() {
+    //        super.initAndValidate();
+    //    }
+    //
 
     /**
      * Obtain the quasi-species type/name, if any, starting on the branch above this node.
@@ -194,6 +202,7 @@ public class QuasiSpeciesNode extends Node {
      *
      * @param scale scale factor
      */
+    @Override
     public void scale(final double scale) {
         startEditing();
         this.makeDirty(QuasiSpeciesTree.IS_DIRTY);
@@ -226,16 +235,16 @@ public class QuasiSpeciesNode extends Node {
                     // get also tip times to help define valid scalings
                     double[] temptiptimes = this.getTipTimesList();
                     int[] temptiptimescount = this.getTipTimesCountList();
-                    if (tempqstimes[tempqstimes.length-1] < this.getHeight())
+                    if (tempqstimes[tempqstimes.length-1] <= this.getHeight())
                         throw new IllegalArgumentException("Scale gives negative branch length");
                     // check also if branching times corresponding to samples through time are also above the respective time
                     int currentPosition = tempqstimes.length-1-(temptiptimescount[0]-1);
                     for (int i = 1; i < temptiptimes.length; i++){
-                        if (tempqstimes[currentPosition] < temptiptimes[i])
-                            throw new IllegalArgumentException("Scale gives negative branch length");
+                        if (tempqstimes[currentPosition] <= temptiptimes[i])
+                            throw new IllegalArgumentException("Scale gives zero/negative branch length");
                         currentPosition -= temptiptimescount[i];
                     }
-                    if (tempqstimes.length > 1 && tempqstimes[0] < this.getHeight()){
+                    if (tempqstimes.length > 1 && tempqstimes[0] <= this.getHeight()){
                         throw new IllegalStateException("problem in QuasiSpeciesTreeScale: you did not really scale the QS start apparently");
                     }
             }
@@ -285,7 +294,7 @@ public class QuasiSpeciesNode extends Node {
                 }
             }
             // deduct the duplicates that stop (sampling through time) before this node attaches
-            for (int i = 0; i < tipTimesList.length; i++){
+            for (int i = tipTimesList.length - 1; i >= 0  ; i--){
                 if (haploseqage <= tipTimesList[i])
                     abcount -= tipTimesCountList[i];
                     // the times are ordered from largest to smallest so stop when a smaller time than haploseqage is encountered
@@ -362,8 +371,13 @@ public class QuasiSpeciesNode extends Node {
         Arrays.sort(attachmentTimesList);
         // copy the largest bifurcation time, to indicate the haplo start time
         attachmentTimesList[0] = attachmentTimesList[attachmentTimesList.length - 1];
+        //it is though possible there is no duplicate, correctly set the attachmentTimes[0] to nodeHeight
+        if (attachmentTimesList.length == 1){
+            attachmentTimesList[0] = this.getHeight();
+        }
         // reverse the array to start with the largest value
-        sortAttachTimeList();
+        else
+            sortAttachTimeList();
     }
 
     /**
