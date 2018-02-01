@@ -1109,9 +1109,10 @@ public class QuasiSpeciesTree extends Tree {
                         break;
                     }
                 }
+                // set the next entry in the attach time array to the currently processed internal node height
                 double[] attachmentTimesListTmp = tip.getAttachmentTimesList();
                 for (int i = 0; i < attachmentTimesListTmp.length; i++) {
-                    if (attachmentTimesListTmp[i]==0) {
+                    if (attachmentTimesListTmp[i] == 0) {
                         attachmentTimesListTmp[i] = node.getHeight();
                         break;
                     }
@@ -1148,7 +1149,7 @@ public class QuasiSpeciesTree extends Tree {
                 }
             }
             //case 3
-            if (leftFakeHaplo != -1 && rightFakeHaplo != -1 && collapseIdentical){
+            else if (leftFakeHaplo != -1 && rightFakeHaplo != -1 && collapseIdentical){
                 throw new IllegalArgumentException("The input tree is not recursively monophyletic and therefore" +
                         " cannot be converted to a quasi-species tree. Try to input a" +
                         " different tree. Alternatively, input sequences only.");
