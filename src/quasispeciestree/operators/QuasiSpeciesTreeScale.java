@@ -5,8 +5,9 @@ import beast.core.Input;
 import beast.core.parameter.BooleanParameter;
 import beast.core.parameter.RealParameter;
 import beast.evolution.tree.Node;
-import beast.util.Randomizer;
 import quasispeciestree.tree.QuasiSpeciesNode;
+import quasispeciestree.util.RandomGenerator;
+import quasispeciestree.util.BeastRandomGenerator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,6 +48,16 @@ public class QuasiSpeciesTreeScale extends QuasiSpeciesTreeOperator{
             "scale root of a tree only, ignored if tree is not specified (default false)", false);
 
     boolean indicatorsUsed, indicatorsInverseUsed;
+
+    private RandomGenerator random;
+
+    public QuasiSpeciesTreeScale() {
+        this(new BeastRandomGenerator());
+    }
+
+    public QuasiSpeciesTreeScale(RandomGenerator random) {
+        this.random = random;
+    }
 
     @Override
     public void initAndValidate() {
@@ -92,6 +103,11 @@ public class QuasiSpeciesTreeScale extends QuasiSpeciesTreeOperator{
             indicatorsInverseUsed = true;
         } else
             indicatorsInverseUsed = false;
+
+        if (scaleFactorInput.get() == null) {
+            throw new IllegalArgumentException("You need to input valid scaleFactorInput value." +
+            "It is set to null at the moment");
+        }
     }
 
     @Override
@@ -100,7 +116,7 @@ public class QuasiSpeciesTreeScale extends QuasiSpeciesTreeOperator{
         try {
 
             // Choose scale factor:
-            double u = Randomizer.nextDouble();
+            double u = random.getNext();
             double f = u * scaleFactorInput.get() + (1.0 - u) / scaleFactorInput.get();
 
             // Keep track of Hastings ratio:
@@ -115,7 +131,7 @@ public class QuasiSpeciesTreeScale extends QuasiSpeciesTreeOperator{
                 final double newHeight = oldHeight * f;
                 logHastingsRatio -= logf;
 
-                if (newHeight < Math.max(root.getLeft().getHeight(), root.getRight().getHeight())) {
+                if (newHeight <= Math.max(root.getLeft().getHeight(), root.getRight().getHeight())) {
                     return Double.NEGATIVE_INFINITY;
                 }
 
@@ -154,10 +170,16 @@ public class QuasiSpeciesTreeScale extends QuasiSpeciesTreeOperator{
                     if (newHeight < lefttemqstimes[0]) {
                         leftabove = true;
                     }
+                    else if (newHeight == lefttemqstimes[0]){
+                        return Double.NEGATIVE_INFINITY;
+                    }
                 } else if (haploleft != -1) {
                     lefttemqstimes = ((QuasiSpeciesNode) qsTree.getNode(haploleft)).getAttachmentTimesList();
                     if (newHeight < lefttemqstimes[0]) {
                         leftabove = true;
+                    }
+                    else if (newHeight == lefttemqstimes[0]){
+                        return Double.NEGATIVE_INFINITY;
                     }
                 }
                 if (haplo != -1 && haplo == right.getContinuingHaploName()) {
@@ -165,10 +187,16 @@ public class QuasiSpeciesTreeScale extends QuasiSpeciesTreeOperator{
                     if (newHeight < righttemqstimes[0]) {
                         rightabove = true;
                     }
+                    else if (newHeight == righttemqstimes[0]){
+                        return Double.NEGATIVE_INFINITY;
+                    }
                 } else if (haploright != -1) {
                     righttemqstimes = ((QuasiSpeciesNode) qsTree.getNode(haploright)).getAttachmentTimesList();
                     if (newHeight < righttemqstimes[0]) {
                         rightabove = true;
+                    }
+                    else if (newHeight == righttemqstimes[0]){
+                        return Double.NEGATIVE_INFINITY;
                     }
                 }
                 // if both haplo are above the new height, reject the move
