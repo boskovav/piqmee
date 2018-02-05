@@ -222,7 +222,7 @@ public class QuasiSpeciesNode extends Node {
         // Scale haplotype attachment times
         else {
             double[] tempqstimes = this.getAttachmentTimesList().clone();
-            for (int i = 0; i < tempqstimes.length; i++) {
+            for (int i = 1; i < tempqstimes.length; i++) {
                 tempqstimes[i] = tempqstimes[i] * scale;
             }
             if (tempqstimes.length > 1)
@@ -231,22 +231,19 @@ public class QuasiSpeciesNode extends Node {
                 tempqstimes[0] = this.getHeight();
             this.setAttachmentTimesList(tempqstimes);
             // Reject invalid tree scalings:
-            if (scale < 1.0) {
-                    // get also tip times to help define valid scalings
-                    double[] temptiptimes = this.getTipTimesList();
-                    int[] temptiptimescount = this.getTipTimesCountList();
-                    if (tempqstimes[tempqstimes.length-1] <= this.getHeight())
-                        throw new IllegalArgumentException("Scale gives negative branch length");
-                    // check also if branching times corresponding to samples through time are also above the respective time
-                    int currentPosition = tempqstimes.length-1-(temptiptimescount[0]-1);
-                    for (int i = 1; i < temptiptimes.length; i++){
-                        if (tempqstimes[currentPosition] <= temptiptimes[i])
-                            throw new IllegalArgumentException("Scale gives zero/negative branch length");
-                        currentPosition -= temptiptimescount[i];
-                    }
-                    if (tempqstimes.length > 1 && tempqstimes[0] <= this.getHeight()){
-                        throw new IllegalStateException("problem in QuasiSpeciesTreeScale: you did not really scale the QS start apparently");
-                    }
+            if (scale < 1.0 & tempqstimes.length > 1) {
+                // get also tip times to help define valid scalings
+                double[] temptiptimes = this.getTipTimesList();
+                int[] temptiptimescount = this.getTipTimesCountList();
+                if (tempqstimes[tempqstimes.length-1] <= this.getHeight())
+                    throw new IllegalArgumentException("Scale gives negative branch length");
+                // check also if branching times corresponding to samples through time are also above the respective time
+                int currentPosition = tempqstimes.length - 1 - (temptiptimescount[0] - 1);
+                for (int i = 1; i < temptiptimes.length; i++) {
+                    if (tempqstimes[currentPosition] <= temptiptimes[i])
+                        throw new IllegalArgumentException("Scale gives zero/negative branch length");
+                    currentPosition -= temptiptimescount[i];
+                }
             }
         }
     }
