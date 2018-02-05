@@ -41,8 +41,8 @@ public class BirthDeathSkylineQuasiSpeciesModel extends BirthDeathSkylineModel{
      *
      * @param number the number to calculate the factorial of
      */
-    public static long logfactorial(int number) {
-        long result = 0;
+    public static double logfactorial(int number) {
+        double result = 0;
 
         for (int factor = 2; factor <= number; factor++) {
             result += Math.log(factor);
@@ -57,7 +57,7 @@ public class BirthDeathSkylineQuasiSpeciesModel extends BirthDeathSkylineModel{
      * @param numberOfLineages the number of lineages at time m (closer to the present)
      * @param coalCounter number of coalescent events between times m and m-1
      */
-    public double logNumerOfTrees(int numberOfLineages, int coalCounter) {
+    public double logNumberOfTrees(int numberOfLineages, int coalCounter) {
         double result = 0;
 
         result  = logfactorial(numberOfLineages)
@@ -72,7 +72,7 @@ public class BirthDeathSkylineQuasiSpeciesModel extends BirthDeathSkylineModel{
 
 
 
-    /*
+    /**
      * Adds the number of qs duplicates to the count of tips at each of the contemporaneous sampling times ("rho" sampling time)
      * @return negative infinity if tips are found at a time when rho is zero, zero otherwise.
      */
@@ -366,14 +366,14 @@ public class BirthDeathSkylineQuasiSpeciesModel extends BirthDeathSkylineModel{
                 if (tipTimeIndex >= QSTipTimesTemp.length){
                     coalCounter += 1;
                     if (j == 1 && coalCounter > 0)
-                        logNumberOfTrees += logNumerOfTrees(numberOfLineages,coalCounter);
+                        logNumberOfTrees += logNumberOfTrees(numberOfLineages,coalCounter);
                 }
                 else if (QSTimesTemp[j] <= QSTipTimesTemp[tipTimeIndex]) {
                     coalCounter += 1;
                 }
                 else {
                     if (coalCounter > 0)
-                        logNumberOfTrees += logNumerOfTrees(numberOfLineages,coalCounter);
+                        logNumberOfTrees += logNumberOfTrees(numberOfLineages,coalCounter);
                     numberOfLineages += QSTipCountsTemp[tipTimeIndex] - coalCounter;
                     tipTimeIndex += 1;
                     // one coal time is already above the limit of the next sampling time... so coalCounter is now set to 1
