@@ -110,122 +110,48 @@ public class QuasiSpeciesRateStatistic extends RateStatistic {
             // contribution from the real internal nodes only
             for (int i = nrOfLeafs; i < n; i++) {
                 final QuasiSpeciesNode child = (QuasiSpeciesNode) nodes[i];
-                //orig-root branch has rate 1 --- defined in the relaxed clock models
+                //orig-root branch has rate 1 --- defined in the relaxed clock models --- so do not include here
                 if (!child.isRoot()) {
                     double parentHeight = child.getParent().getHeight();
                     int haploAboveChild = child.getHaploAboveName();
                     int haploContChild = child.getContinuingHaploName();
+                    double rate = branchRateModel.getRateForBranch(child);
                     // Case 1: branch can be free - i.e. no haplo passing, branch has its rate
                     if (haploContChild == -1) {
-                        branchLengths[k] = parentHeight - child.getHeight();
+                        branchLengths[l] = parentHeight - child.getHeight();
+                        ratesForBranchLengths[l] = rate;
+                        rates[k] = rate;
+                        l++;
                     }
                     // Case 2: it can be that a haplo starts above this node, in that case
                     //          only the partial branch has the branch's rate
                     else if (haploAboveChild != -1) {
-                        branchLengths[k] = parentHeight - ((QuasiSpeciesNode) tree.getNode(haploAboveChild)).getAttachmentTimesList()[0];
-                    }
-                    rates[k] = branchRateModel.getRateForBranch(child);
-                    k++;
-                    // Case 3: it can be that a haplo passes this branch, in that case the rate is the same as for the
-                    //          corresponding tip branch rate -- treated separately below
-                }
-            }
-            // contribution from the "internal nodes" of the QS subtree only
-            for (int i = 0; i < nrOfLeafs; i++){
-                final QuasiSpeciesNode child = (QuasiSpeciesNode) nodes[i];
-                Node parent = child.getParent();
-
-                int haploAboveChild = child.getHaploAboveName();
-                double[] attachTimes = child.getAttachmentTimesList();
-                int attachTimeArrayLength = attachTimes.length;
-
-                double rate = branchRateModel.getRateForBranch(child);
-                if (attachTimeArrayLength > 1) {
-                    // take care of internal branches that are partial branches above the tip
-                    if (haploAboveChild != -1) {
-                        branchLengths[k] = parent.getHeight() - attachTimes[0];
+                        branchLengths[l] = parentHeight - ((QuasiSpeciesNode) tree.getNode(haploAboveChild)).getAttachmentTimesList()[0];
+                        ratesForBranchLengths[l] = rate;
                         rates[k] = rate;
-                        k++;
+                        l++;
                     }
-                    // else taken care of above
-
-                    // for each internal branch of the QS subtree
-                    // first and any next attach time can be above the parent/grandparent/... already
-                    // so check which is the first node below the current attach time
-                    int position = attachTimeArrayLength - 1;
-                    for (int q = position; q > 1; q--) {
-                        if (attachTimes[position] > parent.getHeight()) {
-                            while (attachTimes[position] > parent.getHeight()) {
-                                // is it also above the grandparent?
-                                if (!parent.isRoot()) {
-                                    if (attachTimes[position] > parent.getParent().getHeight()) {
-                                        branchLengths[k] = parent.getParent().getHeight() - parent.getHeight();
-                                        rates[k] = rate;
-                                        k++;
-                                        parent = parent.getParent();
-                                    }
-                                } else {
-                                    for (int o = position; o > 1; o--) {
-                                        branchLengths[k] = attachTimes[o - 1] - attachTimes[o];
-                                        rates[k] = rate;
-                                        k++;
-                                    }
-                                }
-                            }
-                        }
-                        else {
-                            parent = parent.getParent();
-                        }
-                    }
-                    // now check for the rest of attach times
+                    // Case 3: it can be that a haplo passes this branch, in that case the rate is the same as for the
+                    //          corresponding tip branch rate
                     else {
-                        for (int q = position; q > 1; q--) {
-                            // watch our for the origin
-                            if (parent.getHeight() > attachTimes[q]) {
-                                branchLengths[k] = attachTimes[q] - parent.getHeight();
-                                rates[k] = rate;
-                                k++;
-                            } else if ()
-
-                                rates[k] = rate;
-
-
-                            branchLengths[k] = attachTimes[q] - height;
-                            rates[k] = rate;
-                            k++;
-                        }
-                    else{
-                            branchLengths[k] = parent.getHeight() - child.getHeight();
-                            rates[k] = branchRateModel.getRateForBranch(child);
-                            k++;
-                        }
-
-
-                    else{
-                            double height = child.getHeight();
-                            branchLengths[k] = attachTimes[attachTimeArrayLength - 1] - height;
-                            rates[k] = rate;
-                            k++;
-                            for (int q = 1; q < attachTimeArrayLength; q++) {
-                                branchLengths[k] = attachTimes[q] - height;
-                                rates[k] = rate;
-                                k++;
-                            }
-                        }
+                        rates[k] = branchRateModel.getRateForBranch(tree.getNode(haploContChild));
                     }
+                    k++;
                 }
             }
         }
 
-        // from here as in original RateStatistic class //
         final double[] values = new double[3];
         double totalWeightedRate = 0.0;
         double totalTreeLength = 0.0;
 
-        for (int i = 0; i < rates.length; i++) {
-
-            totalWeightedRate += rates[i] * branchLengths[i];
+        for (int i = 0; i < rates.length ; i++) {
+            totalWeightedRate += ratesForBranchLengths[i] * branchLengths[i];
             totalTreeLength += branchLengths[i];
+        }
+        for (int i = 0; i < internalQSBranchLengths.length ; i++) {
+            totalWeightedRate += internalQSBranchRates[i] * internalQSBranchLengths[i];
+            totalTreeLength += internalQSBranchLengths[i];
         }
 
         // from here as in original RateStatistic class //
