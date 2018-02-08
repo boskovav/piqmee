@@ -3,6 +3,7 @@ package quasispeciestree.tree;
 import beast.core.Input;
 import beast.core.StateNode;
 import beast.core.StateNodeInitialiser;
+import beast.core.parameter.RealParameter;
 import beast.evolution.alignment.Alignment;
 import beast.evolution.alignment.distance.Distance;
 import beast.evolution.tree.Node;
@@ -27,9 +28,6 @@ public class QuasiSpeciesTree extends Tree {
     public Input<TraitSet> haplotypeCountsInput =
             new Input<TraitSet>("haplotypeCounts","Count of sequences for each haplotype (including the one representative of each haplotype in the tree input)",
             Input.Validate.REQUIRED);
-    public Input<Double> originInput = new Input<>(
-        "origin", "The time from origin to last sample (must be larger than tree height)",
-        Input.Validate.REQUIRED);
 
 
     private Map<String,Integer> haplotypeCounts;
@@ -163,7 +161,7 @@ public class QuasiSpeciesTree extends Tree {
                 // or there is just one sequence possibly sampled through time
                 else
 //                    initAttachmentTimesHelper(tempqstimes,temptiptimes,temptiptimescount,originInput.get().getValue(),attachmentTimesListOld);
-                    initAttachmentTimesHelper(tempqstimes,temptiptimes,temptiptimescount,originInput.get(),attachmentTimesListOld);
+                    initAttachmentTimesHelper(tempqstimes,temptiptimes,temptiptimescount,attachmentTimesListOld[0],attachmentTimesListOld);
 
                 Arrays.sort(tempqstimes);
                 tempqstimes[0] = tempqstimes[tempqstimes.length-1];
@@ -832,7 +830,7 @@ public class QuasiSpeciesTree extends Tree {
      *
      * @param uniqueHaploTree
      */
-    public void initFromUniqueHaploTree(Tree uniqueHaploTree, Alignment data, boolean collapseIdentical){
+    public void initFromUniqueHaploTree(Tree uniqueHaploTree, Alignment data, boolean collapseIdentical, TraitSet haplotypeCountsTrait){
 
         // In unique haplo tree, there can still be duplicate sequences, if found at different points in time
         // Get the distances for the sequences:
@@ -844,7 +842,7 @@ public class QuasiSpeciesTree extends Tree {
         List<QuasiSpeciesNode> qsInternalNodes = new ArrayList<>();
 
         // set haplo count to those found in input for uniqueHaploTree
-        setHaploCounts(haplotypeCountsInput.get(),uniqueHaploTree);
+        setHaploCounts(haplotypeCountsTrait,uniqueHaploTree);
 
         ArrayList result = processNextNodeOfFullNewickTree(
                 uniqueHaploTree.getRoot(),qsTips,qsInternalNodes,distanceMatrix,haplotypesSeen,collapseIdentical);

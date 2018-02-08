@@ -26,6 +26,13 @@ public class QuasiSpeciesTreeFromNewick extends QuasiSpeciesTree implements Stat
             "Should nodes that have identical sequences be collapsed to one haplotype? " +
                     "Default true.", true);
 
+    public QuasiSpeciesTreeFromNewick() {
+
+        // When specifying the input tree with full newick tree, we do not allow for duplicate counts input on the top.
+        haplotypeCountsInput.setRule(Input.Validate.REQUIRED);
+
+    }
+
     @Override
     public void initAndValidate(){
         super.initAndValidate();
@@ -39,7 +46,7 @@ public class QuasiSpeciesTreeFromNewick extends QuasiSpeciesTree implements Stat
         if (dataInput.get() == null)
             throw new RuntimeException("The data input needs to be specified");
 
-        initFromUniqueHaploTree(inputTree, dataInput.get(),collapseIdenticalSequencesInput.get());
+        initFromUniqueHaploTree(inputTree, dataInput.get(),collapseIdenticalSequencesInput.get(),haplotypeCountsInput.get());
     }
 
     @Override
