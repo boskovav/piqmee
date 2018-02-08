@@ -300,7 +300,7 @@ public class QuasiSpeciesNode extends Node {
             }
             if(abcount==0){
                 throw new RuntimeException("There is an error in counting the number of attachment points." +
-                        " Please contact the developers with this error: QuasiSpeciesHaplo # 445");
+                        " Please contact the developers with this error: QuasiSpeciesNode # 303");
             }
         }
         return abcount;
@@ -329,7 +329,7 @@ public class QuasiSpeciesNode extends Node {
         double totalTime=0.0;
         int currentTipTimePosition = 0;
         int currentTipArrayPosition = 0;
-        for (int i=0; i<attachmentTimesList.length; i++){
+        for (int i=attachmentTimesList.length-1; i>=0; i--){
             totalTime += attachmentTimesList[i] - tipTimesList[currentTipTimePosition];
             currentTipArrayPosition++;
             if (currentTipArrayPosition == tipTimesCountList[currentTipTimePosition]) {
