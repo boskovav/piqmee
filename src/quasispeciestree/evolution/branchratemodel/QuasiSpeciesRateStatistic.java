@@ -24,15 +24,28 @@ public class QuasiSpeciesRateStatistic extends RateStatistic {
     final static int COEFFICIENT_OF_VARIATION = 2;
 
     // Empty constructor as required:
-    public QuasiSpeciesRateStatistic() { };
+//    public QuasiSpeciesRateStatistic() { };
+
+    @Override
+    public void initAndValidate() {
+        tree = (QuasiSpeciesTree) treeInput.get();
+        branchRateModel = branchRateModelInput.get();
+        if (branchRateModel == null) {
+            branchRateModel = likelihoodInput.get().branchRateModelInput.get();
+        }
+        this.internal = internalInput.get();
+        this.external = externalInput.get();
+    }
+
+
 
     /**
      * calculate the three statistics from scratch *
      */
     @Override
     public double[] calcValues() {
-        // literal copy from RateStatistic besides lines TODO & TODO //
         int length = 0;
+        int lengthBL = 0;
         int offset = 0;
         int offsetForBranchLengthsAndRates = 0;
 
@@ -42,20 +55,23 @@ public class QuasiSpeciesRateStatistic extends RateStatistic {
 
         if (external) {
             length += nrOfLeafsAndQSDupl;
+            lengthBL += nrOfLeafs;
         }
         if (internal) {
             length += tree.getInternalNodeCount() - 1 + nrOfQSDupl;
+            lengthBL += tree.getInternalNodeCount() - 1;
         }
 
         // these are the rates for each branch as in the full tree when reconstructed from the QS tree
         final double[] rates = new double[length];
-        // these are the rates for each branch length, where branch length for the tip is the total
-        //  branch length spanned by the haplotype
-        final double[] ratesForBranchLengths = new double[length];
+        // for internal QS branches and lengths...need to split from external QS branch lengths
         final double[] internalQSBranchLengths = new double[nrOfLeafs];
         final double[] internalQSBranchRates = new double[nrOfLeafs];
+        // these are the rates for each branch length, where branch length for the tip is the total
+        //  branch length spanned by the haplotype (minus the internal QS branch lengths -- in internalQSBranchLengths)
+        final double[] ratesForBranchLengths = new double[lengthBL];
         // need those only for mean
-        final double[] branchLengths = new double[length];
+        final double[] branchLengths = new double[lengthBL];
 
         final Node[] nodes = tree.getNodesAsArray();
 
@@ -74,12 +90,13 @@ public class QuasiSpeciesRateStatistic extends RateStatistic {
                 // it can be that there are no duplicates, so the branch is from the child to the parent
                 if (haploAboveChild != -1 && attachTimeArrayLength == 1) {
                     branchLengths[i] = parent.getHeight() - child.getHeight();
-                    rates[i] = rate;
+                    rates[k] = rate;
+                    k++;
                 }
                 // and now for each "external branch" from QS duplicates
                 else {
                     double[] tipTimes = child.getTipTimesList();
-                    branchLengths[i] = child.getTotalBranchLengths() - attachTimes[0] - tipTimes[0];
+                    branchLengths[i] = child.getTotalBranchLengths() - (attachTimes[0] - tipTimes[0]);
 
                     // the first external branch can be till the real internal node or till the next attachment time
                     if (parent.getHeight() > attachTimes[attachTimeArrayLength - 1]) {
@@ -91,6 +108,7 @@ public class QuasiSpeciesRateStatistic extends RateStatistic {
                         internalQSBranchLengths[i] = attachTimes[0] - parent.getHeight();
                     }
                     internalQSBranchRates[i] = rate;
+                    // for each branch of the haplotype add contribution to rates array (also for 0 - first = "true" branch)
                     for (int q = 0; q < attachTimeArrayLength; q++) {
                         rates[k + q] = rate;
                     }
@@ -107,6 +125,27 @@ public class QuasiSpeciesRateStatistic extends RateStatistic {
             final int n = tree.getNodeCount();
             int k = offset;
             int l = offsetForBranchLengthsAndRates;
+            // contribution from the internal QS branches
+            for (int i = 0; i < nrOfLeafs; i++){
+                final QuasiSpeciesNode child = (QuasiSpeciesNode) nodes[i];
+                double rate = branchRateModel.getRateForBranch(child);
+                double[] attachTimes = child.getAttachmentTimesList();
+                int attachTimeArrayLength = attachTimes.length;
+                // check if the partial branch is above the tip
+                //      (else above another internal node --- treated in internal node loop)
+                if (attachTimeArrayLength > 1){
+                   if (attachTimes[0] < child.getParent().getHeight()){
+                        rates[k] = rate;
+                        k++;
+                    }
+                    // this is for the QS duplicate branches and respective internal QS branches
+                    for (int q = 0; q < attachTimeArrayLength - 2; q++) {
+                        rates[k + q] = rate;
+                    }
+                    k += attachTimeArrayLength - 2;
+                }
+            }
+
             // contribution from the real internal nodes only
             for (int i = nrOfLeafs; i < n; i++) {
                 final QuasiSpeciesNode child = (QuasiSpeciesNode) nodes[i];
@@ -145,7 +184,7 @@ public class QuasiSpeciesRateStatistic extends RateStatistic {
         double totalWeightedRate = 0.0;
         double totalTreeLength = 0.0;
 
-        for (int i = 0; i < rates.length ; i++) {
+        for (int i = 0; i < ratesForBranchLengths.length ; i++) {
             totalWeightedRate += ratesForBranchLengths[i] * branchLengths[i];
             totalTreeLength += branchLengths[i];
         }
