@@ -31,6 +31,14 @@ public class BirthDeathSkylineQuasiSpeciesModel extends BirthDeathSkylineModel{
     public void initAndValidate() {
         super.initAndValidate();
 
+        isRhoTip = new ArrayList<Boolean>(treeInput.get().getLeafNodeCount());
+        for (int i = 0; i < treeInput.get().getLeafNodeCount(); i++){
+            QuasiSpeciesNode node = (QuasiSpeciesNode) treeInput.get().getNode(i);
+            double[] tipTimes = node.getTipTimesList();
+            boolean[] isRhoTipArray = new boolean[tipTimes.length];
+            isRhoTip.add(i,isRhoTipArray);
+        }
+
         if(SAModel || r!=null)
             throw new IllegalArgumentException("The sampled ancestor model has not been implemented to work with quasispecies model yet");
 
