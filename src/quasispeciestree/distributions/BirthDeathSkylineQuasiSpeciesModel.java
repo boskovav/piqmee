@@ -160,13 +160,13 @@ public class BirthDeathSkylineQuasiSpeciesModel extends BirthDeathSkylineModel{
 
         for (int i = 0; i < tipCount; i++) {
             QuasiSpeciesNode node = (QuasiSpeciesNode) tree.getNode(i);
-            double[] attachTimes = node.getAttachmentTimesList();
-            double[] tipTimes = node.getTipTimesList();
-            int[] tipTimeCounts = node.getTipTimesCountList();
 
             if (node.getHeight() >= time) count -= 1;
             // node.getHeight() should be the same as the tipTimes[0]
             else {
+                double[] attachTimes = node.getAttachmentTimesList();
+                double[] tipTimes = node.getTipTimesList();
+                int[] tipTimeCounts = node.getTipTimesCountList();
                 // start at position attachTimes.length-1 and stop at 1, since position 0 is the "fake" start of the haplo
                 int position = attachTimes.length-1;
                 if (tipTimes[0] < time){
@@ -211,13 +211,13 @@ public class BirthDeathSkylineQuasiSpeciesModel extends BirthDeathSkylineModel{
 
         for (int i = 0; i < tipCount; i++) {
             QuasiSpeciesNode node = (QuasiSpeciesNode) tree.getNode(i);
-            double[] attachTimes = node.getAttachmentTimesList();
-            double[] tipTimes = node.getTipTimesList();
-            int[] tipTimeCounts = node.getTipTimesCountList();
 
             if (node.getHeight() >= time) count -= 1;
                 // node.getHeight() should be the same as the tipTimes[0]
             else {
+                double[] attachTimes = node.getAttachmentTimesList();
+                double[] tipTimes = node.getTipTimesList();
+                int[] tipTimeCounts = node.getTipTimesCountList();
                 // start at position attachTimes.length-1 and stop at 1, since position 0 is the "fake" start of the haplo
                 int position = attachTimes.length-1;
                 if (tipTimes[0] < time){
