@@ -1332,6 +1332,7 @@ public class QuasiSpeciesTree extends Tree {
     @Override
     public int scale(final double scale) {
         ((QuasiSpeciesNode) root).scale(scale);
+        this.countAndSetPossibleStartBranches();
         return getInternalNodeCount() + getTotalAttachmentCounts() - getDirectAncestorNodeCount();
     }
 
