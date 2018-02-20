@@ -347,51 +347,33 @@ public class BirthDeathSkylineQuasiSpeciesModel extends BirthDeathSkylineModel{
             int nQSTemp = qsTree.getHaplotypeCounts(node);
             double[] QSTimesTemp = ((QuasiSpeciesNode) node).getAttachmentTimesList();
             double[] QSTipTimesTemp = ((QuasiSpeciesNode) node).getTipTimesList();
-            int[] QSTipCountsTemp = ((QuasiSpeciesNode) node).getTipTimesCountList();
-            // start the tipTime pointer at 1 not 0, since we look at how many lineages coalesced between generation 0 and 1
-            int tipTimeIndex = 1;
-            int coalCounter = 0;
-            int numberOfLineages = QSTipCountsTemp[0];
-            double logNumberOfTrees = 0;
-            for (int j = nQSTemp - 1; j > 0 ; j-- ){
-                double x = times[totalIntervals - 1] - QSTimesTemp[j];
-                index = index(x);
-                // term for the Quasi-Species tree likelihood calculation counting possible attachment branches
-                // THIS IS A CONSTANT FOR ANY TREE TOPOLOGY, SO OMIT THIS TERM FOR NUMERICAL STABILITY AND CALCULATION SPEED
-                //int gammaj = tree.countPossibleAttachmentBranches((QuasiSpeciesNode) node, j, tree.getAttachmentTimesList((QuasiSpeciesNode) node)[j]);
-                //    gammaj is actually 1 here
-                //temp = Math.log(gammaj * birth[index] * g(index, times[index], x));
-                //      times 2 for left OR right -- constant factor also not taken into account
-                // temp = Math.log(2 * gammaj * birth[index] * g(index, times[index], x));
-                temp = Math.log(birth[index]) + log_q(index, times[index], x);
-                logP += temp;
-                if (printTempResults) System.out.println("1st pwd" +
-                        " = " + temp + "; QSinterval & QS attachment branches = " + node.getID() + " " + j);
-                if (Double.isInfinite(logP))
-                    return logP;
-
-                // plus extra term for quasispecies model accounting for the fact that QS tree may represent several full trees
-                if (tipTimeIndex >= QSTipTimesTemp.length){
-                    coalCounter += 1;
-                    if (j == 1 && coalCounter > 0)
-                        logNumberOfTrees += logNumberOfTrees(numberOfLineages,coalCounter);
-                }
-                else if (QSTimesTemp[j] <= QSTipTimesTemp[tipTimeIndex]) {
-                    coalCounter += 1;
-                }
-                else {
-                    if (coalCounter > 0)
-                        logNumberOfTrees += logNumberOfTrees(numberOfLineages,coalCounter);
-                    numberOfLineages += QSTipCountsTemp[tipTimeIndex] - coalCounter;
-                    tipTimeIndex += 1;
-                    // one coal time is already above the limit of the next sampling time... so coalCounter is now set to 1
-                    coalCounter = 1;
+            if (QSTipTimesTemp.length == 1){
+                for (int j = nQSTemp - 1; j > 0; j--) {
+                    double x = times[totalIntervals - 1] - QSTimesTemp[j];
+                    index = index(x);
+                    temp = Math.log(birth[index]) + log_q(index, times[index], x);
+                    logP += temp;
+                    if (printTempResults)
+                        System.out.println("1st pwd" + " = " + temp + "; QSinterval & QS attachment branches = " + node.getID() + " " + j);
+                    if (Double.isInfinite(logP))
+                        return logP;
                 }
             }
-
-            logP += logNumberOfTrees;
-            if (Double.isInfinite(logP))
-                return logP;
+            else {
+                for (int j = nQSTemp - 1; j > 0; j--) {
+                    double x = times[totalIntervals - 1] - QSTimesTemp[j];
+                    index = index(x);
+                    // term for the Quasi-Species tree likelihood calculation counting possible attachment branches
+                    int gammaj = ((QuasiSpeciesNode) node).countPossibleAttachmentBranches(j, QSTimesTemp[j]);
+                    temp = Math.log(gammaj * (gammaj + 1));
+                    temp += Math.log(birth[index]) + log_q(index, times[index], x);
+                    logP += temp;
+                    if (printTempResults)
+                        System.out.println("1st pwd" + " = " + temp + "; QSinterval & QS attachment branches = " + node.getID() + " " + j);
+                    if (Double.isInfinite(logP))
+                        return logP;
+                }
+            }
         }
 
         // middle product term in f[T]
