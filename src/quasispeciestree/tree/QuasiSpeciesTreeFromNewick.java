@@ -3,6 +3,7 @@ package quasispeciestree.tree;
 import beast.core.*;
 import beast.core.Input.Validate;
 import beast.evolution.alignment.Alignment;
+import beast.evolution.tree.TraitSet;
 import beast.evolution.tree.Tree;
 import beast.util.TreeParser;
 
@@ -37,11 +38,14 @@ public class QuasiSpeciesTreeFromNewick extends QuasiSpeciesTree implements Stat
     public void initAndValidate(){
         super.initAndValidate();
 
+        TraitSet times = this.getDateTrait();
+
         TreeParser inputTree = new TreeParser();
         inputTree.initByName(
                 "IsLabelledNewick", true,
                 "adjustTipHeights", adjustTipHeightsInput.get(),
-                "newick", newickStringInput.get());
+                "newick", newickStringInput.get(),
+                "trait", times);
 
         if (dataInput.get() == null)
             throw new RuntimeException("The data input needs to be specified");
