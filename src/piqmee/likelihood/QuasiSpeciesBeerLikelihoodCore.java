@@ -18,6 +18,17 @@ public class QuasiSpeciesBeerLikelihoodCore extends BeerLikelihoodCore {
      */
 
     /**
+     * Integrates partial likelihoods at origin.
+     *
+     * @param inPartials       partials from the origin
+     * @param proportions
+     * @param outPartials       partials to be outputted
+     */
+    public void integratePartials(double[] inPartials, double[] proportions, double[] outPartials) {
+        calculateIntegratePartials(inPartials, proportions, outPartials);
+    }
+
+    /**
      * Calculates partial likelihoods at origin when coming from the root.
      *
      * @param nodeIndex1       the tip (child 1) node
@@ -52,7 +63,7 @@ public class QuasiSpeciesBeerLikelihoodCore extends BeerLikelihoodCore {
     protected void calculateOriginTipPruning(int[] stateIndex, double[] matricesQS1, double[] matrices1aboveQSstart,
                                              double[] originPartials, int child1QS){
 
-        double sum, tmp;
+        double tmp;
 
         // v keeps track of the pattern we are about to calculate
         int v = 0;
@@ -80,12 +91,10 @@ public class QuasiSpeciesBeerLikelihoodCore extends BeerLikelihoodCore {
                     // the alignment at node has a gap or unknown state so treat it as unknown
                     // for each state at the parent node calculate prob. of going to the state of the tip * P(QS start -> QS tip)
                     for (int i = 0; i < nrOfStates; i++) {
-                        sum = 0.0;
                         for (int j = 0; j < nrOfStates; j++){
                             tmp = matricesQS1[w + nrOfStates * j + j];
-                            sum += tmp * matrices1aboveQSstart[w + nrOfStates * i + j];
+                            originPartials[v + i] += tmp * matrices1aboveQSstart[w + nrOfStates * i + j];
                         }
-                        originPartials[v + i] = sum;
                     }
                 }
 
@@ -147,32 +156,23 @@ public class QuasiSpeciesBeerLikelihoodCore extends BeerLikelihoodCore {
      * @param originPartials    probability vector at origin (of length nrOfStates * nrOfPatterns)
      */
     public void calculateOriginRootPartials(int rootNodeIndex, int rootQS, int nodeCount, double[] originPartials) {
-        if (rootQS == -1 || states[rootQS] == null){
-            calculateOriginRootPruning(null,partials[currentPartialsIndex[rootNodeIndex]][rootNodeIndex],
-                                       matrices[currentMatrixIndex[rootNodeIndex]][rootNodeIndex],
-                                       null,
-                                       originPartials,rootQS);
-        }
-        else {
-            calculateOriginRootPruning(states[rootQS],partials[currentPartialsIndex[rootNodeIndex]][rootNodeIndex],
+        calculateOriginRootPruning(states[rootQS],partials[currentPartialsIndex[rootNodeIndex]][rootNodeIndex],
                                        matrices[currentMatrixIndex[rootNodeIndex]][rootNodeIndex],
                                        matrices[currentMatrixIndex[nodeCount+rootQS]][nodeCount+rootQS],
                                        originPartials,rootQS);
-        }
     }
-        /**
-         * Calculates partial likelihood at origin.
-         *
-         * @param stateIndexRoot    alignment at node corresponding to the QS passing through the root
-         * @param partialsRoot      probability vector at root node (of length nrOfStates * nrOfPatterns)
-         * @param matricesRoot      transition probability matrix from origin to root
-         * @param originPartials    probability vector at origin (of length nrOfStates * nrOfPatterns)
-         * @param rootQS            QS passing through parent node
-         */
+
+    /**
+     * Calculates partial likelihood at origin.
+     *
+     * @param stateIndexRoot    alignment at node corresponding to the QS passing through the root
+     * @param partialsRoot      probability vector at root node (of length nrOfStates * nrOfPatterns)
+     * @param matricesRoot      transition probability matrix from origin to root
+     * @param originPartials    probability vector at origin (of length nrOfStates * nrOfPatterns)
+     * @param rootQS            QS passing through parent node
+     */
     protected void calculateOriginRootPruning(int[] stateIndexRoot, double[] partialsRoot, double[] matricesRoot, double[] matricesRootaboveQSstart,
                                               double[] originPartials, int rootQS) {
-
-        double sum, tmp;
 
         // v keeps track of the pattern we are about to calculate
         int v = 0;
@@ -187,17 +187,7 @@ public class QuasiSpeciesBeerLikelihoodCore extends BeerLikelihoodCore {
 
                 for (int k = 0; k < nrOfPatterns; k++) {
 
-                    for (int i = 0; i < nrOfStates; i++) {
-                        // since state at root is unknown, take into account all the possibilities
-                        // for each state at the parent node calculate prob. of going to the state of the tip * P(QS start -> QS tip)
-                        sum = 0.0;
-                        for (int j = 0; j < nrOfStates; j++) {
-                            // note down the partial at the root
-                            tmp = partialsRoot[v + j];
-                            sum += tmp * matricesRoot[w + nrOfStates * i + j];
-                        }
-                        originPartials[v + i] = sum;
-                    }
+                    calculateOriginRootPruningHelperNoQSorState(partialsRoot, matricesRoot, originPartials, w, v);
 
                     v += nrOfStates;
 
@@ -218,34 +208,58 @@ public class QuasiSpeciesBeerLikelihoodCore extends BeerLikelihoodCore {
 
                     // root's QS has a state
                     if (rootState < nrOfStates){
-                        // note down the partial at the child 1
-                        tmp = partialsRoot[v + rootState];
-                        // for each state at the parent node calculate prob. of going to the state of the tip * P(QS start -> QS tip)
-                        for (int i = 0; i < nrOfStates; i++){
-                            originPartials[v + i] = tmp * matricesRootaboveQSstart[w + nrOfStates * i + rootState];
-                        }
-
-                        v += nrOfStates;
-
+                        calculateOriginRootPruningHelperWithQS(partialsRoot, matricesRootaboveQSstart, originPartials, w, v, rootState);
                     // root's QS has a gap or unknown state
                     } else {
-                        // since states at QS tip is unknown, take into account all the possibilities
-                        // for each state at the parent node calculate prob. of going to the state of the tip * P(QS start -> QS tip)
-                        for (int i = 0; i < nrOfStates; i++){
-                            sum = 0.0;
-                            for (int j = 0; j < nrOfStates; j++) {
-                                // note down the partial at the root
-                                tmp = partialsRoot[v + j];
-                                sum += tmp * matricesRootaboveQSstart[w + nrOfStates * i + j];
-                            }
-                            originPartials[v + i] = sum;
-                        }
-
-                        v += nrOfStates;
-
+                        calculateOriginRootPruningHelperNoQSorState(partialsRoot, matricesRootaboveQSstart, originPartials, w, v);
                     }
+
+                    v += nrOfStates;
+
                 }
             }
+        }
+    }
+
+
+    /**
+     * Helper function to calculateOriginRootPruning for case of no QS passing or unknown state/gap at QS passing the root.
+     *
+     * @param partialsRoot                      probability vector at root node (of length nrOfStates * nrOfPatterns)
+     * @param matricesRootOrRootaboveQSstart    transition probability matrix from origin to root
+     * @param originPartials                    probability vector at origin (of length nrOfStates * nrOfPatterns)
+     */
+    protected void calculateOriginRootPruningHelperNoQSorState(double[] partialsRoot, double[] matricesRootOrRootaboveQSstart,
+                                                               double[] originPartials, int w, int v) {
+        double tmp;
+        for (int i = 0; i < nrOfStates; i++) {
+            // since state at root is unknown, take into account all the possibilities
+            // for each state at the parent node calculate prob. of going to the state of the tip * P(QS start -> QS tip)
+            for (int j = 0; j < nrOfStates; j++) {
+                // note down the partial at the root
+                tmp = partialsRoot[v + j];
+                originPartials[v + i] += tmp * matricesRootOrRootaboveQSstart[w + nrOfStates * i + j];
+            }
+        }
+    }
+
+    /**
+     * Helper function to calculateOriginRootPruning for case a QS passing.
+     *
+     * @param rootState                     states at the tip belonging to QS passing through root
+     * @param partialsRoot                  probability vector at root node (of length nrOfStates * nrOfPatterns)
+     * @param matricesRootaboveQSstart      transition probability matrix from origin to root
+     * @param originPartials                probability vector at origin (of length nrOfStates * nrOfPatterns)
+     */
+    protected void calculateOriginRootPruningHelperWithQS(double[] partialsRoot, double[] matricesRootaboveQSstart,
+                                                          double[] originPartials, int w, int v, int rootState) {
+
+        double tmp;
+        // note down the partial at the child 1
+        tmp = partialsRoot[v + rootState];
+        // for each state at the parent node calculate prob. of going to the state of the tip * P(QS start -> QS tip)
+        for (int i = 0; i < nrOfStates; i++){
+            originPartials[v + i] = tmp * matricesRootaboveQSstart[w + nrOfStates * i + rootState];
         }
     }
 
