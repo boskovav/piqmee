@@ -1,10 +1,10 @@
-package quasispeciestree.operators;
+package piqmee.operators;
 
 import beast.core.Description;
 import beast.evolution.tree.Node;
 import beast.util.Randomizer;
-import quasispeciestree.tree.QuasiSpeciesNode;
-import quasispeciestree.tree.QuasiSpeciesTree;
+import piqmee.tree.QuasiSpeciesNode;
+import piqmee.tree.QuasiSpeciesTree;
 
 import java.util.ArrayList;
 

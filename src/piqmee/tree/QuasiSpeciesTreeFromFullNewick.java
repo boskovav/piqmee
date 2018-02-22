@@ -1,4 +1,4 @@
-package quasispeciestree.tree;
+package piqmee.tree;
 
 import beast.core.*;
 import beast.evolution.alignment.Alignment;

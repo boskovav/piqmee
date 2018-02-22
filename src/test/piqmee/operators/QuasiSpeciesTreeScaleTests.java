@@ -1,22 +1,22 @@
-package test.quasispeciestree.operators;
+package test.piqmee.operators;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 import beast.core.Description;
-import quasispeciestree.operators.QuasiSpeciesTreeScale;
-import quasispeciestree.tree.QuasiSpeciesNode;
-import quasispeciestree.tree.QuasiSpeciesTree;
-import test.quasispeciestree.DeterministicRandomGenerator;
-import test.quasispeciestree.QuasiSpeciesTestCase;
+import piqmee.operators.QuasiSpeciesTreeScale;
+import piqmee.tree.QuasiSpeciesNode;
+import piqmee.tree.QuasiSpeciesTree;
+import test.piqmee.DeterministicRandomGenerator;
+import test.piqmee.QuasiSpeciesTestCase;
 
 
 /**
  * @author Veronika Boskova created on 23/10/17
  */
 
-@Description("Test the quasispeciestree tree scale operator class functions")
+@Description("Test the piqmee tree scale operator class functions")
 public class QuasiSpeciesTreeScaleTests {
 
     /**

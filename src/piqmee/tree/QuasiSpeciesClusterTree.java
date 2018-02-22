@@ -1,11 +1,8 @@
-package quasispeciestree.tree;
+package piqmee.tree;
 
 import beast.core.*;
-import beast.core.Input.Validate;
 import beast.evolution.alignment.Alignment;
-import beast.evolution.tree.Tree;
 import beast.util.ClusterTree;
-import beast.util.TreeParser;
 
 import java.util.List;
 

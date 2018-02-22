@@ -1,9 +1,9 @@
-package quasispeciestree.util;
+package piqmee.util;
 
 import beast.core.*;
 import beast.evolution.tree.Node;
-import quasispeciestree.tree.QuasiSpeciesTree;
-import quasispeciestree.tree.QuasiSpeciesNode;
+import piqmee.tree.QuasiSpeciesTree;
+import piqmee.tree.QuasiSpeciesNode;
 
 import java.io.PrintStream;
 

@@ -1,4 +1,4 @@
-package quasispeciestree.util;
+package piqmee.util;
 
 /**
  * @author Veronika Boskova created on 24/10/17

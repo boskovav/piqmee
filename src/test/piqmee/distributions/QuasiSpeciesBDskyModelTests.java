@@ -1,4 +1,4 @@
-package test.quasispeciestree.distributions;
+package test.piqmee.distributions;
 
 import static org.junit.Assert.assertEquals;
 import beast.core.Description;
@@ -7,15 +7,15 @@ import beast.evolution.speciation.BirthDeathSkylineModel;
 import beast.evolution.tree.Tree;
 import beast.util.TreeParser;
 import org.junit.Test;
-import quasispeciestree.distributions.QuasiSpeciesBirthDeathSkylineModel;
-import quasispeciestree.tree.QuasiSpeciesTree;
-import test.quasispeciestree.QuasiSpeciesTestCase;
+import piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel;
+import piqmee.tree.QuasiSpeciesTree;
+import test.piqmee.QuasiSpeciesTestCase;
 
 /**
  * @author Veronika Boskova created on 15/07/16
  */
 
-@Description("Test the quasispeciestree birth-death model with a small tree example")
+@Description("Test the piqmee birth-death model with a small tree example")
 public class QuasiSpeciesBDskyModelTests {
 
 

@@ -1,12 +1,12 @@
-package test.quasispeciestree;
+package test.piqmee;
 
 import beast.evolution.alignment.Alignment;
 import beast.evolution.alignment.Sequence;
 import beast.evolution.alignment.TaxonSet;
 import beast.evolution.tree.TraitSet;
-import quasispeciestree.tree.QuasiSpeciesTree;
-import quasispeciestree.tree.QuasiSpeciesTreeFromFullNewick;
-import quasispeciestree.tree.QuasiSpeciesTreeFromNewick;
+import piqmee.tree.QuasiSpeciesTree;
+import piqmee.tree.QuasiSpeciesTreeFromFullNewick;
+import piqmee.tree.QuasiSpeciesTreeFromNewick;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,12 +1,12 @@
-package quasispeciestree.operators;
+package piqmee.operators;
 
 import beast.core.Description;
 import beast.core.Input;
 import beast.core.Operator;
 import beast.evolution.tree.Node;
 import beast.util.Randomizer;
-import quasispeciestree.tree.QuasiSpeciesTree;
-import quasispeciestree.tree.QuasiSpeciesNode;
+import piqmee.tree.QuasiSpeciesTree;
+import piqmee.tree.QuasiSpeciesNode;
 import beast.core.parameter.RealParameter;
 
 import java.util.ArrayList;

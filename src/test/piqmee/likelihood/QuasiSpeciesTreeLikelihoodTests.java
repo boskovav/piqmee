@@ -1,4 +1,4 @@
-package test.quasispeciestree.likelihood;
+package test.piqmee.likelihood;
 
 import beast.core.parameter.RealParameter;
 import beast.evolution.alignment.Alignment;
@@ -8,10 +8,10 @@ import beast.evolution.substitutionmodel.JukesCantor;
 import beast.evolution.tree.Tree;
 import beast.util.TreeParser;
 import org.junit.Test;
-import quasispeciestree.likelihood.QuasiSpeciesTreeLikelihood;
-import quasispeciestree.tree.QuasiSpeciesTree;
+import piqmee.likelihood.QuasiSpeciesTreeLikelihood;
+import piqmee.tree.QuasiSpeciesTree;
 import test.beast.BEASTTestCase;
-import test.quasispeciestree.QuasiSpeciesTestCase;
+import test.piqmee.QuasiSpeciesTestCase;
 
 import static org.junit.Assert.assertEquals;
 

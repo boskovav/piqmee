@@ -1,4 +1,4 @@
-package quasispeciestree.util;
+package piqmee.util;
 
 import beast.util.Randomizer;
 

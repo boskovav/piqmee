@@ -1,4 +1,4 @@
-package quasispeciestree.distance;
+package piqmee.distance;
 
 import beast.core.Description;
 import beast.evolution.alignment.distance.Distance;

@@ -1,19 +1,18 @@
-package test.quasispeciestree.tree;
+package test.piqmee.tree;
 
-import org.junit.Assert;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 import beast.core.Description;
-import quasispeciestree.tree.QuasiSpeciesNode;
+import piqmee.tree.QuasiSpeciesNode;
 
 
 /**
  * @author Veronika Boskova created on 23/10/17
  */
 
-@Description("Test the quasispeciestree node class functions")
+@Description("Test the piqmee node class functions")
 public class QuasiSpeciesNodeTests {
 
     /**

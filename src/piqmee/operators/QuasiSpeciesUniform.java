@@ -1,9 +1,9 @@
-package quasispeciestree.operators;
+package piqmee.operators;
 
 import beast.core.Description;
 import beast.util.Randomizer;
-import quasispeciestree.tree.QuasiSpeciesNode;
-import quasispeciestree.tree.QuasiSpeciesTree;
+import piqmee.tree.QuasiSpeciesNode;
+import piqmee.tree.QuasiSpeciesTree;
 
 /**
  * @author Veronika Boskova created on 18/01/2017

@@ -1,12 +1,12 @@
-package quasispeciestree.evolution.branchratemodel;
+package piqmee.evolution.branchratemodel;
 
 import beast.core.Description;
 import beast.evolution.branchratemodel.BranchRateModel;
 import beast.evolution.branchratemodel.RateStatistic;
 import beast.evolution.tree.Node;
 import beast.math.statistic.DiscreteStatistics;
-import quasispeciestree.tree.QuasiSpeciesNode;
-import quasispeciestree.tree.QuasiSpeciesTree;
+import piqmee.tree.QuasiSpeciesNode;
+import piqmee.tree.QuasiSpeciesTree;
 
 /**
  *  @author Veronika Boskova created on 08/02/2018

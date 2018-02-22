@@ -1,4 +1,4 @@
-package quasispeciestree.likelihood;
+package piqmee.likelihood;
 
 import beast.core.Description;
 import beast.evolution.likelihood.BeerLikelihoodCore;

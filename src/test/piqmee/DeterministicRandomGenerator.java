@@ -1,6 +1,6 @@
-package test.quasispeciestree;
+package test.piqmee;
 
-import quasispeciestree.util.RandomGenerator;
+import piqmee.util.RandomGenerator;
 
 /**
  * @author Veronika Boskova created on 24/10/17

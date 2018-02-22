@@ -1,16 +1,15 @@
-package quasispeciestree.tree;
+package piqmee.tree;
 
 import beast.core.Input;
 import beast.core.StateNode;
 import beast.core.StateNodeInitialiser;
-import beast.core.parameter.RealParameter;
 import beast.evolution.alignment.Alignment;
 import beast.evolution.alignment.distance.Distance;
 import beast.evolution.tree.Node;
 import beast.evolution.tree.TraitSet;
 import beast.evolution.tree.Tree;
 import beast.util.TreeParser;
-import quasispeciestree.distance.DifferenceCount;
+import piqmee.distance.DifferenceCount;
 
 import java.io.PrintStream;
 import java.util.*;
@@ -1004,7 +1003,7 @@ public class QuasiSpeciesTree extends Tree {
                             for (int j = 0; j < tipTimesListTmp.length; j++) {
                                 // check if the tips with the same sequence that have been seen had also the current node's sampling time
                                 if (tipTimesListTmp[j] == node.getHeight()) {
-                                    throw new IllegalArgumentException("There are at least two tips with the same " + "sequence and same sampling time. If you want to input tree with all " + "sequences as tips, please use class quasispeciestree.tree.QuasiSpeciesTreeFromFullNewick; " + "otherwise please remove duplicates and use haplotypeCounts traitset " + "to annotate the duplicate counts");
+                                    throw new IllegalArgumentException("There are at least two tips with the same " + "sequence and same sampling time. If you want to input tree with all " + "sequences as tips, please use class piqmee.tree.QuasiSpeciesTreeFromFullNewick; " + "otherwise please remove duplicates and use haplotypeCounts traitset " + "to annotate the duplicate counts");
                                 }
                             }
                             // if with different time, add to tip times and counts

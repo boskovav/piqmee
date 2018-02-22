@@ -1,4 +1,4 @@
-package quasispeciestree.likelihood;
+package piqmee.likelihood;
 
 import beast.core.Description;
 import beast.core.Input;
@@ -15,15 +15,15 @@ import beast.evolution.likelihood.LikelihoodCore;
 import beast.evolution.likelihood.GenericTreeLikelihood;
 import beast.evolution.sitemodel.SiteModel;
 import beast.evolution.substitutionmodel.SubstitutionModel;
-import quasispeciestree.tree.QuasiSpeciesNode;
-import quasispeciestree.tree.QuasiSpeciesTree;
+import piqmee.tree.QuasiSpeciesNode;
+import piqmee.tree.QuasiSpeciesTree;
 
 import java.util.*;
 
 /**
  *  @author Veronika Boskova created on summer 2016 finished 21/04/2017
  */
-@Description("Calculates the probability of sequence data on a beast.quasispeciestree.tree " +
+@Description("Calculates the probability of sequence data on a beast.piqmee.tree " +
         "given a site and substitution model using a variant of the 'peeling algorithm'. " +
         "For details, see Felsenstein, Joseph (1981). Evolutionary trees from DNA sequences: a maximum likelihood approach. J Mol Evol 17 (6): 368-376.")
 public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
