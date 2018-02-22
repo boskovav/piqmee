@@ -1,4 +1,4 @@
-package test.quasispeciestree;
+package test.quasispeciestree.tree;
 
 import org.junit.Assert;
 import static org.junit.Assert.assertTrue;

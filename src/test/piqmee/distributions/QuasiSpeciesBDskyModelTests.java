@@ -1,4 +1,4 @@
-package test.quasispeciestree;
+package test.quasispeciestree.distributions;
 
 import static org.junit.Assert.assertEquals;
 import beast.core.Description;
