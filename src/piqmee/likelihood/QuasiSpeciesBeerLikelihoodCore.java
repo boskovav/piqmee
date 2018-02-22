@@ -18,17 +18,6 @@ public class QuasiSpeciesBeerLikelihoodCore extends BeerLikelihoodCore {
      */
 
     /**
-     * Integrates partial likelihoods at origin.
-     *
-     * @param inPartials       partials from the origin
-     * @param proportions
-     * @param outPartials       partials to be outputted
-     */
-    public void integratePartials(double[] inPartials, double[] proportions, double[] outPartials) {
-        calculateIntegratePartials(inPartials, proportions, outPartials);
-    }
-
-    /**
      * Calculates partial likelihoods at origin when coming from the root.
      *
      * @param nodeIndex1       the tip (child 1) node
@@ -37,20 +26,22 @@ public class QuasiSpeciesBeerLikelihoodCore extends BeerLikelihoodCore {
      * @param originPartials   probability vector at origin (of length nrOfStates * nrOfPatterns)
      */
     public void calculateOriginTipPartials(int nodeIndex1, int child1QS, int nodeCount, double[] originPartials) {
+        // tip has a state
         if (states[nodeIndex1] != null){
             calculateOriginTipPruning(
                     states[nodeIndex1],matrices[currentMatrixIndex[nodeIndex1]][nodeIndex1],matrices[currentMatrixIndex[nodeCount+nodeIndex1]][nodeCount+nodeIndex1],
                     originPartials,child1QS);
         }
+        // tip has partials
         else {
             calculateOriginTipPruning(
-                    states[child1QS],matrices[currentMatrixIndex[nodeIndex1]][nodeIndex1],matrices[currentMatrixIndex[nodeCount+nodeIndex1]][nodeCount+nodeIndex1],
+                    partials[currentPartialsIndex[nodeIndex1]][nodeIndex1],matrices[currentMatrixIndex[nodeIndex1]][nodeIndex1],matrices[currentMatrixIndex[nodeCount+nodeIndex1]][nodeCount+nodeIndex1],
                     originPartials, child1QS);
         }
     }
 
     /**
-     * Calculates partial likelihood at origin if tree has only one tip.
+     * Calculates partial likelihood at origin if tree has only one tip with states.
      *
      * @param stateIndex            alignment at the tip (child 1)
      * @param matricesQS1           transition probability matrix from parent to the tip (child 1) - if the node is a tip, it holds the probability that the sequence does not change from the tip to the start of the haplo
@@ -85,26 +76,67 @@ public class QuasiSpeciesBeerLikelihoodCore extends BeerLikelihoodCore {
                         originPartials[v + i] = tmp * matrices1aboveQSstart[w + nrOfStates * i + state];
                     }
 
-                    v += nrOfStates;
-
-//                } else {
-//                    // the alignment at node has a gap or unknown state so treat it as unknown
-//                    // for each state at the parent node calculate prob. of going to the state of the tip * P(QS start -> QS tip)
-//                    for (int i = 0; i < nrOfStates; i++) {
-//                        sum = 0.0;
-//                        for (int j = 0; j < nrOfStates; j++){
-//                            tmp = matricesQS1[w + nrOfStates * j + j];
-//                            sum += tmp * matrices1aboveQSstart[w + nrOfStates * i + j];
-//                        }
-//                        originPartials[v + i] = sum;
-//                    }
-//
-//                    v += nrOfStates;
-
+                } else {
+                    // the alignment at node has a gap or unknown state so treat it as unknown
+                    // for each state at the parent node calculate prob. of going to the state of the tip * P(QS start -> QS tip)
+                    for (int i = 0; i < nrOfStates; i++) {
+                        sum = 0.0;
+                        for (int j = 0; j < nrOfStates; j++){
+                            tmp = matricesQS1[w + nrOfStates * j + j];
+                            sum += tmp * matrices1aboveQSstart[w + nrOfStates * i + j];
+                        }
+                        originPartials[v + i] = sum;
+                    }
                 }
+
+                v += nrOfStates;
+
             }
         }
     }
+
+    /**
+     * Calculates partial likelihood at origin if tree has only one tip with partials.
+     *
+     * @param partials1             partials at the tip (child 1)
+     * @param matricesQS1           transition probability matrix from parent to the tip (child 1) - if the node is a tip, it holds the probability that the sequence does not change from the tip to the start of the haplo
+     * @param matrices1aboveQSstart transition probability matrix from node above QS start to QS start for QS passing through the tip (child 1)
+     * @param originPartials        probability vector at origin (of length nrOfStates * nrOfPatterns)
+     * @param child1QS              QS passing through parent tip (child 1)
+     */
+    protected void calculateOriginTipPruning(double[] partials1, double[] matricesQS1, double[] matrices1aboveQSstart,
+                                             double[] originPartials, int child1QS){
+
+        double tmp;
+
+        // v keeps track of the pattern we are about to calculate
+        int v = 0;
+
+        for (int l = 0; l < nrOfMatrices; l++) {
+
+            // w keeps track of the state the internal node evolves from
+            int w = l * matrixSize;
+
+            for (int k = 0; k < nrOfPatterns; k++) {
+                // note down the state at the tip
+
+                for (int i = 0; i < nrOfStates; i++) {
+                    // since state at QS tip is unknown, take into account all the possibilities
+                    // for each state at the origin calculate prob. of going to the state of the tip * P(QS start -> QS tip)
+                    for (int j = 0; j < nrOfStates; j++) {
+                        // note down the partial at the child 1
+                        tmp = partials1[v + j] * matricesQS1[w + nrOfStates * j + j];
+                        // calculate the partials at the origin
+                        originPartials[v + i] += tmp * matrices1aboveQSstart[w + nrOfStates * i + j];
+                    }
+                }
+
+                v += nrOfStates;
+
+            }
+        }
+    }
+
 
     /**
      * Calculates partial likelihoods at origin when coming from the root.
@@ -115,7 +147,7 @@ public class QuasiSpeciesBeerLikelihoodCore extends BeerLikelihoodCore {
      * @param originPartials    probability vector at origin (of length nrOfStates * nrOfPatterns)
      */
     public void calculateOriginRootPartials(int rootNodeIndex, int rootQS, int nodeCount, double[] originPartials) {
-        if (rootQS == -1){
+        if (rootQS == -1 || states[rootQS] == null){
             calculateOriginRootPruning(null,partials[currentPartialsIndex[rootNodeIndex]][rootNodeIndex],
                                        matrices[currentMatrixIndex[rootNodeIndex]][rootNodeIndex],
                                        null,
@@ -146,7 +178,7 @@ public class QuasiSpeciesBeerLikelihoodCore extends BeerLikelihoodCore {
         int v = 0;
 
         // there is no QS arising above the root
-        if (rootQS==-1){
+        if (rootQS==-1 || stateIndexRoot == null){
 
             for (int l = 0; l < nrOfMatrices; l++) {
 
@@ -195,21 +227,21 @@ public class QuasiSpeciesBeerLikelihoodCore extends BeerLikelihoodCore {
 
                         v += nrOfStates;
 
-//                    // root's QS has a gap or unknown state
-//                    } else {
-//                        // since states at QS tip is unknown, take into account all the possibilities
-//                        // for each state at the parent node calculate prob. of going to the state of the tip * P(QS start -> QS tip)
-//                        for (int i = 0; i < nrOfStates; i++){
-//                            sum = 0.0;
-//                            for (int j = 0; j < nrOfStates; j++) {
-//                                // note down the partial at the root
-//                                tmp = partialsRoot[v + j];
-//                                sum += tmp * matricesRootaboveQSstart[w + nrOfStates * i + j];
-//                            }
-//                            originPartials[v + i] = sum;
-//                        }
-//
-//                        v += nrOfStates;
+                    // root's QS has a gap or unknown state
+                    } else {
+                        // since states at QS tip is unknown, take into account all the possibilities
+                        // for each state at the parent node calculate prob. of going to the state of the tip * P(QS start -> QS tip)
+                        for (int i = 0; i < nrOfStates; i++){
+                            sum = 0.0;
+                            for (int j = 0; j < nrOfStates; j++) {
+                                // note down the partial at the root
+                                tmp = partialsRoot[v + j];
+                                sum += tmp * matricesRootaboveQSstart[w + nrOfStates * i + j];
+                            }
+                            originPartials[v + i] = sum;
+                        }
+
+                        v += nrOfStates;
 
                     }
                 }
@@ -1399,7 +1431,7 @@ public class QuasiSpeciesBeerLikelihoodCore extends BeerLikelihoodCore {
                     }
 
                 }
-                // child 2 (partials) has the QS start below the branch leading from the parent to the child (i.e. no QS on current branch)
+                // child 2 (partials) has the QS start below the branch leading2 from the parent to the child (i.e. no QS on current branch)
                 else {
 
                     for (int l = 0; l < nrOfMatrices; l++) {
