@@ -176,7 +176,7 @@ public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
      * @param rates the matrix where the new rates should be stored
      *
      */
-    void getNoChangeRates(double[] rates) {
+    public void getNoChangeRates(double[] rates) {
         EigenDecomposition eigenDecomposition = substitutionModel.getEigenDecomposition(null);
         double[] evec = eigenDecomposition.getEigenVectors();
         double[] eval = eigenDecomposition.getEigenValues();
