@@ -20,10 +20,10 @@ import java.util.ArrayList;
 @Description("Model for calculating birth-death likelihood for quasispecies (ultrametric) trees ")
 
 @Citation("Boskova, V., Stadler, T., Quasispecies algorithm")
-public class BirthDeathSkylineQuasiSpeciesModel extends BirthDeathSkylineModel{
+public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel{
 
     // Empty constructor as required:
-    public BirthDeathSkylineQuasiSpeciesModel() { };
+    public QuasiSpeciesBirthDeathSkylineModel() { };
 
     ArrayList isRhoTip;
 
