@@ -63,7 +63,7 @@ public class QuasiSpeciesBeerLikelihoodCore extends BeerLikelihoodCore {
     protected void calculateOriginTipPruning(int[] stateIndex, double[] matricesQS1, double[] matrices1aboveQSstart,
                                              double[] originPartials, int child1QS){
 
-        double tmp;
+        double tmp, sum;
 
         // v keeps track of the pattern we are about to calculate
         int v = 0;
@@ -91,10 +91,12 @@ public class QuasiSpeciesBeerLikelihoodCore extends BeerLikelihoodCore {
                     // the alignment at node has a gap or unknown state so treat it as unknown
                     // for each state at the parent node calculate prob. of going to the state of the tip * P(QS start -> QS tip)
                     for (int i = 0; i < nrOfStates; i++) {
+                        sum = 0.0;
                         for (int j = 0; j < nrOfStates; j++){
                             tmp = matricesQS1[w + nrOfStates * j + j];
-                            originPartials[v + i] += tmp * matrices1aboveQSstart[w + nrOfStates * i + j];
+                            sum += tmp * matrices1aboveQSstart[w + nrOfStates * i + j];
                         }
+                        originPartials[v + i] = sum;
                     }
                 }
 
@@ -116,7 +118,7 @@ public class QuasiSpeciesBeerLikelihoodCore extends BeerLikelihoodCore {
     protected void calculateOriginTipPruning(double[] partials1, double[] matricesQS1, double[] matrices1aboveQSstart,
                                              double[] originPartials, int child1QS){
 
-        double tmp;
+        double tmp, sum;
 
         // v keeps track of the pattern we are about to calculate
         int v = 0;
@@ -132,12 +134,14 @@ public class QuasiSpeciesBeerLikelihoodCore extends BeerLikelihoodCore {
                 for (int i = 0; i < nrOfStates; i++) {
                     // since state at QS tip is unknown, take into account all the possibilities
                     // for each state at the origin calculate prob. of going to the state of the tip * P(QS start -> QS tip)
+                    sum = 0.0;
                     for (int j = 0; j < nrOfStates; j++) {
                         // note down the partial at the child 1
                         tmp = partials1[v + j] * matricesQS1[w + nrOfStates * j + j];
                         // calculate the partials at the origin
-                        originPartials[v + i] += tmp * matrices1aboveQSstart[w + nrOfStates * i + j];
+                        sum += tmp * matrices1aboveQSstart[w + nrOfStates * i + j];
                     }
+                    originPartials[v + i] = sum;
                 }
 
                 v += nrOfStates;
@@ -232,16 +236,18 @@ public class QuasiSpeciesBeerLikelihoodCore extends BeerLikelihoodCore {
     protected void calculateOriginRootPruningHelperNoQSorUnknownState(double[] partialsRoot, double[] matricesRootOrRootaboveQSstart,
                                                                double[] originPartials, int w, int v) {
 
-        double tmp;
+        double tmp, sum;
 
         for (int i = 0; i < nrOfStates; i++) {
             // since state at root is unknown, take into account all the possibilities
             // for each state at the parent node calculate prob. of going to the state of the tip * P(QS start -> QS tip)
+            sum = 0.0;
             for (int j = 0; j < nrOfStates; j++) {
                 // note down the partial at the root
                 tmp = partialsRoot[v + j];
-                originPartials[v + i] += tmp * matricesRootOrRootaboveQSstart[w + nrOfStates * i + j];
+                sum += tmp * matricesRootOrRootaboveQSstart[w + nrOfStates * i + j];
             }
+            originPartials[v + i] = sum;
         }
     }
 
@@ -283,8 +289,6 @@ public class QuasiSpeciesBeerLikelihoodCore extends BeerLikelihoodCore {
     protected void calculateStatesStatesPruning(int[] stateIndex1, double[] matricesQS1, double[] matrices1aboveQSstart,
                                                 int[] stateIndex2, double[] matricesQS2, double[] matrices2aboveQSstart,
                                                 double[] partials3, int child1QS, int child2QS, int parentQS) {
-
-        double sum1, sum2, tmp1, tmp2;
 
         // v keeps track of the pattern we are about to calculate
         int v = 0;
@@ -351,12 +355,12 @@ public class QuasiSpeciesBeerLikelihoodCore extends BeerLikelihoodCore {
                                                                          partials3, w, v, state1, state2);
                         // child 2 has a gap or unknown state so treat it as unknown
                         } else if (state1 < nrOfStates) {
-                            calculateStatesStatesPruningHelperOneQSbelowOneUnknownState(matricesQS1, matrices1aboveQSstart,
+                            calculateStatesStatesPruningHelperOneQSbelowAndUnknownState(matricesQS1, matrices1aboveQSstart,
                                                                                         matricesQS2,
                                                                                         partials3, w, v, state1);
                         // child 1 has a gap or unknown state so treat it as unknown
                         } else if (state2 < nrOfStates) {
-                            calculateStatesStatesPruningHelperOneQSbelowAndUnknownState(matricesQS1, matrices1aboveQSstart,
+                            calculateStatesStatesPruningHelperOneQSbelowWithUnknownState(matricesQS1, matrices1aboveQSstart,
                                                                                         matricesQS2,
                                                                                         partials3, w, v, state2);
                         // both children have a gap or unknown state
@@ -391,12 +395,12 @@ public class QuasiSpeciesBeerLikelihoodCore extends BeerLikelihoodCore {
                                                                          partials3, w, v, state2, state1);
                         // child 2 has a gap or unknown state so treat it as unknown
                         } else if (state1 < nrOfStates) {
-                            calculateStatesStatesPruningHelperOneQSbelowAndUnknownState(matricesQS2, matrices2aboveQSstart,
+                            calculateStatesStatesPruningHelperOneQSbelowWithUnknownState(matricesQS2, matrices2aboveQSstart,
                                                                                         matricesQS1,
                                                                                         partials3, w, v, state1);
                         // child 1 has a gap or unknown state so treat it as unknown
                         } else if (state2 < nrOfStates) {
-                            calculateStatesStatesPruningHelperOneQSbelowOneUnknownState(matricesQS2, matrices2aboveQSstart,
+                            calculateStatesStatesPruningHelperOneQSbelowAndUnknownState(matricesQS2, matrices2aboveQSstart,
                                                                                         matricesQS1,
                                                                                         partials3, w, v, state2);
                         // both children have a gap or unknown state
@@ -439,7 +443,7 @@ public class QuasiSpeciesBeerLikelihoodCore extends BeerLikelihoodCore {
         // for each state at the parent node calculate prob. of going to the state of the tip * P(QS start -> QS tip)
         for (int i = 0; i < nrOfStates; i++) {
             partials3[v + i] = tmp1 * matrices1aboveQSstart[w + nrOfStates * i + state1]
-                    * tmp2 * matrices2aboveQSstart[w + nrOfStates * i + state2];
+                             * tmp2 * matrices2aboveQSstart[w + nrOfStates * i + state2];
         }
     }
 
@@ -472,7 +476,7 @@ public class QuasiSpeciesBeerLikelihoodCore extends BeerLikelihoodCore {
                 sum2 += tmp2 * matrices2aboveQSstart[w + nrOfStates * i + j];
             }
             partials3[v + i] = tmp1 * matrices1aboveQSstart[w + nrOfStates * i + state1]
-                    * sum2;
+                             * sum2;
         }
     }
 
@@ -535,7 +539,7 @@ public class QuasiSpeciesBeerLikelihoodCore extends BeerLikelihoodCore {
             partials3[v + i] = 0;
         }
         partials3[v + state2] = tmp1 * matrices1aboveQSstart[w + nrOfStates * state2 + state1]
-                * tmp2;
+                              * tmp2;
     }
 
     /**
@@ -547,7 +551,7 @@ public class QuasiSpeciesBeerLikelihoodCore extends BeerLikelihoodCore {
      * @param partials3             probability vector at parent node (of length nrOfStates * nrOfPatterns)
      * @param state1                state at child 1
      */
-    protected void calculateStatesStatesPruningHelperOneQSbelowOneUnknownState(
+    protected void calculateStatesStatesPruningHelperOneQSbelowAndUnknownState(
             double[] matricesQS1, double[] matrices1aboveQSstart,
             double[] matricesQS2,
             double[] partials3, int w, int v, int state1) {
@@ -562,7 +566,7 @@ public class QuasiSpeciesBeerLikelihoodCore extends BeerLikelihoodCore {
         for (int i = 0; i < nrOfStates; i++) {
             tmp2 = matricesQS2[w + nrOfStates * i + i];
             partials3[v + i] = tmp1 * matrices1aboveQSstart[w + nrOfStates * i + state1]
-                    * tmp2;
+                             * tmp2;
         }
     }
 
@@ -575,7 +579,7 @@ public class QuasiSpeciesBeerLikelihoodCore extends BeerLikelihoodCore {
      * @param partials3             probability vector at parent node (of length nrOfStates * nrOfPatterns)
      * @param state2                state at child 2
      */
-    protected void calculateStatesStatesPruningHelperOneQSbelowAndUnknownState(
+    protected void calculateStatesStatesPruningHelperOneQSbelowWithUnknownState(
             double[] matricesQS1, double[] matrices1aboveQSstart,
             double[] matricesQS2,
             double[] partials3, int w, int v, int state2) {
@@ -627,6 +631,76 @@ public class QuasiSpeciesBeerLikelihoodCore extends BeerLikelihoodCore {
     }
 
     /**
+     * Helper function to calculateStatesStatesPruning for case of no QS passing through the parent node.
+     *
+     * @param matricesQS1           transition probability matrix from parent to child 1 - if the node is a tip, it holds the probability that the sequence does not change from the tip to the start of the haplo
+     * @param matrices1aboveQSstart transition probability matrix from node above QS start to QS start for QS passing through child 1
+     * @param partials2             probability vector at child 2 (of length nrOfStates * nrOfPatterns)
+     * @param matrices2aboveQSstart transition probability matrix from node above QS start to QS start for QS passing through child 2
+     * @param partials3             probability vector at parent node (of length nrOfStates * nrOfPatterns)
+     * @param state1                state at child 1
+     * @param state2                state at child 2
+     */
+    protected void calculateStatesPartialsPruningHelperBothQSbelow(
+            double[] matricesQS1, double[] matrices1aboveQSstart,
+            double[] partials2, double[] matrices2aboveQSstart,
+            double[] partials3, int w, int v, int state1, int state2) {
+
+        double tmp1, tmp2;
+
+        // note down the transition probability (of no change) on the sum of the QS branch lengths
+        // P(QS start -> QS tip)
+        tmp1 = matricesQS1[w + nrOfStates * state1 + state1];
+        // note down the partial at the child 2
+        tmp2 = partials2[v + state2];
+        // for each state at the parent node calculate prob. of going to the state of the tip * P(QS start -> QS tip)
+        for (int i = 0; i < nrOfStates; i++) {
+            partials3[v + i] = tmp1 * matrices1aboveQSstart[w + nrOfStates * i + state1]
+                             * tmp2 * matrices2aboveQSstart[w + nrOfStates * i + state2];
+        }
+    }
+
+    /**
+     * Helper function to calculateStatesStatesPruning for case of no QS passing through the parent node passing and the node has a gap.
+     *
+     * @param matricesQS1           transition probability matrix from parent to child 1 - if the node is a tip, it holds the probability that the sequence does not change from the tip to the start of the haplo
+     * @param matrices1aboveQSstart transition probability matrix from node above QS start to QS start for QS passing through child 1
+     * @param partials2             probability vector at child 2 (of length nrOfStates * nrOfPatterns)
+     * @param matrices2aboveQSstart transition probability matrix from node above QS start to QS start for QS passing through child 2
+     * @param partials3             probability vector at parent node (of length nrOfStates * nrOfPatterns)
+     * @param state1                state at child 1
+     */
+    protected void calculateStatesPartialsPruningHelperBothQSbelowOneUnknownState(
+            double[] matricesQS1, double[] matrices1aboveQSstart,
+            double[] partials2, double[] matrices2aboveQSstart,
+            double[] partials3, int w, int v, int state1) {
+
+        double tmp1, tmp2, sum2;
+
+        // note down the transition probability (of no change) on the sum of the QS branch lengths
+        // P(QS start -> QS tip)
+        tmp1 = matricesQS1[w + nrOfStates * state1 + state1];
+        // since state at child 2 is unknown, take into account all the possibilities
+        // for each state at the parent node calculate prob. of going to the state of the tip * P(QS start -> QS tip)
+        for (int i = 0; i < nrOfStates; i++){
+            sum2 = 0.0;
+            for (int j = 0; j < nrOfStates; j++) {
+                // note down the partial at the child 2
+                tmp2 = partials2[v + j];
+                sum2 += tmp2 * matrices2aboveQSstart[w + nrOfStates * i + j];
+            }
+            partials3[v + i] = tmp1 * matrices1aboveQSstart[w + nrOfStates * i + state1]
+                             * sum2;
+        }
+    }
+
+
+    // TODO continue here 
+
+
+
+
+    /**
      * Calculates partial likelihoods at a node when one child has states and one has partials.
      *
      * @param stateIndex1           alignment at child 1
@@ -667,39 +741,22 @@ public class QuasiSpeciesBeerLikelihoodCore extends BeerLikelihoodCore {
 
                         // child 1 has a state and child2's QS has a state
                         if (state1 < nrOfStates && state2 < nrOfStates) {
-                            // note down the transition probability (of no change) on the sum of the QS branch lengths
-                            // P(QS start -> QS tip)
-                            tmp1 = matricesQS1[w + nrOfStates * state1 + state1];
-                            // note down the partial at the child 2
-                            tmp2 = partials2[v + state2];
-                            // for each state at the parent node calculate prob. of going to the state of the tip * P(QS start -> QS tip)
-                            for (int i = 0; i < nrOfStates; i++) {
-                                partials3[v + i] = tmp1 * matrices1aboveQSstart[w + nrOfStates * i + state1]
-                                                 * tmp2 * matrices2aboveQSstart[w + nrOfStates * i + state2];
-                            }
+
+                            calculateStatesPartialsPruningHelperBothQSbelow(matricesQS1, matrices1aboveQSstart,
+                                                                            partials2, matrices2aboveQSstart,
+                                                                            partials3, w, v, state1, state2);
 
                             v += nrOfStates;
 
-//                        // child 1 has a state but child2's QS has a gap or unknown sequence
-//                        } else if (state1 < nrOfStates){
-//                            // note down the transition probability (of no change) on the sum of the QS branch lengths
-//                            // P(QS start -> QS tip)
-//                            tmp1 = matricesQS1[w + nrOfStates * state1 + state1];
-//                            // since state at child 2 is unknown, take into account all the possibilities
-//                            // for each state at the parent node calculate prob. of going to the state of the tip * P(QS start -> QS tip)
-//                            for (int i = 0; i < nrOfStates; i++){
-//                                sum2 = 0.0;
-//                                for (int j = 0; j < nrOfStates; j++) {
-//                                    // note down the partial at the child 2
-//                                    tmp2 = partials2[v + j];
-//                                    sum2 += tmp2 * matrices2aboveQSstart[w + nrOfStates * i + j];
-//                                }
-//                                partials3[v + i] = tmp1 * matrices1aboveQSstart[w + nrOfStates * i + state1]
-//                                                 * sum2;
-//                            }
-//
-//                            v += nrOfStates;
-//
+                        // child 1 has a state but child2's QS has a gap or unknown sequence
+                        } else if (state1 < nrOfStates){
+
+                            calculateStatesPartialsPruningHelperBothQSbelowOneUnknownState(matricesQS1, matrices1aboveQSstart,
+                                                                                           partials2, matrices2aboveQSstart,
+                                                                                           partials3, w, v, state1);
+
+                            v += nrOfStates;
+
 //                        // child 1 has a gap or unknown state but child2's QS has a state
 //                        } else if (state2 < nrOfStates){
 //                            // note down the partial at the child 2
