@@ -1003,7 +1003,11 @@ public class QuasiSpeciesTree extends Tree {
                             for (int j = 0; j < tipTimesListTmp.length; j++) {
                                 // check if the tips with the same sequence that have been seen had also the current node's sampling time
                                 if (tipTimesListTmp[j] == node.getHeight()) {
-                                    throw new IllegalArgumentException("There are at least two tips with the same " + "sequence and same sampling time. If you want to input tree with all " + "sequences as tips, please use class piqmee.tree.QuasiSpeciesTreeFromFullNewick; " + "otherwise please remove duplicates and use haplotypeCounts traitset " + "to annotate the duplicate counts");
+                                    throw new IllegalArgumentException("There are at least two tips with the same "
+                                            + "sequence and same sampling time. If you want to input tree with all "
+                                            + "sequences as tips, please use class piqmee.tree.QuasiSpeciesTreeFromFullNewick; "
+                                            + "otherwise please remove duplicates and use haplotypeCounts traitset "
+                                            + "to annotate the duplicate counts");
                                 }
                             }
                             // if with different time, add to tip times and counts
