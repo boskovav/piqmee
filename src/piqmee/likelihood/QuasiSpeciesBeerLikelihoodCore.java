@@ -1231,6 +1231,12 @@ public class QuasiSpeciesBeerLikelihoodCore extends BeerLikelihoodCore {
         }
     }
 
+
+
+
+
+
+
     /**
      * Helper function to calculatePartialsPartialsPruning for case of no QS passing through the parent node.
      *
@@ -1296,13 +1302,13 @@ public class QuasiSpeciesBeerLikelihoodCore extends BeerLikelihoodCore {
      * Helper function to calculatePartialsPartialsPruning for case of no QS passing through the parent node and both nodes have a gap.
      *
      * @param partials1                         probability vector at child 1 (of length nrOfStates * nrOfPatterns)
-     * @param matrices1aboveQSstart             transition probability matrix from node above QS start to QS start for QS passing through child 1
+     * @param matrices1aboveQSstartOrMatrices1  transition probability matrix from node above QS start to QS start for QS passing through child 1 / transition probability matrix between two nodes
      * @param partials2                         probability vector at child 2 (of length nrOfStates * nrOfPatterns)
      * @param matrices2aboveQSstartOrMatrices2  transition probability matrix from node above QS start to QS start for QS passing through child 2 / transition probability matrix between two nodes
      * @param partials3                         probability vector at parent node (of length nrOfStates * nrOfPatterns)
      */
     protected void calculatePartialsPartialsPruningHelperBothQSbelowBothUnknownState(
-            double[] partials1, double[] matrices1aboveQSstart,
+            double[] partials1, double[] matrices1aboveQSstartOrMatrices1,
             double[] partials2, double[] matrices2aboveQSstartOrMatrices2,
             double[] partials3, int w, int v) {
 
@@ -1317,7 +1323,7 @@ public class QuasiSpeciesBeerLikelihoodCore extends BeerLikelihoodCore {
                 tmp1 = partials1[v + j];
                 // note down the partial at the child 2
                 tmp2 = partials2[v + j];
-                sum1 += tmp1 * matrices1aboveQSstart[w + nrOfStates * i + j];
+                sum1 += tmp1 * matrices1aboveQSstartOrMatrices1[w + nrOfStates * i + j];
                 sum2 += tmp2 * matrices2aboveQSstartOrMatrices2[w + nrOfStates * i + j];
             }
             partials3[v + i] = sum1 * sum2;
@@ -1368,7 +1374,7 @@ public class QuasiSpeciesBeerLikelihoodCore extends BeerLikelihoodCore {
      * @param matrices2aboveQSstart transition probability matrix from node above QS start to QS start for QS passing through child 2
      * @param partials3             probability vector at parent node (of length nrOfStates * nrOfPatterns)
      */
-    protected void calculatePartialsPartialsPruningHelperBothQSbelowBothOneQSTipWithPartials(
+    protected void calculatePartialsPartialsPruningHelperBothQSbelowOneQSTipWithPartials(
             double[] partials1, double[] matricesQS1, double[] matrices1aboveQSstart,
             double[] partials2, double[] matrices2aboveQSstart,
             double[] partials3, int w, int v){
@@ -1391,11 +1397,218 @@ public class QuasiSpeciesBeerLikelihoodCore extends BeerLikelihoodCore {
         }
     }
 
+    /**
+     * Helper function to calculatePartialsPartialsPruning for case of a QS passing through the parent node.
+     *
+     * @param partials1             probability vector at child 1 (of length nrOfStates * nrOfPatterns)
+     * @param matrices1aboveQSstart transition probability matrix from node above QS start to QS start for QS passing through child 1
+     * @param partials2             probability vector at child 2 (of length nrOfStates * nrOfPatterns)
+     * @param partials3             probability vector at parent node (of length nrOfStates * nrOfPatterns)
+     * @param state1                state at child 1
+     * @param state2                state at child 2
+     */
+    protected void calculatePartialsPartialsPruningHelperOneQSbelow(
+            double[] partials1, double[] matrices1aboveQSstart,
+            double[] partials2,
+            double[] partials3, int w, int v, int state1, int state2) {
+
+        double tmp1, tmp2;
+
+        // note down the partial at the child 1/child 2
+        tmp1 = partials1[v + state1];
+        tmp2 = partials2[v + state2];
+        // for the state at the parent node calculate prob. of going to the state of the tip * P(QS start -> QS tip)
+        // 0 elsewhere (if not the state at the parent)
+        for (int i = 0; i < nrOfStates; i++) {
+            partials3[v + i] = 0;
+        }
+        partials3[v + state2] = tmp1 * matrices1aboveQSstart[w + nrOfStates * state2 + state1]
+                              * tmp2;
+    }
+
+    /**
+     * Helper function to calculatePartialsPartialsPruning for case of a QS passing through the parent node and the corresponding node has a gap.
+     *
+     * @param partials1                         probability vector at child 1 (of length nrOfStates * nrOfPatterns)
+     * @param matrices1aboveQSstart transition probability matrix from node above QS start to QS start for QS passing through child 1
+     * @param partials2                         probability vector at child 2 (of length nrOfStates * nrOfPatterns)
+     * @param partials3             probability vector at parent node (of length nrOfStates * nrOfPatterns)
+     * @param state1                state at child 1
+     */
+    protected void calculatePartialsPartialsPruningHelperOneQSbelowAndPartialsUnknownState(
+            double[] partials1, double[] matrices1aboveQSstart,
+            double[] partials2,
+            double[] partials3, int w, int v, int state1) {
+
+        double tmp1, tmp2;
+
+        // note down the partial at the child 1
+        tmp1 = partials1[v + state1];
+        // since state at child 2 is unknown, take into account all the possibilities
+        // for each state at the parent node calculate prob. of going to the state of the tip * P(QS start -> QS tip)
+        for (int i = 0; i < nrOfStates; i++){
+            // note down the partial at the child 2
+            tmp2 = partials2[v + i];
+            partials3[v + i] = tmp1 * matrices1aboveQSstart[w + nrOfStates * i + state1]
+                             * tmp2;
+        }
+    }
+
+    /**
+     * Helper function to calculatePartialsPartialsPruning for case of a QS passing through the parent node and the other node has a gap.
+     *
+     * @param partials1                         probability vector at child 1 (of length nrOfStates * nrOfPatterns)
+     * @param matrices1aboveQSstartOrMatrices1  transition probability matrix from node above QS start to QS start for QS passing through child 1 / transition probability matrix between two nodes
+     * @param partials2                         probability vector at child 2 (of length nrOfStates * nrOfPatterns)
+     * @param partials3                         probability vector at parent node (of length nrOfStates * nrOfPatterns)
+     * @param state2                            state at child 2
+     */
+    protected void calculatePartialsPartialsPruningHelperOneQSbelowWithPartialsUnknownState(
+            double[] partials1, double[] matrices1aboveQSstartOrMatrices1,
+            double[] partials2,
+            double[] partials3, int w, int v, int state2) {
+
+        double tmp1, tmp2, sum1;
+
+        // note down the partial at the child 2
+        tmp2 = partials2[v + state2];
+        // since state at child 1 is unknown, take into account all the possibilities
+        // for each state at the parent node calculate prob. of going to the state of the tip * P(QS start -> QS tip)
+        sum1 = 0.0;
+        for (int i = 0; i < nrOfStates; i++){
+            partials3[v + i] = 0;
+            // note down the partial at the child 1
+            tmp1 = partials1[v + i];
+            sum1 += tmp1 * matrices1aboveQSstartOrMatrices1[w + nrOfStates * state2 + i];
+        }
+        partials3[v + state2] = sum1 * tmp2;
+    }
+
+    /**
+     * Helper function to calculatePartialsPartialsPruning for case of a QS passing through the parent node both nodes with a gap.
+     *
+     * @param partials1                         probability vector at child 1 (of length nrOfStates * nrOfPatterns)
+     * @param matrices1aboveQSstartOrMatrices1  transition probability matrix from node above QS start to QS start for QS passing through child 1 / transition probability matrix between two nodes
+     * @param partials2                         probability vector at child 2 (of length nrOfStates * nrOfPatterns)
+     * @param partials3                         probability vector at parent node (of length nrOfStates * nrOfPatterns)
+     */
+    protected void calculatePartialsPartialsPruningHelperOneQSbelowBothUnknownState(
+            double[] partials1, double[] matrices1aboveQSstartOrMatrices1,
+            double[] partials2,
+            double[] partials3, int w, int v) {
+
+        double tmp1, tmp2, sum1;
+
+        // since states at QS tips are unknown, take into account all the possibilities
+        // for each state at the parent node calculate prob. of going to the state of the tip * P(QS start -> QS tip)
+        for (int i = 0; i < nrOfStates; i++){
+            // note down the partial at the child 2
+            tmp2 = partials2[v + i];
+            sum1 = 0.0;
+            for (int j = 0; j < nrOfStates; j++) {
+                // note down the partial at the child 1
+                tmp1 = partials1[v + j];
+                sum1 += tmp1 * matrices1aboveQSstartOrMatrices1[w + nrOfStates * i + j];
+            }
+            partials3[v + i] = sum1 * tmp2;
+        }
+    }
+
+    /**
+     * Helper function to calculatePartialsPartialsPruning for case of a QS passing through the parent node and both nodes have a gap.
+     *
+     * @param partials1             probability vector at child 1 (of length nrOfStates * nrOfPatterns)
+     * @param matricesQS1           transition probability matrix from parent to child 1 - if the node is a tip, it holds the probability that the sequence does not change from the tip to the start of the haplo
+     * @param matrices1aboveQSstart transition probability matrix from node above QS start to QS start for QS passing through child 1
+     * @param partials2             probability vector at child 2 (of length nrOfStates * nrOfPatterns)
+     * @param matricesQS2           transition probability matrix from parent to child 2 - if the node is a tip, it holds the probability that the sequence does not change from the tip to the start of the haplo
+     * @param partials3             probability vector at parent node (of length nrOfStates * nrOfPatterns)
+     */
+    protected void calculatePartialsPartialsPruningHelperOneQSbelowBothQSTipsWithPartials(
+            double[] partials1, double[] matricesQS1, double[] matrices1aboveQSstart,
+            double[] partials2, double[] matricesQS2,
+            double[] partials3, int w, int v){
 
 
+        double tmp1, tmp2, sum1;
+
+        // since states at QS tips are partials, take into account all viable possibilities
+        // for each state at the parent node calculate prob. of going to the state (partial) of the tip * P(QS start -> QS tip)
+        for (int i = 0; i < nrOfStates; i++){
+            // note down the partial at the child 2
+            tmp2 = partials2[v + i] * matricesQS2[w + nrOfStates * i + i];
+            sum1 = 0.0;
+            for (int j = 0; j < nrOfStates; j++) {
+                // note down the partial at the child 1
+                tmp1 = partials1[v + j] * matricesQS1[w + nrOfStates * j + j];
+                sum1 += tmp1 * matrices1aboveQSstart[w + nrOfStates * i + j];
+            }
+            partials3[v + i] = sum1 * tmp2;
+        }
+    }
+
+    /**
+     * Helper function to calculatePartialsPartialsPruning for case of a QS passing through the parent node and both nodes have a gap.
+     *
+     * @param partials1             probability vector at child 1 (of length nrOfStates * nrOfPatterns)
+     * @param matricesQS1           transition probability matrix from parent to child 1 - if the node is a tip, it holds the probability that the sequence does not change from the tip to the start of the haplo
+     * @param matrices1aboveQSstart transition probability matrix from node above QS start to QS start for QS passing through child 1
+     * @param partials2             probability vector at child 2 (of length nrOfStates * nrOfPatterns)
+     * @param partials3             probability vector at parent node (of length nrOfStates * nrOfPatterns)
+     */
+    protected void calculatePartialsPartialsPruningHelperOneQSbelowOneQSTipWithPartials(
+            double[] partials1, double[] matricesQS1, double[] matrices1aboveQSstart,
+            double[] partials2,
+            double[] partials3, int w, int v){
+
+        double tmp1, tmp2, sum1;
+
+        // since states at QS tips are partials, take into account all viable possibilities
+        // for each state at the parent node calculate prob. of going to the state (partial) of the tip * P(QS start -> QS tip)
+        for (int i = 0; i < nrOfStates; i++){
+            // note down the partial at the child 2
+            tmp2 = partials2[v + i];
+            sum1 = 0.0;
+            for (int j = 0; j < nrOfStates; j++) {
+                // note down the partial at the child 1
+                tmp1 = partials1[v + j] * matricesQS1[w + nrOfStates * j + j];
+                sum1 += tmp1 * matrices1aboveQSstart[w + nrOfStates * i + j];
+            }
+            partials3[v + i] = sum1 * tmp2;
+        }
+    }
+
+    /**
+     * Helper function to calculatePartialsPartialsPruning for case of a QS passing through the parent node and both nodes have a gap.
+     *
+     * @param partials1                         probability vector at child 1 (of length nrOfStates * nrOfPatterns)
+     * @param matrices1aboveQSstartOrMatrices1  transition probability matrix from node above QS start to QS start for QS passing through child 1 / transition probability matrix between two nodes
+     * @param partials2                         probability vector at child 2 (of length nrOfStates * nrOfPatterns)
+     * @param matricesQS2                       transition probability matrix from parent to child 2 - if the node is a tip, it holds the probability that the sequence does not change from the tip to the start of the haplo
+     * @param partials3                         probability vector at parent node (of length nrOfStates * nrOfPatterns)
+     */
+    protected void calculatePartialsPartialsPruningHelperOneQSbelowOtherQSTipWithPartials(
+            double[] partials1, double[] matrices1aboveQSstartOrMatrices1,
+            double[] partials2, double[] matricesQS2,
+            double[] partials3, int w, int v){
 
 
+        double tmp1, tmp2, sum1;
 
+        // since states at QS tips are partials, take into account all viable possibilities
+        // for each state at the parent node calculate prob. of going to the state (partial) of the tip * P(QS start -> QS tip)
+        for (int i = 0; i < nrOfStates; i++){
+            // note down the partial at the child 2
+            tmp2 = partials2[v + i] * matricesQS2[w + nrOfStates * i + i];
+            sum1 = 0.0;
+            for (int j = 0; j < nrOfStates; j++) {
+                // note down the partial at the child 1
+                tmp1 = partials1[v + j];
+                sum1 += tmp1 * matrices1aboveQSstartOrMatrices1[w + nrOfStates * i + j];
+            }
+            partials3[v + i] = sum1 * tmp2;
+        }
+    }
 
 
 
@@ -1498,20 +1711,20 @@ public class QuasiSpeciesBeerLikelihoodCore extends BeerLikelihoodCore {
                             // or just child node 1 is a tip
                             else if (nodeIndex1 == child1QS) {
                                 // note that the tips belonging to QS passing through child1/child2 have partials (no states) or gap (does not matter)
-                                calculatePartialsPartialsPruningHelperBothQSbelowBothOneQSTipWithPartials(partials1, matrices1,
-                                                                                                          matrices1aboveQSstart,
-                                                                                                          partials2,
-                                                                                                          matrices2aboveQSstart,
-                                                                                                          partials3, w, v);
-
+                                calculatePartialsPartialsPruningHelperBothQSbelowOneQSTipWithPartials(partials1, matrices1,
+                                                                                                      matrices1aboveQSstart,
+                                                                                                      partials2,
+                                                                                                      matrices2aboveQSstart,
+                                                                                                      partials3, w, v);
                             }
                             // or just child node 2 is a tip
                             else if (nodeIndex2 == child2QS) {
-                                calculatePartialsPartialsPruningHelperBothQSbelowBothOneQSTipWithPartials(partials2, matrices2,
-                                                                                                          matrices2aboveQSstart,
-                                                                                                          partials1,
-                                                                                                          matrices1aboveQSstart,
-                                                                                                          partials3, w, v);
+                                // note that the tips belonging to QS passing through child1/child2 have partials (no states) or gap (does not matter)
+                                calculatePartialsPartialsPruningHelperBothQSbelowOneQSTipWithPartials(partials2, matrices2,
+                                                                                                      matrices2aboveQSstart,
+                                                                                                      partials1,
+                                                                                                      matrices1aboveQSstart,
+                                                                                                      partials3, w, v);
                             }
                             // or no child node is a tip
                             else {
@@ -1572,11 +1785,11 @@ public class QuasiSpeciesBeerLikelihoodCore extends BeerLikelihoodCore {
                             // check if the child node 1 is a tip
                             if (nodeIndex1 == child1QS) {
                                 // note that the tips belonging to QS passing through child1/child2 have partials (no states) or gap (does not matter)
-                                calculatePartialsPartialsPruningHelperBothQSbelowBothOneQSTipWithPartials(partials1, matrices1,
-                                                                                                          matrices1aboveQSstart,
-                                                                                                          partials2,
-                                                                                                          matrices2aboveQSstart,
-                                                                                                          partials3, w, v);
+                                calculatePartialsPartialsPruningHelperBothQSbelowOneQSTipWithPartials(partials1, matrices1,
+                                                                                                      matrices1aboveQSstart,
+                                                                                                      partials2,
+                                                                                                      matrices2aboveQSstart,
+                                                                                                      partials3, w, v);
                             }
                             // or child 1 node is not a tip
                             else {
@@ -1590,7 +1803,6 @@ public class QuasiSpeciesBeerLikelihoodCore extends BeerLikelihoodCore {
 
                         }
                     }
-
                 }
             }
             // child 1 (partials) has the QS start below the branch leading from the parent to the child (i.e. no QS on current branch)
@@ -1638,13 +1850,13 @@ public class QuasiSpeciesBeerLikelihoodCore extends BeerLikelihoodCore {
                             // check if the child node 2 is a tip
                             if (nodeIndex2 == child2QS) {
                                 // note that the tips belonging to QS passing through child1/child2 have partials (no states) or gap (does not matter)
-                                calculatePartialsPartialsPruningHelperBothQSbelowBothOneQSTipWithPartials(partials2, matrices2,
-                                                                                                          matrices2aboveQSstart,
-                                                                                                          partials1,
-                                                                                                          matrices1aboveQSstart,
-                                                                                                          partials3, w, v);
+                                calculatePartialsPartialsPruningHelperBothQSbelowOneQSTipWithPartials(partials2, matrices2,
+                                                                                                      matrices2aboveQSstart,
+                                                                                                      partials1,
+                                                                                                      matrices1aboveQSstart,
+                                                                                                      partials3, w, v);
                             }
-                            // or child 1 node is not a tip
+                            // or child 2 node is not a tip
                             else {
                                 // note that the tips belonging to QS passing through child1/child2 have partials (no states) or gap (does not matter)
                                 calculatePartialsPartialsPruningHelperBothQSbelowBothUnknownState(partials1, matrices1aboveQSstart,
@@ -1656,7 +1868,6 @@ public class QuasiSpeciesBeerLikelihoodCore extends BeerLikelihoodCore {
 
                         }
                     }
-
                 }
             }
             // both children the QS start below the branch leading from the parent to the child (i.e. no QS on current branch)
@@ -1668,21 +1879,9 @@ public class QuasiSpeciesBeerLikelihoodCore extends BeerLikelihoodCore {
 
                     for (int k = 0; k < nrOfPatterns; k++) {
                         // note down the states at the tips belonging to QS passing through child1/child2
-
-                        for (int i = 0; i < nrOfStates; i++) {
-                            // since states at QS tips are unknown, take into account all the possibilities
-                            // for each state at the parent node calculate prob. of going to the state of the tip * P(QS start -> QS tip)
-                            sum1 = sum2 = 0.0;
-                            for (int j = 0; j < nrOfStates; j++) {
-                                // note down the partial at the child 1
-                                tmp1 = partials1[v + j];
-                                // note down the partial at the child 2
-                                tmp2 = partials2[v + j];
-                                sum1 += tmp1 * matrices1[w + nrOfStates * i + j];
-                                sum2 += tmp2 * matrices2[w + nrOfStates * i + j];
-                            }
-                            partials3[v + i] = sum1 * sum2;
-                        }
+                        calculatePartialsPartialsPruningHelperBothQSbelowBothUnknownState(partials1, matrices1,
+                                                                                          partials2, matrices2,
+                                                                                          partials3, w, v);
 
                         v += nrOfStates;
 
@@ -1696,82 +1895,92 @@ public class QuasiSpeciesBeerLikelihoodCore extends BeerLikelihoodCore {
             if (child1QS!=parentQS){
 
                 // child1 has the QS start on the branch leading from the parent to the child
-                if (child1QS!=-1){
+                if (child1QS!=-1) {
 
-                    for (int l = 0; l < nrOfMatrices; l++) {
+                    // the QS passing the nodes below have a state (as opposed to uncertain state = partials)
+                    if (stateIndex1 != null && stateIndex2 != null){
 
-                        // w keeps track of the state the internal node evolves from
-                        int w = l * matrixSize;
+                        for (int l = 0; l < nrOfMatrices; l++) {
 
-                        for (int k = 0; k < nrOfPatterns; k++) {
-                            // note down the states at the tips belonging to QS passing through child1/child2
-                            int state1 = stateIndex1[k];
-                            int state2 = stateIndex2[k];
+                            // w keeps track of the state the internal node evolves from
+                            int w = l * matrixSize;
 
-                            // child1's QS and child2's QS have a state
-                            if (state1 < nrOfStates && state2 < nrOfStates) {
-                                // note down the partial at the child 1/child 2
-                                tmp1 = partials1[v + state1];
-                                tmp2 = partials2[v + state2];
-                                // for the state at the parent node calculate prob. of going to the state of the tip * P(QS start -> QS tip)
-                                // 0 elsewhere (if not the state at the parent)
-                                for (int i = 0; i < nrOfStates; i++) {
-                                    partials3[v + i] = 0;
+                            for (int k = 0; k < nrOfPatterns; k++) {
+                                // note down the states at the tips belonging to QS passing through child1/child2
+                                int state1 = stateIndex1[k];
+                                int state2 = stateIndex2[k];
+
+                                // child1's QS and child2's QS have a state
+                                if (state1 < nrOfStates && state2 < nrOfStates) {
+                                    calculatePartialsPartialsPruningHelperOneQSbelow(partials1, matrices1aboveQSstart,
+                                                                                     partials2,
+                                                                                     partials3, w, v, state1, state2);
+                                // child1's QS has a state but child2's QS has a gap or unknown sequence
+                                } else if (state1 < nrOfStates){
+                                    calculatePartialsPartialsPruningHelperOneQSbelowAndPartialsUnknownState(partials1, matrices1aboveQSstart,
+                                                                                                            partials2,
+                                                                                                            partials3, w, v, state1);
+
+                                // child1's QS has a gap or unknown state but child2's QS has a state
+                                } else if (state2 < nrOfStates){
+                                    calculatePartialsPartialsPruningHelperOneQSbelowWithPartialsUnknownState(partials1, matrices1aboveQSstart,
+                                                                                                             partials2,
+                                                                                                             partials3, w, v, state2);
+                                // both children have a gap or unknown state
+                                } else {
+                                    calculatePartialsPartialsPruningHelperOneQSbelowBothUnknownState(partials1, matrices1aboveQSstart,
+                                                                                                     partials2,
+                                                                                                     partials3, w, v);
                                 }
-                                partials3[v + state2] = tmp1 * matrices1aboveQSstart[w + nrOfStates * state2 + state1]
-                                                      * tmp2 ;
 
                                 v += nrOfStates;
 
-//                            // child1's QS has a state but child2's QS has a gap or unknown sequence
-//                            } else if (state1 < nrOfStates){
-//                                // note down the partial at the child 1
-//                                tmp1 = partials1[v + state1];
-//                                // since state at child 2 is unknown, take into account all the possibilities
-//                                // for each state at the parent node calculate prob. of going to the state of the tip * P(QS start -> QS tip)
-//                                for (int i = 0; i < nrOfStates; i++){
-//                                    // note down the partial at the child 2
-//                                    tmp2 = partials2[v + i];
-//                                    partials3[v + i] = tmp1 * matrices1aboveQSstart[w + nrOfStates * i + state1]
-//                                                     * tmp2;
-//                                }
-//
-//                                v += nrOfStates;
-//
-//                            // child1's QS has a gap or unknown state but child2's QS has a state
-//                            } else if (state2 < nrOfStates){
-//                                // note down the partial at the child 2
-//                                tmp2 = partials2[v + state2];
-//                                // since state at child 1 is unknown, take into account all the possibilities
-//                                // for each state at the parent node calculate prob. of going to the state of the tip * P(QS start -> QS tip)
-//                                sum1 = 0.0;
-//                                for (int i = 0; i < nrOfStates; i++){
-//                                    partials3[v + i] = 0;
-//                                    // note down the partial at the child 1
-//                                    tmp1 = partials1[v + i];
-//                                    sum1 += tmp1 * matrices1aboveQSstart[w + nrOfStates * state2 + i];
-//                                }
-//                                partials3[v + state2] = sum1 * tmp2;
-//
-//                                v += nrOfStates;
-//
-//                            // both children have a gap or unknown state
-//                            } else {
-//                                // since states at QS tips are unknown, take into account all the possibilities
-//                                // for each state at the parent node calculate prob. of going to the state of the tip * P(QS start -> QS tip)
-//                                for (int i = 0; i < nrOfStates; i++){
-//                                    // note down the partial at the child 2
-//                                    tmp2 = partials2[v + i];
-//                                    sum1 = 0.0;
-//                                    for (int j = 0; j < nrOfStates; j++) {
-//                                        // note down the partial at the child 1
-//                                        tmp1 = partials1[v + j];
-//                                        sum1 += tmp1 * matrices1aboveQSstart[w + nrOfStates * i + j];
-//                                    }
-//                                    partials3[v + i] = sum1 * tmp2;
-//                                }
-//
-//                                v += nrOfStates;
+                            }
+                        }
+
+                    }
+                    // the QS do not have a state so they have partials
+                    else {
+
+                        for (int l = 0; l < nrOfMatrices; l++) {
+
+                            // w keeps track of the state the internal node evolves from
+                            int w = l * matrixSize;
+
+                            for (int k = 0; k < nrOfPatterns; k++) {
+
+                                // check if both of the child nodes is a tip
+                                if (nodeIndex1 == child1QS && nodeIndex2 == child2QS) {
+                                    // note that the tips belonging to QS passing through child1/child2 have partials (no states) or gap (does not matter)
+                                    calculatePartialsPartialsPruningHelperOneQSbelowBothQSTipsWithPartials(partials1, matrices1,
+                                                                                                           matrices1aboveQSstart,
+                                                                                                           partials2, matrices2,
+                                                                                                           partials3, w, v);
+                                }
+                                // or just child node 1 is a tip
+                                else if (nodeIndex1 == child1QS) {
+                                    // note that the tips belonging to QS passing through child1/child2 have partials (no states) or gap (does not matter)
+                                    calculatePartialsPartialsPruningHelperOneQSbelowOneQSTipWithPartials(partials1, matrices1,
+                                                                                                         matrices1aboveQSstart,
+                                                                                                         partials2,
+                                                                                                         partials3, w, v);
+                                }
+                                // or just child node 2 is a tip
+                                else if (nodeIndex2 == child2QS) {
+                                    // note that the tips belonging to QS passing through child1/child2 have partials (no states) or gap (does not matter)
+                                    calculatePartialsPartialsPruningHelperOneQSbelowOtherQSTipWithPartials(partials1, matrices1aboveQSstart,
+                                                                                                           partials2, matrices2,
+                                                                                                           partials3, w, v);
+                                }
+                                // or no child node is a tip
+                                else {
+                                    // note that the tips belonging to QS passing through child1/child2 have partials (no states) or gap (does not matter)
+                                    calculatePartialsPartialsPruningHelperOneQSbelowBothUnknownState(partials1, matrices1aboveQSstart,
+                                                                                                     partials2,
+                                                                                                     partials3, w, v);
+                                }
+
+                                v += nrOfStates;
 
                             }
                         }
@@ -1780,51 +1989,57 @@ public class QuasiSpeciesBeerLikelihoodCore extends BeerLikelihoodCore {
                 // child 1 (partials) has the QS start below the branch leading from the parent to the child (i.e. no QS on current branch)
                 else {
 
-                    for (int l = 0; l < nrOfMatrices; l++) {
+                    // the QS passing the child 2 below has a state (as opposed to uncertain state = partials)
+                    if (stateIndex2 != null) {
 
-                        // w keeps track of the state the internal node evolves from
-                        int w = l * matrixSize;
+                        for (int l = 0; l < nrOfMatrices; l++) {
 
-                        for (int k = 0; k < nrOfPatterns; k++) {
-                            // note down the states at the tips belonging to QS passing through child1/child2
-//                            int state1 = stateIndex1[k];
-                            int state2 = stateIndex2[k];
+                            // w keeps track of the state the internal node evolves from
+                            int w = l * matrixSize;
 
-                            // child 2 has a state
-                            if (state2 < nrOfStates){
-                                // note down the partial at the child 2
-                                tmp2 = partials2[v + state2];
-                                // since state at child 1 is unknown, take into account all the possibilities
-                                // for the state at the parent node calculate prob. of going to the state of the tip * P(QS start -> QS tip)
-                                // 0 elsewhere (if not the state at the parent)
-                                sum1 = 0.0;
-                                for (int i = 0; i < nrOfStates; i++) {
-                                    partials3[v + i] = 0;
-                                    // note down the partial at the child 1
-                                    tmp1 = partials1[v + i];
-                                    sum1 += tmp1 * matrices1[w + nrOfStates * state2 + i];
+                            for (int k = 0; k < nrOfPatterns; k++) {
+                                // note down the states at the tips belonging to QS passing through child1/child2
+                                int state2 = stateIndex2[k];
+
+                                // child 2 has a state
+                                if (state2 < nrOfStates) {
+                                    calculatePartialsPartialsPruningHelperOneQSbelowWithPartialsUnknownState(partials1, matrices1, partials2, partials3, w, v, state2);
+                                // child 2 has a gap or unknown state
+                                } else {
+                                    calculatePartialsPartialsPruningHelperOneQSbelowBothUnknownState(partials1, matrices1, partials2, partials3, w, v);
                                 }
-                                partials3[v + state2] = sum1 * tmp2;
 
                                 v += nrOfStates;
 
-//                            // child2 has a gap or unknown state
-//                            } else {
-//                                // since states at child1/child2 are unknown, take into account all the possibilities
-//                                // for each state at the parent node calculate prob. of going to the state of the tip * P(QS start -> QS tip)
-//                                for (int i = 0; i < nrOfStates; i++){
-//                                    // note down the partial at the child 2
-//                                    tmp2 = partials2[v + i];
-//                                    sum1 = 0.0;
-//                                    for (int j = 0; j < nrOfStates; j++) {
-//                                        // note down the partial at the child 1
-//                                        tmp1 = partials1[v + j];
-//                                        sum1 += tmp1 * matrices1[w + nrOfStates * i + j];
-//                                    }
-//                                    partials3[v + i] = sum1 * tmp2;
-//                                }
-//
-//                                v += nrOfStates;
+                            }
+                        }
+                    }
+                    // the QS do not have a state so they have partials
+                    else {
+
+                        for (int l = 0; l < nrOfMatrices; l++) {
+
+                            // w keeps track of the state the internal node evolves from
+                            int w = l * matrixSize;
+
+                            for (int k = 0; k < nrOfPatterns; k++) {
+
+                                // check if the child node 2 is a tip
+                                if (nodeIndex2 == child2QS) {
+                                    // note that the tips belonging to QS passing through child1/child2 have partials (no states) or gap (does not matter)
+                                    calculatePartialsPartialsPruningHelperOneQSbelowOtherQSTipWithPartials(partials1, matrices1,
+                                                                                                           partials2, matrices2,
+                                                                                                           partials3, w, v);
+                                }
+                                // or child 2 node is not a tip
+                                else {
+                                    // note that the tips belonging to QS passing through child1/child2 have partials (no states) or gap (does not matter)
+                                    calculatePartialsPartialsPruningHelperOneQSbelowBothUnknownState(partials1, matrices1,
+                                                                                                     partials2,
+                                                                                                     partials3, w, v);
+                                }
+
+                                v += nrOfStates;
 
                             }
                         }
@@ -1835,139 +2050,155 @@ public class QuasiSpeciesBeerLikelihoodCore extends BeerLikelihoodCore {
                 // child2 has the QS start on the branch leading from the parent to the child
                 if (child2QS!=-1){
 
-                    for (int l = 0; l < nrOfMatrices; l++) {
+                    // the QS passing the nodes below have a state (as opposed to uncertain state = partials)
+                    if (stateIndex1 != null && stateIndex2 != null) {
 
-                        // w keeps track of the state the internal node evolves from
-                        int w = l * matrixSize;
+                        for (int l = 0; l < nrOfMatrices; l++) {
 
-                        for (int k = 0; k < nrOfPatterns; k++) {
-                            // note down the states at the tips belonging to QS passing through child1/child2
-                            int state1 = stateIndex1[k];
-                            int state2 = stateIndex2[k];
+                            // w keeps track of the state the internal node evolves from
+                            int w = l * matrixSize;
 
-                            // child1's QS and child2's QS have a state
-                            if (state1 < nrOfStates && state2 < nrOfStates) {
-                                // note down the partial at the child 1/child 2
-                                tmp1 = partials1[v + state1];
-                                tmp2 = partials2[v + state2];
-                                // for the state at the parent node calculate prob. of going to the state of the tip * P(QS start -> QS tip)
-                                // 0 elsewhere (if not the state at the parent)
-                                for (int i = 0; i < nrOfStates; i++) {
-                                    partials3[v + i] = 0;
+                            for (int k = 0; k < nrOfPatterns; k++) {
+                                // note down the states at the tips belonging to QS passing through child1/child2
+                                int state1 = stateIndex1[k];
+                                int state2 = stateIndex2[k];
+
+                                // child1's QS and child2's QS have a state
+                                if (state1 < nrOfStates && state2 < nrOfStates) {
+                                    calculatePartialsPartialsPruningHelperOneQSbelow(partials2, matrices2aboveQSstart,
+                                                                                     partials1,
+                                                                                     partials3, w, v, state2, state1);
+                                // child1's QS has a state but child2's QS has a gap or unknown sequence
+                                } else if (state1 < nrOfStates) {
+                                    calculatePartialsPartialsPruningHelperOneQSbelowWithPartialsUnknownState(partials2, matrices2aboveQSstart,
+                                                                                                             partials1,
+                                                                                                             partials3, w, v, state1);
+                                // child1's QS has a gap or unknown state but child2's QS has a state
+                                } else if (state2 < nrOfStates) {
+                                    calculatePartialsPartialsPruningHelperOneQSbelowAndPartialsUnknownState(partials2, matrices2aboveQSstart,
+                                                                                                            partials1,
+                                                                                                            partials3, w, v, state2);
+                                // both children have a gap or unknown state
+                                } else {
+                                    calculatePartialsPartialsPruningHelperOneQSbelowBothUnknownState(partials2, matrices2aboveQSstart,
+                                                                                                     partials1,
+                                                                                                     partials3, w, v);
                                 }
-                                partials3[v + state1] = tmp1
-                                                      * tmp2 * matrices2aboveQSstart[w + nrOfStates * state1 + state2];
 
                                 v += nrOfStates;
-
-//                            // child1's QS has a state but child2's QS has a gap or unknown sequence
-//                            } else if (state1 < nrOfStates){
-//                                // note down the partial at the child 1
-//                                tmp1 = partials1[v + state1];
-//                                // since state at child 2 is unknown, take into account all the possibilities
-//                                // for each state at the parent node calculate prob. of going to the state of the tip * P(QS start -> QS tip)
-//                                sum2 = 0.0;
-//                                for (int i = 0; i < nrOfStates; i++){
-//                                    partials3[v + i] = 0;
-//                                    // note down the partial at the child 2
-//                                    tmp2 = partials2[v + i];
-//                                    sum2 += tmp2 * matrices2aboveQSstart[w + nrOfStates * state1 + i];
-//                                }
-//                                partials3[v + state1] = tmp1 * sum2;
-//
-//                                v += nrOfStates;
-//
-//                                // child1's QS has a gap or unknown state but child2's QS has a state
-//                            } else if (state2 < nrOfStates){
-//                                // note down the partial at the child 2
-//                                tmp2 = partials2[v + state2];
-//                                // since state at child 1 is unknown, take into account all the possibilities
-//                                // for each state at the parent node calculate prob. of going to the state of the tip * P(QS start -> QS tip)
-//                                for (int i = 0; i < nrOfStates; i++){
-//                                    // note down the partial at the child 1
-//                                    tmp1 = partials1[v + i];
-//                                    partials3[v + i] = tmp1
-//                                                     * tmp2 * matrices2aboveQSstart[w + nrOfStates * i + state2];
-//                                }
-//
-//                                v += nrOfStates;
-//
-//                            // both children have a gap or unknown state
-//                            } else {
-//                                // since states at QS tips are unknown, take into account all the possibilities
-//                                // for each state at the parent node calculate prob. of going to the state of the tip * P(QS start -> QS tip)
-//                                for (int i = 0; i < nrOfStates; i++){
-//                                    // note down the partial at the child 1
-//                                    tmp1 = partials1[v + i];
-//                                    sum2 = 0.0;
-//                                    for (int j = 0; j < nrOfStates; j++) {
-//                                        // note down the partial at the child 2
-//                                        tmp2 = partials2[v + j];
-//                                        sum2 += tmp2 * matrices2aboveQSstart[w + nrOfStates * i + j];
-//                                    }
-//                                    partials3[v + i] = tmp1 * sum2;
-//                                }
-//
-//                                v += nrOfStates;
 
                             }
                         }
                     }
+                    // the QS do not have a state so they have partials
+                    else {
 
+                        for (int l = 0; l < nrOfMatrices; l++) {
+
+                            // w keeps track of the state the internal node evolves from
+                            int w = l * matrixSize;
+
+                            for (int k = 0; k < nrOfPatterns; k++) {
+
+                                // check if both of the child nodes is a tip
+                                if (nodeIndex1 == child1QS && nodeIndex2 == child2QS) {
+                                    // note that the tips belonging to QS passing through child1/child2 have partials (no states) or gap (does not matter)
+                                    calculatePartialsPartialsPruningHelperOneQSbelowBothQSTipsWithPartials(partials2, matrices2,
+                                                                                                           matrices2aboveQSstart,
+                                                                                                           partials1, matrices1,
+                                                                                                           partials3, w, v);
+                                }
+                                // or just child node 2 is a tip
+                                else if (nodeIndex2 == child1QS) {
+                                    // note that the tips belonging to QS passing through child1/child2 have partials (no states) or gap (does not matter)
+                                    calculatePartialsPartialsPruningHelperOneQSbelowOneQSTipWithPartials(partials2, matrices2,
+                                                                                                         matrices2aboveQSstart,
+                                                                                                         partials1,
+                                                                                                         partials3, w, v);
+                                }
+                                // or just child node 1 is a tip
+                                else if (nodeIndex1 == child1QS) {
+                                    // note that the tips belonging to QS passing through child1/child2 have partials (no states) or gap (does not matter)
+                                    calculatePartialsPartialsPruningHelperOneQSbelowOtherQSTipWithPartials(partials2, matrices2aboveQSstart,
+                                                                                                           partials1, matrices1,
+                                                                                                           partials3, w, v);
+                                }
+                                // or no child node is a tip
+                                else {
+                                    // note that the tips belonging to QS passing through child1/child2 have partials (no states) or gap (does not matter)
+                                    calculatePartialsPartialsPruningHelperOneQSbelowBothUnknownState(partials2, matrices2aboveQSstart,
+                                                                                                     partials1,
+                                                                                                     partials3, w, v);
+                                }
+
+                                v += nrOfStates;
+
+                            }
+                        }
+                    }
                 }
                 // child 2 (partials) has the QS start below the branch leading2 from the parent to the child (i.e. no QS on current branch)
                 else {
 
-                    for (int l = 0; l < nrOfMatrices; l++) {
+                    // the QS passing the child 2 below has a state (as opposed to uncertain state = partials)
+                    if (stateIndex2 != null) {
 
-                        // w keeps track of the state the internal node evolves from
-                        int w = l * matrixSize;
+                        for (int l = 0; l < nrOfMatrices; l++) {
 
-                        for (int k = 0; k < nrOfPatterns; k++) {
-                            // note down the states at the tips belonging to QS passing through child1/child2
-                            int state1 = stateIndex1[k];
-//                            int state2 = stateIndex2[k];
+                            // w keeps track of the state the internal node evolves from
+                            int w = l * matrixSize;
 
-                            // child 1 has a state
-                            if (state1 < nrOfStates){
-                                // note down the partial at the child 1
-                                tmp1 = partials1[v + state1];
-                                // since state at child 2 is unknown, take into account all the possibilities
-                                // for the state at the parent node calculate prob. of going to the state of the tip * P(QS start -> QS tip)
-                                // 0 elsewhere (if not the state at the parent)
-                                sum2 = 0.0;
-                                for (int i = 0; i < nrOfStates; i++) {
-                                    partials3[v + i] = 0;
-                                    // note down the partial at the child 2
-                                    tmp2 = partials2[v + i];
-                                    sum2 += tmp2 * matrices2[w + nrOfStates * state1 + i];
+                            for (int k = 0; k < nrOfPatterns; k++) {
+                                // note down the states at the tips belonging to QS passing through child1/child2
+                                int state1 = stateIndex1[k];
+
+                                // child 1 has a state
+                                if (state1 < nrOfStates){
+                                    calculatePartialsPartialsPruningHelperOneQSbelowWithPartialsUnknownState(partials2, matrices2,
+                                                                                                             partials1,
+                                                                                                             partials3, w, v, state1);
+                                // child 1 has a gap or unknown state
+                                } else {
+                                    calculatePartialsPartialsPruningHelperOneQSbelowBothUnknownState(partials2, matrices2,
+                                                                                                     partials1,
+                                                                                                     partials3, w, v);
                                 }
-                                partials3[v + state1] = tmp1 * sum2;
 
                                 v += nrOfStates;
-
-//                            // child2 has a gap or unknown state
-//                            } else {
-//                                // since states at child1/child2 are unknown, take into account all the possibilities
-//                                // for each state at the parent node calculate prob. of going to the state of the tip * P(QS start -> QS tip)
-//                                for (int i = 0; i < nrOfStates; i++){
-//                                    // note down the partial at the child 1
-//                                    tmp1 = partials1[v + i];
-//                                    sum2 = 0.0;
-//                                    for (int j = 0; j < nrOfStates; j++) {
-//                                        // note down the partial at the child 2
-//                                        tmp2 = partials2[v + j];
-//                                        sum2 += tmp2 * matrices2[w + nrOfStates * i + j];
-//                                    }
-//                                    partials3[v + i] = tmp1 * sum2;
-//                                }
-//
-//                                v += nrOfStates;
 
                             }
                         }
                     }
+                    // the QS do not have a state so they have partials
+                    else {
 
+                        for (int l = 0; l < nrOfMatrices; l++) {
+
+                            // w keeps track of the state the internal node evolves from
+                            int w = l * matrixSize;
+
+                            for (int k = 0; k < nrOfPatterns; k++) {
+
+                                // check if the child node 1 is a tip
+                                if (nodeIndex1 == child1QS) {
+                                    // note that the tips belonging to QS passing through child1/child2 have partials (no states) or gap (does not matter)
+                                    calculatePartialsPartialsPruningHelperOneQSbelowOtherQSTipWithPartials(partials2, matrices2,
+                                                                                                           partials1, matrices1,
+                                                                                                           partials3, w, v);
+                                }
+                                // or child 1 node is not a tip
+                                else {
+                                    // note that the tips belonging to QS passing through child1/child2 have partials (no states) or gap (does not matter)
+                                    calculatePartialsPartialsPruningHelperOneQSbelowBothUnknownState(partials2, matrices2,
+                                                                                                     partials1,
+                                                                                                     partials3, w, v);
+                                }
+
+                                v += nrOfStates;
+
+                            }
+                        }
+                    }
                 }
             }
             else{
