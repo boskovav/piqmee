@@ -377,6 +377,22 @@ public class QuasiSpeciesTree extends Tree {
         }
     }
 
+    /**
+     * Function checking if the haplotype counts array contains other entry than 1
+     *
+     * @param counts    traitSet with haplotype counts
+     * @return          returns true if all the sequences have are present in 1 copy each, i.e. if the haplotype count
+     *                      array only contains 1s
+     */
+    public boolean haplotypeCountIsAll1(TraitSet counts){
+        for (int i = 0; i < counts.taxaInput.get().asStringList().size(); i++) {
+            if (counts.getValue(i) > 1)
+                return false;
+        }
+        return(true);
+    }
+
+
 
     /*
     //

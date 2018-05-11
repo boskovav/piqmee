@@ -2,6 +2,7 @@ package piqmee.tree;
 
 import beast.core.*;
 import beast.evolution.alignment.Alignment;
+import beast.evolution.tree.TraitSet;
 import beast.util.ClusterTree;
 
 import java.util.List;
@@ -39,7 +40,7 @@ public class QuasiSpeciesClusterTree extends QuasiSpeciesTree implements StateNo
         if (dataInput.get() == null)
             throw new RuntimeException("The data input needs to be specified");
 
-        if (haplotypeCountsInput.get() != null)
+        if (haplotypeCountsInput.get() != null || !haplotypeCountIsAll1(haplotypeCountsInput.get()))
             initFromUniqueHaploTree(inputTree, dataInput.get(),collapseIdenticalSequencesInput.get(),haplotypeCountsInput.get());
         else
             initFromFullTree(inputTree, dataInput.get(),collapseIdenticalSequencesInput.get());
