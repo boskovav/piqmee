@@ -249,7 +249,7 @@ public class QuasiSpeciesTreeScale extends QuasiSpeciesTreeOperator{
                     }
                 }
                 // recalculate countPossibleStartBranches
-                qsTree.countAndSetPossibleStartBranches();
+                //qsTree.countAndSetPossibleStartBranches();
 
                 // scaling the entire tree
             } else {

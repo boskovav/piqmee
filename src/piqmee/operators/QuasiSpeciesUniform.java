@@ -121,7 +121,7 @@ public class QuasiSpeciesUniform extends QuasiSpeciesTreeOperator {
         node.setHeight(newValue);
 
         // it is possible that we passed a QS sampling time, so less branches for the node to start off -- recalculate
-        qsTree.countAndSetPossibleStartBranches();
+        //qsTree.countAndSetPossibleStartBranches();
 
         return 0.0;
     }

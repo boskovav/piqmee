@@ -14,7 +14,7 @@ public class QuasiSpeciesNode extends Node {
 
     private int haploAboveName = -1;
     private int continuingHaploName = -1;
-    private int startBranchCounts = 1;
+//    private int startBranchCounts = 1;
 
     // attachment times are sorted from the biggest to the smallest
     private double[] attachmentTimesList;
@@ -88,20 +88,18 @@ public class QuasiSpeciesNode extends Node {
      *
      * @return start branch count
      */
-    public int getStartBranchCounts() {
-        return this.startBranchCounts;
-    }
+//    public int getStartBranchCounts() {return this.startBranchCounts;}
 
     /**
      * Sets the number of branches the node can be attached to
      *
      * @param startBranchCount New quasi-species name
      */
-    public void setStartBranchCounts(int startBranchCount) {
-        startEditing();
-        this.makeDirty(QuasiSpeciesTree.IS_FILTHY);
-        this.startBranchCounts = startBranchCount;
-    }
+//    public void setStartBranchCounts(int startBranchCount) {
+//        startEditing();
+//        this.makeDirty(QuasiSpeciesTree.IS_FILTHY);
+//        this.startBranchCounts = startBranchCount;
+//    }
 
     /**
      * Set quasi-species tree for a copied node
@@ -131,7 +129,7 @@ public class QuasiSpeciesNode extends Node {
 
         node.haploAboveName = haploAboveName;
         node.continuingHaploName = continuingHaploName;
-        node.startBranchCounts = startBranchCounts;
+//        node.startBranchCounts = startBranchCounts;
 
         if (attachmentTimesList != null) {
             node.attachmentTimesList = new double[attachmentTimesList.length];
@@ -171,7 +169,7 @@ public class QuasiSpeciesNode extends Node {
         QuasiSpeciesNode qsNode = (QuasiSpeciesNode)node;
         haploAboveName = qsNode.haploAboveName;
         continuingHaploName = qsNode.continuingHaploName;
-        startBranchCounts = qsNode.startBranchCounts;
+//        startBranchCounts = qsNode.startBranchCounts;
         if (qsNode.attachmentTimesList != null) {
             attachmentTimesList = new double[qsNode.attachmentTimesList.length];
             System.arraycopy(qsNode.attachmentTimesList,0,attachmentTimesList,0,qsNode.attachmentTimesList.length);
