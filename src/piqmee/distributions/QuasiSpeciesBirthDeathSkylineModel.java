@@ -12,6 +12,7 @@ import piqmee.tree.QuasiSpeciesTree;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.stream.IntStream;
 
 /**
@@ -29,6 +30,7 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel{
     public QuasiSpeciesBirthDeathSkylineModel() { };
 
     ArrayList isRhoTip;
+    double[] uniqueSampTimes;
 
     @Override
     public void initAndValidate() {
@@ -42,24 +44,11 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel{
             isRhoTip.add(i,isRhoTipArray);
         }
 
+        uniqueSampTimes = getArrayOfUniqueSamplingTimes(treeInput.get());
+
         if(SAModel || r!=null)
             throw new IllegalArgumentException("The sampled ancestor model has not been implemented to work with quasispecies model yet");
 
-    }
-
-    /**
-     * Factorial calculation for counting number of possible full topologies QS tree represents
-     *
-     * @param number the number to calculate the factorial of
-     */
-    public static double logfactorial(int number) {
-        double result = 0;
-
-        for (int factor = 2; factor <= number; factor++) {
-            result += Math.log(factor);
-        }
-
-        return result;
     }
 
     /**
@@ -68,12 +57,13 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel{
      */
     public int getTotalN(){
         int totalN = 0;
-        for (int i = 0; i < N.length; i++){
-            totalN += N[i];
+        if (N != null){
+            for (int i = 0; i < N.length; i++){
+                totalN += N[i];
+            }
         }
         return totalN;
     }
-
 
     /**
      * Sorts the array of values in descending order
@@ -112,18 +102,33 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel{
     }
 
     /**
-     * Sorts the array of values in descending order and gives the sort order of old positions of elements
+     * Counts number of unique sampling times of leaves in a tree
      *
      */
-    public void sortListDescending(double[] array, int[] order) {
-        Arrays.sort(array);
-        // reverse the array to start with the largest value
-        int totalLength = array.length;
-        for (int j = 0; j < totalLength/2; j++){
-            double tmp = array[j];
-            array[j] = array[totalLength-1-j];
-            array[totalLength-1-j] = tmp;
+    public double[] getArrayOfUniqueSamplingTimes(TreeInterface tree){
+
+        List<Double> uniqueTimes = new ArrayList();
+
+        int nrTips = tree.getLeafNodeCount();
+
+        for (int i = 0; i < nrTips; i++) {
+            Node node = tree.getNode(i);
+            double[] samplingtimes = ((QuasiSpeciesNode) node).getTipTimesList();
+            for (int time = 0; time < samplingtimes.length; time++) {
+                if (!uniqueTimes.contains(samplingtimes[time])) {
+                    uniqueTimes.add(samplingtimes[time]);
+                }
+            }
         }
+        // cast from Double to double
+        double[] uniqueTimesArray = new double[uniqueTimes.size()];
+        for (int i = 0; i < uniqueTimes.size(); i++) {
+            uniqueTimesArray[i] = uniqueTimes.get(i);
+        }
+
+        sortListDescending(uniqueTimesArray);
+
+        return uniqueTimesArray;
     }
 
     /**
@@ -136,85 +141,52 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel{
 
         QuasiSpeciesTree qsTree = (QuasiSpeciesTree) tree;
 
-        // count tips sampled at sampling efforts
-        int totalN = getTotalN();
-
-        // total number of sampling times in the tree
-        int totalsamplingtimes = qsTree.getTotalAttachmentCounts() + tree.getLeafNodeCount();
-
-        // make 4 time arrays - 1) sampling at present (sap) times,
-        //                      2) stt times,
-        //                      3) true internal node times and
-        //                      4) merge of these
+        // make 3 time arrays - 1) sampling times -- this one is made in initAndValidate already
+        //                      2) true internal node times and
+        //                      3) merge of these
         // store in 2 arrays a) number of bifurcations and b) total number of lineages A at time t0, t1 etc
         // at each time t0, t1 etc add the gamma contribution from A -> knowing number of bifurcations and total nr of lineages
         // add total number of QS lineages to TOTAL number of all lineages array
 
         // times arrays
-        double[] SAP = new double[N.length];
-        double[] STT = new double[totalsamplingtimes - totalN];
-        double[] INT = new double[tree.getInternalNodeCount()];
-        double[] allTimes = new double[SAP.length + STT.length + INT.length];
+        int nrTips = tree.getLeafNodeCount();
+        int nrINTnodes = tree.getInternalNodeCount();
+        double[] INT = new double[nrINTnodes];
         // fill time arrays
-        int intp = 0;
-        int sapp = 0;
-        int sttp = 0;
-        Node[] nodes = tree.getNodesAsArray();
-        for (Node node : nodes){
-            if (node.isLeaf()){
-                double[] samplingtimes = ((QuasiSpeciesNode) node).getTipTimesList();
-                boolean[] isRhoTipArray = (boolean[]) isRhoTip.get(node.getNr());
-                for (int time = 0;  time < isRhoTipArray.length; time++){
-                    if (isRhoTipArray[time]) {
-                        if (sapp < SAP.length) {
-                            SAP[sapp] = samplingtimes[time];
-                            sapp++;
-                        }
-                    }
-                        else {
-                        STT[sttp] = samplingtimes[time];
-                        sttp++;
-                    }
-                }
-            }
+        for (int i = nrTips; i < nrTips+nrINTnodes; i++){
             // internal node, add its height to INT
-            else {
-                INT[intp] = (node.getHeight());
-                intp++;
-            }
+            INT[i-nrTips] = ((tree.getNode(i)).getHeight());
         }
 
-        // make array of sort indexes for INT
+        // make array of sort indexes for INT --- for checking later if the node belonging to this height has QS passing through
         int[] indexes = IntStream.range(0, INT.length).boxed()
                 .sorted((i, j) -> ((Double)INT[i]).compareTo(INT[j])).mapToInt(ele -> ele).toArray();
         // get in descending order
         invertArray(indexes);
 
-        // sort time arrays in ascending order
-        sortListDescending(SAP);
-        sortListDescending(STT);
+        // sort time arrays in descending order
         sortListDescending(INT);
-        System.arraycopy(SAP,0, allTimes,0, SAP.length);
-        System.arraycopy(STT, 0, allTimes, SAP.length, STT.length);
-        System.arraycopy(INT, 0, allTimes, SAP.length+STT.length, INT.length);
+        double[] allTimes = new double[uniqueSampTimes.length + INT.length];
+        System.arraycopy(uniqueSampTimes,0, allTimes,0, uniqueSampTimes.length);
+        System.arraycopy(INT, 0, allTimes, uniqueSampTimes.length, INT.length);
         sortListDescending(allTimes);
 
         // arrays to store number of bifurcations / total number of lineages of QS and total number of all lineages
+        // QS
+        int[] nrqsattachments = new int[allTimes.length];
+        int[] nrqslineages = new int[allTimes.length];
+        // total
         int[] nrtotallineages = new int[allTimes.length];
         Arrays.fill(nrtotallineages,1);
         int[] nrtotalqsattachments = new int[allTimes.length];
 
-        int[] nrqsattachments = new int[allTimes.length];
-        int[] nrqslineages = new int[allTimes.length];
-
-        // restart pointer for internal node times
-        intp = 0;
+        // pointer for internal node times - to associate INT node with QS correctly
+        int intp = 0;
 
         // count for each haplo at each time point the n's and add to total count
         for (Node node : tree.getExternalNodes()){
             Arrays.fill(nrqsattachments,0);
-            Arrays.fill(nrqslineages,1);
-            int nQSTemp = qsTree.getHaplotypeCounts(node);
+            Arrays.fill(nrqslineages,0);
             double[] QSTimesTemp = ((QuasiSpeciesNode) node).getAttachmentTimesList();
             double[] QSTipTimesTemp = ((QuasiSpeciesNode) node).getTipTimesList();
             int[] QSTipTimesCountTemp = ((QuasiSpeciesNode) node).getTipTimesCountList();
@@ -222,28 +194,28 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel{
             int qstimep = 1;
             int qstiptimep = QSTipTimesTemp.length - 1;
             for (int i = 0; i < allTimes.length; i++) {
-                // new bifurctations between i-1 and i, add a lineage to qs and total count
+                // new bifurcations between i-1 and i, add a lineage to qs and total count
                 while (qstimep < QSTimesTemp.length && QSTimesTemp[qstimep] > allTimes[i]) {
                     nrqsattachments[i] += 1;
                     qstimep++;
                 }
                 nrqslineages[i] += nrqsattachments[i];
 
-                if (i+1 < allTimes.length){//qstimep < QSTimesTemp.length || qstiptimep > 0){
+                if (i+1 < allTimes.length){
                     // number of lineages at time i+1 is the same as at i ... + bifurcations (i to i+1) - sampling (i)
                     nrqslineages[i + 1] += nrqslineages[i];
-                    // the time in allTimes[i] can be a time for sampling at present or STT (both in QSTipTimesTemp of the given node)
-                    // sampling at time i, remove lineages from time i+1
+                    // the time in allTimes[i] can be a time for sampling at time i, remove lineages from time i+1
                     if (qstiptimep >= 0 && QSTipTimesTemp[qstiptimep] == allTimes[i]) {
                         nrqslineages[i+1] -= QSTipTimesCountTemp[qstiptimep];
                         qstiptimep--;
                     }
-                    // but the time in allTimes[i] can be the time for a real internal node
+                    // the time in allTimes[i] can be the time for a real internal node
+                    //              - account for all possible QS lineages it can attach to
                     else {
                         // check if this node belongs to this haplotype
-                        if (((QuasiSpeciesNode) nodes[indexes[intp]]).getContinuingHaploName() == node.getNr()) {
+                        if (intp < indexes.length && ((QuasiSpeciesNode) tree.getNode(indexes[intp] + nrTips)).getContinuingHaploName() == node.getNr()) {
                             // if it does, add contribution to the gamma factor for possible attachment branches
-                            gamma += Math.log(nrqslineages[i]);
+                            gamma += Math.log(nrqslineages[i] + 1);
                             intp++;
                         }
                     }
@@ -260,9 +232,9 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel{
                 }
             }
             // check if we checked everything in QS attachment array
-            if (qstimep < nQSTemp){// && QSTimesTemp.length > 0){
+            if (qstimep < qsTree.getHaplotypeCounts(node)){// && QSTimesTemp.length > 0){
                 throw new RuntimeException("There is somethings wrong with accounting for attachments times of node " +
-                        node.getNr() + ". Please check line 265 in QuasiSpeciesBirthDeathSkylineModel class.");
+                        node.getNr() + ". Please check line 224 in QuasiSpeciesBirthDeathSkylineModel class.");
             }
         }
 
@@ -273,8 +245,12 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel{
             //      the lineage due to the internal node. We could have opted to increase the lineage count due to the
             //      internal node when the node's gamma contribution above was added, but it can happen that there is
             //      no QS lineage passing through the node and we would then never have increased the lineage count.
-            for (int j = i + 1; j < allTimes.length; j++) {
-                nrtotallineages[j] += 1;
+            for (Node node : tree.getInternalNodes()) {
+                if (node.getHeight() == allTimes[i]) {
+                    for (int j = i + 1; j < allTimes.length; j++) {
+                        nrtotallineages[j] += 1;
+                    }
+                }
             }
             //
             for (int lineage = nrtotallineages[i]; lineage > nrtotallineages[i] - nrtotalqsattachments[i]; lineage--) {
@@ -285,8 +261,6 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel{
 
         return gamma;
     }
-
-
 
     /**
      * Adds the number of qs duplicates to the count of tips at each of the contemporaneous sampling times ("rho" sampling time)
