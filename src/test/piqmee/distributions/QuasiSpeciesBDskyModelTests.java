@@ -93,7 +93,7 @@ public class QuasiSpeciesBDskyModelTests {
         double t3_tips = 2*-0.19427342018656657;
         // Since all tips have haplo duplicates sampled only at a single time point, no factor for number of full trees = constant
         // double nrFullTrees = Math.log(4*3*3*2*2*1 * 3*2*2*1 * 2*1);
-        assertEquals(bdsky+t1_1+t2_1+t2_2+t3_1+t3_2+t3_3+t1_tips+t2_tips+t3_tips, bdsqs.calculateTreeLogLikelihood(tree), 1e-5);
+        assertEquals(bdsky+bdsqs.logNumberOfQSTrees(tree)+t1_1+t2_1+t2_2+t3_1+t3_2+t3_3+t1_tips+t2_tips+t3_tips, bdsqs.calculateTreeLogLikelihood(tree), 1e-5);
     }
 
     @Test
@@ -122,7 +122,7 @@ public class QuasiSpeciesBDskyModelTests {
         double t1_tips = 3*2.5377465380121595;
         double t2_tips = 1*-0.6931471805599453;
         double t3_tips = 2*-0.19427342018656657;
-        assertEquals(bdsky+t1_1+t2_1+t2_2+t3_1+t3_2+t3_3+t1_tips+t2_tips+t3_tips, bdsqs.calculateTreeLogLikelihood(tree), 1e-5);
+        assertEquals(bdsky+bdsqs.logNumberOfQSTrees(tree)+t1_1+t2_1+t2_2+t3_1+t3_2+t3_3+t1_tips+t2_tips+t3_tips, bdsqs.calculateTreeLogLikelihood(tree), 1e-5);
     }
 
     /**
@@ -156,7 +156,7 @@ public class QuasiSpeciesBDskyModelTests {
      */
 
     @Test
-    public void testCounterOfFullTreesRepresentedByQsTree() throws Exception {
+    public void testCounterOfFullTreesRepresentedByQsTree1() throws Exception {
 
         // Assemble BEASTObjects needed by QuasiSpeciesTree
         QuasiSpeciesTree tree = QuasiSpeciesTestCase.setTreeFromFullNewick("(((((((((((t0 : 1, t1 : 1) : 1, t2 : 2) : 0.5, t3 : 1) : 1, t4 : 2) : 1, t5 : 3) : 1, t6 : 4) : 1, t7 : 5) : 0.5, t8 : 2) : 1, t9 : 3) : 1, t10 : 4 ) : 1, t11 : 10 ) : 1;",
@@ -175,9 +175,74 @@ public class QuasiSpeciesBDskyModelTests {
 
         double qsbdsky = bdsqs.calculateTreeLogLikelihood(tree);
         double bdsky = bdssm.calculateTreeLogLikelihood(treeNormal)
-                +Math.log(3*2)
-                +Math.log(7*6*6*5*5*4*4*3)
-                +Math.log(6*5*5*4*4*3*3*2*2*1);
+                // no qs to be attached to for G (node t11) so no gamma contribution here
+                // before height 5 there are new 5 attachment points, and one lineage existing from height A
+                + Math.log(6*5*5*4*4*3*3*2*2*1)
+                // at the same time, at height 5 there is in total 6 + 1 (G) lineages
+                    - Math.log(7*6*6*5*5*4*4*3*3*2)
+                // before height 1.5 there are 3 surviving A lineages from previous interval, plus
+                // 4 new attachment points
+                + Math.log(7*6*6*5*5*4*4*3)
+                // at the same time, at height 1.5 there is in total 7 + 1 (G) lineages
+                    - Math.log(8*7*7*6*6*5*5*4)
+                // before height 0 there are 2 surviving A lineages from previous interval, plus
+                // 1 new attachment points
+                + Math.log(3*2)
+                // at the same time, at height 0 there is in total 3 + 1 (G) lineages
+                    - Math.log(4*3);
+
+        assertEquals(qsbdsky,bdsky,1e-10);
+
+    }
+
+    /**
+     *
+     * Tree prior calculation P(tree|tree parameters) testing - number of full trees from qs tree
+     *
+     */
+
+    @Test
+    public void testCounterOfFullTreesRepresentedByQsTree2() throws Exception {
+
+        // Assemble BEASTObjects needed by QuasiSpeciesTree
+        QuasiSpeciesTree tree = QuasiSpeciesTestCase.setTreeFromFullNewick("(((((((((((t0 : 1, t1 : 1) : 1, t2 : 2) : 0.5, t3 : 1) : 1, t4 : 2) : 1, t5 : 3) : 1, t6 : 4) : 1, t7 : 5) : 0.5, t8 : 2) : 1, t9 : 3) : 1, t10 : 4 ) : 1, t11 : 10 ) : 1;",
+                new String[] {"A", "A", "G", "A", "A", "A", "A", "A", "A", "A", "A", "A"});
+
+        // calculate the tree likelihood with QS algorithm
+        QuasiSpeciesBirthDeathSkylineModel bdsqs = this.getQSBDSKYmodel(tree, new RealParameter("11.0"),
+                false, new RealParameter("2.0"), new RealParameter("1.0"),
+                new RealParameter("0.5"));
+
+        // calculate the basis of the tree likelihood with bdsky
+        Tree treeNormal = new TreeParser("(((((((((((t0 : 1, t1 : 1) : 1, t2 : 2) : 0.5, t3 : 1) : 1, t4 : 2) : 1, t5 : 3) : 1, t6 : 4) : 1, t7 : 5) : 0.5, t8 : 2) : 1, t9 : 3) : 1, t10 : 4 ) : 1, t11 : 10 ) : 1;",false);
+        BirthDeathSkylineModel bdssm = this.getBDSKYmodel(treeNormal, new RealParameter("11.0"),
+                false, new RealParameter("2.0"), new RealParameter("1.0"),
+                new RealParameter("0.5"));
+
+        double qsbdsky = bdsqs.calculateTreeLogLikelihood(tree);
+        double bdsky = bdssm.calculateTreeLogLikelihood(treeNormal)
+                // before height 5 there are new 6 attachment points, and one lineage existing from height A
+                + Math.log(7*6*6*5*5*4*4*3*3*2*2*1)
+                // at the same time, at height 5 there is in total 7 (A) lineages
+                    - Math.log(7*6*6*5*5*4*4*3*3*2*2*1)
+                // before height 2 there are 4 surviving A lineages from previous interval, plus
+                // 3 new attachment points
+                + Math.log(7*6*6*5*5*4)
+                // at the same time, at height 2 there is in total 7 (A) lineages
+                    - Math.log(7*6*6*5*5*4)
+                // at height 2, G lineage is born through true internal node
+                // there are thus 7 qs A lineages to be attached to for G (node t1) so there is gamma contribution
+                + Math.log(7)
+                // before height 1.5 there are 2 surviving A lineages from previous interval, plus
+                // 0 new attachment points
+                //+ Math.log(0)
+                // at the same time, at height 1.5 there is in total 2 + 1 (G) lineages
+                    //- Math.log(0)
+                // before height 0 there are 2 surviving A lineages from previous interval, plus
+                // 1 new attachment points
+                + Math.log(3*2)
+                // at the same time, at height 0 there is in total 3 + 1 (G) lineages
+                    - Math.log(4*3);
 
         assertEquals(qsbdsky,bdsky,1e-10);
 
