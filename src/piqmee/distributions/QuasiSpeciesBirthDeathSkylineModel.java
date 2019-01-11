@@ -176,12 +176,9 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel{
         int[] nrqsattachments = new int[allTimes.length];
         int[] nrqslineages = new int[allTimes.length];
         // total
-        int[] nrtotallineages = new int[allTimes.length];
-        Arrays.fill(nrtotallineages,1);
-        int[] nrtotalqsattachments = new int[allTimes.length];
-
-        // pointer for internal node times - to associate INT node with QS correctly
-        int intp = 0;
+        //int[] nrtotallineages = new int[allTimes.length];
+        //Arrays.fill(nrtotallineages,1);
+        //int[] nrtotalqsattachments = new int[allTimes.length];
 
         // count for each haplo at each time point the n's and add to total count
         for (Node node : tree.getExternalNodes()){
@@ -193,6 +190,8 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel{
             // pointers for qs arrays
             int qstimep = 1;
             int qstiptimep = QSTipTimesTemp.length - 1;
+            // pointer for internal node times - to associate INT node with QS correctly
+            int intp = 0;
             for (int i = 0; i < allTimes.length; i++) {
                 // new bifurcations between i-1 and i, add a lineage to qs and total count
                 while (qstimep < QSTimesTemp.length && QSTimesTemp[qstimep] > allTimes[i]) {
@@ -204,60 +203,68 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel{
                 if (i+1 < allTimes.length){
                     // number of lineages at time i+1 is the same as at i ... + bifurcations (i to i+1) - sampling (i)
                     nrqslineages[i + 1] += nrqslineages[i];
-                    // the time in allTimes[i] can be a time for sampling at time i, remove lineages from time i+1
-                    if (qstiptimep >= 0 && QSTipTimesTemp[qstiptimep] == allTimes[i]) {
-                        nrqslineages[i+1] -= QSTipTimesCountTemp[qstiptimep];
-                        qstiptimep--;
-                    }
-                    // the time in allTimes[i] can be the time for a real internal node
-                    //              - account for all possible QS lineages it can attach to
-                    else {
-                        // check if this node belongs to this haplotype
-                        if (intp < indexes.length && ((QuasiSpeciesNode) tree.getNode(indexes[intp] + nrTips)).getContinuingHaploName() == node.getNr()) {
+                    // if the time is different from previous time - then take into account possible birth/death of lineages
+                    if (allTimes[i] == allTimes[0] || allTimes[i] != allTimes[i-1]) {
+                        // the time in allTimes[i] can be a time for sampling at time i, remove lineages from time i+1
+                        if (qstiptimep >= 0 && QSTipTimesTemp[qstiptimep] == allTimes[i]) {
+                            nrqslineages[i + 1] -= QSTipTimesCountTemp[qstiptimep];
+                            qstiptimep--;
+                        }
+                        // the time in allTimes[i] can be the time for a real internal node
+                        //              - account for all possible QS lineages it can attach to
+                        // check if the internal node with this height belongs to this haplotype
+                        while (intp < indexes.length && tree.getNode(indexes[intp] + nrTips).getHeight() > allTimes[i])
+                            intp++;
+                        if (intp < indexes.length
+                                && tree.getNode(indexes[intp] + nrTips).getHeight() == allTimes[i]
+                                && ((QuasiSpeciesNode) tree.getNode(indexes[intp] + nrTips)).getContinuingHaploName() == node.getNr()) {
                             // if it does, add contribution to the gamma factor for possible attachment branches
                             gamma += Math.log(nrqslineages[i] + 1);
-                            intp++;
                         }
                     }
                 }
 
-                nrtotallineages[i] += nrqslineages[i];
-                nrtotalqsattachments[i] += nrqsattachments[i];
-
-                // include all the (gammaj) factors for the possible combinations of QS lineages at each merge point
-                for (int lineage = nrqslineages[i]; lineage > nrqslineages[i] - nrqsattachments[i]; lineage--){
-                    // for qs lineages we have to have lineage + 1 since we did not count that at first split,
-                    //  we created 2 lineages instead of just one, as at all later splits
-                    gamma += Math.log(lineage) + Math.log(lineage + 1);
+                //nrtotallineages[i] += nrqslineages[i];
+                //nrtotalqsattachments[i] += nrqsattachments[i];
+                // this factor is only needed for trees with tips sampled through time
+                if (uniqueSampTimes.length > 1) {
+                    // include all the (gammaj) factors for the possible combinations of QS lineages at each merge point
+                    for (int lineage = nrqslineages[i]; lineage > nrqslineages[i] - nrqsattachments[i]; lineage--) {
+                        // for qs lineages we have to have lineage + 1 since we did not count that at first split,
+                        //  we created 2 lineages instead of just one, as at all later splits
+                        gamma += Math.log(lineage) + Math.log(lineage + 1);
+                    }
                 }
             }
             // check if we checked everything in QS attachment array
             if (qstimep < qsTree.getHaplotypeCounts(node)){// && QSTimesTemp.length > 0){
                 throw new RuntimeException("There is somethings wrong with accounting for attachments times of node " +
-                        node.getNr() + ". Please check line 224 in QuasiSpeciesBirthDeathSkylineModel class.");
+                        node.getNr() + ". Please check line 242 in QuasiSpeciesBirthDeathSkylineModel class.");
             }
         }
 
-        // add factor for the possible combinations of QS lineages with all the lineages presents in tree at time i
-        for (int i = 0; i < allTimes.length; i++){
-            // add lineage count for when there is a birth of new lineage through true internal node
-            // This was not done above as we looped through each external node, so we had many possibilities to increase
-            //      the lineage due to the internal node. We could have opted to increase the lineage count due to the
-            //      internal node when the node's gamma contribution above was added, but it can happen that there is
-            //      no QS lineage passing through the node and we would then never have increased the lineage count.
-            for (Node node : tree.getInternalNodes()) {
-                if (node.getHeight() == allTimes[i]) {
-                    for (int j = i + 1; j < allTimes.length; j++) {
-                        nrtotallineages[j] += 1;
-                    }
-                }
-            }
-            //
-            for (int lineage = nrtotallineages[i]; lineage > nrtotallineages[i] - nrtotalqsattachments[i]; lineage--) {
-                // for total lineages we have to have lineage - 1 since we did already count also the real nodes in
-                gamma -= (Math.log(lineage) + Math.log(lineage - 1));
-            }
-        }
+//        if (uniqueSampTimes.length > 1) {
+//            // add factor for the possible combinations of QS lineages with all the lineages presentx in tree at time i
+//            for (int i = 0; i < allTimes.length; i++) {
+//                // add lineage count for when there is a birth of new lineage through true internal node
+//                // This was not done above as we looped through each external node, so we had many possibilities to increase
+//                //      the lineage due to the internal node. We could have opted to increase the lineage count due to the
+//                //      internal node when the node's gamma contribution above was added, but it can happen that there is
+//                //      no QS lineage passing through the node and we would then never have increased the lineage count.
+//                for (Node node : tree.getInternalNodes()) {
+//                    if ((allTimes[i] == allTimes[0] || allTimes[i] != allTimes[i-1]) && node.getHeight() == allTimes[i]) {
+//                        for (int j = i + 1; j < allTimes.length; j++) {
+//                            nrtotallineages[j] += 1;
+//                        }
+//                    }
+//                }
+//                //
+//                for (int lineage = nrtotallineages[i]; lineage > nrtotallineages[i] - nrtotalqsattachments[i]; lineage--) {
+//                    // for total lineages we have to have lineage - 1 since we did already count also the real nodes in
+//                    gamma -= ((Math.log(lineage) + Math.log(lineage - 1)));
+//                }
+//            }
+//        }
 
         return gamma;
     }
