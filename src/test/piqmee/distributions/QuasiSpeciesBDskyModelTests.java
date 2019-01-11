@@ -179,17 +179,18 @@ public class QuasiSpeciesBDskyModelTests {
                 // before height 5 there are new 5 attachment points, and one lineage existing from height A
                 + Math.log(6*5*5*4*4*3*3*2*2*1)
                 // at the same time, at height 5 there is in total 6 + 1 (G) lineages
-                    - Math.log(7*6*6*5*5*4*4*3*3*2)
+//                    - Math.log(7*6*6*5*5*4*4*3*3*2)
                 // before height 1.5 there are 3 surviving A lineages from previous interval, plus
                 // 4 new attachment points
                 + Math.log(7*6*6*5*5*4*4*3)
                 // at the same time, at height 1.5 there is in total 7 + 1 (G) lineages
-                    - Math.log(8*7*7*6*6*5*5*4)
+//                    - Math.log(8*7*7*6*6*5*5*4)
                 // before height 0 there are 2 surviving A lineages from previous interval, plus
                 // 1 new attachment points
                 + Math.log(3*2)
                 // at the same time, at height 0 there is in total 3 + 1 (G) lineages
-                    - Math.log(4*3);
+//                    - Math.log(4*3)
+                ;
 
         assertEquals(qsbdsky,bdsky,1e-10);
 
@@ -224,14 +225,14 @@ public class QuasiSpeciesBDskyModelTests {
                 // before height 5 there are new 6 attachment points, and one lineage existing from height A
                 + Math.log(7*6*6*5*5*4*4*3*3*2*2*1)
                 // at the same time, at height 5 there is in total 7 (A) lineages
-                    - Math.log(7*6*6*5*5*4*4*3*3*2*2*1)
+//                    - Math.log(7*6*6*5*5*4*4*3*3*2*2*1)
                 // before height 2 there are 4 surviving A lineages from previous interval, plus
                 // 3 new attachment points
                 + Math.log(7*6*6*5*5*4)
                 // at the same time, at height 2 there is in total 7 (A) lineages
-                    - Math.log(7*6*6*5*5*4)
+//                    - Math.log(7*6*6*5*5*4)
                 // at height 2, G lineage is born through true internal node
-                // there are thus 7 qs A lineages to be attached to for G (node t1) so there is gamma contribution
+                // there are thus 7 qs A lineages to be attached to for G (node t2) so there is gamma contribution
                 + Math.log(7)
                 // before height 1.5 there are 2 surviving A lineages from previous interval, plus
                 // 0 new attachment points
@@ -242,7 +243,123 @@ public class QuasiSpeciesBDskyModelTests {
                 // 1 new attachment points
                 + Math.log(3*2)
                 // at the same time, at height 0 there is in total 3 + 1 (G) lineages
-                    - Math.log(4*3);
+//                    - Math.log(4*3)
+                ;
+
+        assertEquals(qsbdsky,bdsky,1e-10);
+
+    }
+
+
+    /**
+     *
+     * Tree prior calculation P(tree|tree parameters) testing - number of full trees from qs tree
+     *
+     */
+
+    @Test
+    public void testCounterOfFullTreesRepresentedByQsTree3() throws Exception {
+
+        // Assemble BEASTObjects needed by QuasiSpeciesTree
+        QuasiSpeciesTree tree = QuasiSpeciesTestCase.setTreeFromFullNewick("(((((((((((t0 : 1, t1 : 1) : 1, t2 : 2) : 0.5, t3 : 1) : 1, t4 : 2) : 1, t5 : 3) : 1, t6 : 4) : 1, t7 : 5) : 0.5, t8 : 2) : 1, t9 : 3) : 1, t10 : 4 ) : 1, t11 : 10 ) : 1;",
+                new String[] {"A", "A", "G", "A", "T", "A", "A", "A", "A", "A", "A", "A"});
+
+        // calculate the tree likelihood with QS algorithm
+        QuasiSpeciesBirthDeathSkylineModel bdsqs = this.getQSBDSKYmodel(tree, new RealParameter("11.0"),
+                false, new RealParameter("2.0"), new RealParameter("1.0"),
+                new RealParameter("0.5"));
+
+        // calculate the basis of the tree likelihood with bdsky
+        Tree treeNormal = new TreeParser("(((((((((((t0 : 1, t1 : 1) : 1, t2 : 2) : 0.5, t3 : 1) : 1, t4 : 2) : 1, t5 : 3) : 1, t6 : 4) : 1, t7 : 5) : 0.5, t8 : 2) : 1, t9 : 3) : 1, t10 : 4 ) : 1, t11 : 10 ) : 1;",false);
+        BirthDeathSkylineModel bdssm = this.getBDSKYmodel(treeNormal, new RealParameter("11.0"),
+                false, new RealParameter("2.0"), new RealParameter("1.0"),
+                new RealParameter("0.5"));
+
+        double qsbdsky = bdsqs.calculateTreeLogLikelihood(tree);
+        double bdsky = bdssm.calculateTreeLogLikelihood(treeNormal)
+                // before height 5 there are new 6 attachment points, and one lineage existing from height A
+                + Math.log(7*6*6*5*5*4*4*3*3*2*2*1)
+                // at the same time, at height 5 there is in total 7 (A) lineages
+//                    - Math.log(7*6*6*5*5*4*4*3*3*2*2*1)
+                // before height 3.5 there are 4 surviving A lineages from previous interval, plus
+                // 1 new attachment points
+                + Math.log(5*4)
+                // at the same time, at height 3.5 there are in total 5 (A) lineages
+//                    - Math.log(5*4)
+                // at height 3.5, T lineage is born through true internal node
+                // there are thus 5 qs A lineages to be attached to for T (node t4) so there is gamma contribution
+                + Math.log(5)
+                // before height 2 there are 5 surviving A lineages from previous interval, plus
+                // 1 new attachment points
+                + Math.log(6*5)
+                // at the same time, at height 2 there is in total 6 (A) lineages and one T lineage
+//                    - Math.log(7*6)
+                // at height 2, G lineage is born through true internal node
+                // there are thus 6 qs A lineages to be attached to for G (node t2) so there is gamma contribution
+                + Math.log(6)
+                // before height 1.5 there are 2 surviving A lineages from previous interval, plus
+                // 0 new attachment points
+                //+ Math.log(0)
+                // at the same time, at height 1.5 there is in total 2 + 1 (G) lineages
+                //- Math.log(0)
+                // before height 0 there are 2 surviving A lineages from previous interval, plus
+                // 1 new attachment points
+                + Math.log(3*2)
+                // at the same time, at height 0 there is in total 3 + 1 (G) lineages
+//                    - Math.log(4*3)
+                ;
+
+        assertEquals(qsbdsky,bdsky,1e-10);
+
+    }
+
+    /**
+     *
+     * Tree prior calculation P(tree|tree parameters) testing - number of full trees from qs tree
+     *
+     */
+
+    @Test
+    public void testCounterOfFullTreesRepresentedByQsTreeSAP() throws Exception {
+
+        // Assemble BEASTObjects needed by QuasiSpeciesTree
+        QuasiSpeciesTree tree = QuasiSpeciesTestCase.setTreeFromFullNewick("(((((((((((t0 : 1, t1 : 1) : 1, t2 : 2) : 0.5, t3 : 2.5) : 1, t4 : 3.5) : 1, t5 : 4.5) : 1, t6 : 5.5) : 1, t7 : 6.5) : 0.5, t8 : 7) : 1, t9 : 8) : 1, t10 : 9 ) : 1, t11 : 10 ) : 1;",
+                new String[] {"A", "A", "G", "A", "T", "A", "A", "A", "A", "A", "A", "A"});
+
+        // calculate the tree likelihood with QS algorithm
+        QuasiSpeciesBirthDeathSkylineModel bdsqs = this.getQSBDSKYmodel(tree, new RealParameter("11.0"),
+                false, new RealParameter("2.0"), new RealParameter("1.0"),
+                new RealParameter("0.5"));
+
+        // calculate the basis of the tree likelihood with bdsky
+        Tree treeNormal = new TreeParser("(((((((((((t0 : 1, t1 : 1) : 1, t2 : 2) : 0.5, t3 : 2.5) : 1, t4 : 3.5) : 1, t5 : 4.5) : 1, t6 : 5.5) : 1, t7 : 6.5) : 0.5, t8 : 7) : 1, t9 : 8) : 1, t10 : 9 ) : 1, t11 : 10 ) : 1;",false);
+        BirthDeathSkylineModel bdssm = this.getBDSKYmodel(treeNormal, new RealParameter("11.0"),
+                false, new RealParameter("2.0"), new RealParameter("1.0"),
+                new RealParameter("0.5"));
+
+        double qsbdsky = bdsqs.calculateTreeLogLikelihood(tree);
+        double bdsky = bdssm.calculateTreeLogLikelihood(treeNormal)
+                // before height 3.5 there are new 7 attachment points, and one lineage existing from height A
+//                + Math.log(8*7*7*6*6*5*5*4*4*3*3*2*2*1)
+                // at the same time, at height 3.5 there are in total 8 (A) lineages
+//                    - Math.log(8*7*7*6*6*5*5*4*4*3*3*2*2*1)
+                // at height 3.5, T lineage is born through true internal node
+                // there are thus 8 qs A lineages to be attached to for T (node t4) so there is gamma contribution
+                + Math.log(8)
+                // before height 2 there are 8 surviving A lineages from previous interval, plus
+                // 1 new attachment points
+//                + Math.log(9*8)
+                // at the same time, at height 2 there is in total 9 (A) lineages and one T lineage
+//                    - Math.log(10*9)
+                // at height 2, G lineage is born through true internal node
+                // there are thus 9 qs A lineages to be attached to for G (node t2) so there is gamma contribution
+                + Math.log(9)
+                // before height 0 there are 9 surviving A lineages from previous interval, plus
+                // 1 new attachment points
+//                + Math.log(10*9)
+                // at the same time, at height 0 there is in total 10 + 1 (G) + 1 (T) lineages
+//                    - Math.log(12*11)
+                ;
 
         assertEquals(qsbdsky,bdsky,1e-10);
 
