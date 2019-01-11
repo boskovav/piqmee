@@ -25,8 +25,8 @@ public class QuasiSpeciesTree extends Tree {
 
 // TODO the haplotype count can be input as Integer counts only -- implement uncertainty? A:100-120 reads, B: 3200-3700reads, etc
     public Input<TraitSet> haplotypeCountsInput =
-            new Input<TraitSet>("haplotypeCounts","Count of sequences for each haplotype (including the one representative of each haplotype in the tree input)",
-            Input.Validate.REQUIRED);
+            new Input<TraitSet>("haplotypeCounts","Count of sequences for each haplotype (including the one representative of each haplotype in the tree input)");//,
+           // Input.Validate.REQUIRED);
 
 
     private Map<String,Integer> haplotypeCounts;
@@ -302,22 +302,22 @@ public class QuasiSpeciesTree extends Tree {
      *  at one pre-order tree pass (prevent energy & resources waste)
      *
      */
-//    public void countAndSetPossibleStartBranches(){
-//        // get the counts of possible number of start branches for each haplotype (i.e. internal node attachment branches)
-//        int nTips = this.getLeafNodeCount();
-//        for (int i = 0; i < this.getInternalNodeCount(); i++){
+    public void countAndSetPossibleStartBranches(){
+        // get the counts of possible number of start branches for each haplotype (i.e. internal node attachment branches)
+        int nTips = this.getLeafNodeCount();
+        for (int i = 0; i < this.getInternalNodeCount(); i++){
 //            // once determined the parent haplotype find out from how many branches
 //            // of the parent haplotype can it actually branch off
-//            QuasiSpeciesNode node = (QuasiSpeciesNode) this.getNode(nTips + i);
+            QuasiSpeciesNode node = (QuasiSpeciesNode) this.getNode(nTips + i);
 //            int haplo = node.getContinuingHaploName();
 //            if ( haplo != -1 ){
 //                QuasiSpeciesNode haploTip = (QuasiSpeciesNode) this.getNode(haplo);
 //                node.setStartBranchCounts(haploTip.countPossibleAttachmentBranches(0, this.getNode(nTips + i).getHeight()));
 //            } else {
-//                node.setStartBranchCounts(1);
+                node.setStartBranchCounts(1);
 //            }
-//        }
-//    }
+        }
+    }
 
     /**
      * Method to determine the parent haplotype for each haplotype
@@ -833,7 +833,7 @@ public class QuasiSpeciesTree extends Tree {
 
         fillParentHaplo();
 
-        //countAndSetPossibleStartBranches();
+        countAndSetPossibleStartBranches();
 
         for (Node node : this.getExternalNodes()){
             setHaploCounts(node, ((QuasiSpeciesNode) node).getHaplotypeCountsFromTips());
@@ -896,7 +896,7 @@ public class QuasiSpeciesTree extends Tree {
 
         fillParentHaplo();
 
-        //countAndSetPossibleStartBranches();
+        countAndSetPossibleStartBranches();
 
         // remove all entries put from the uniqueHaploTree
         clearHaploCounts(uniqueHaploTree);
@@ -954,7 +954,7 @@ public class QuasiSpeciesTree extends Tree {
 
         fillParentHaplo();
 
-        //countAndSetPossibleStartBranches();
+        countAndSetPossibleStartBranches();
 
         // remove all entries put from the fullTree
         clearHaploCounts(fullTree);
@@ -1351,7 +1351,7 @@ public class QuasiSpeciesTree extends Tree {
     @Override
     public int scale(final double scale) {
         ((QuasiSpeciesNode) root).scale(scale);
-        //this.countAndSetPossibleStartBranches();
+        this.countAndSetPossibleStartBranches();
         return getInternalNodeCount() + getTotalAttachmentCounts() - getDirectAncestorNodeCount();
     }
 

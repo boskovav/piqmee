@@ -112,7 +112,7 @@ public class QuasiSpeciesSubtreeExchangeEasy extends QuasiSpeciesTreeOperator{
         recalculateParentHaploAndCorrectContinuingHaploName(-1, (QuasiSpeciesNode) qsTree.getRoot());
 
         // in any case (changed or not the aboveNodeHaplo/parentHaplo array) recalculate countPossibleStartBranches
-        //qsTree.countAndSetPossibleStartBranches();
+        qsTree.countAndSetPossibleStartBranches();
 
         if (isNarrowInput.get()) {
             int numberofnodesback = countpossiblesrcNodes();

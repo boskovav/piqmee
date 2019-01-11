@@ -95,11 +95,11 @@ public class QuasiSpeciesNode extends Node {
      *
      * @param startBranchCount New quasi-species name
      */
-//    public void setStartBranchCounts(int startBranchCount) {
-//        startEditing();
-//        this.makeDirty(QuasiSpeciesTree.IS_FILTHY);
+    public void setStartBranchCounts(int startBranchCount) {
+        startEditing();
+        this.makeDirty(QuasiSpeciesTree.IS_FILTHY);
 //        this.startBranchCounts = startBranchCount;
-//    }
+    }
 
     /**
      * Set quasi-species tree for a copied node

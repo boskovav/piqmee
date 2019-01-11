@@ -169,7 +169,7 @@ public class QuasiSpeciesHaplotypeSwap extends QuasiSpeciesTreeOperator{
 // FOR ALL CASES: reposition the HAPLOTYPE START ITSELF
 
         // in any case (changed or not the aboveNodeHaplo/parentHaplo array) recalculate countPossibleStartBranches
-        //qsTree.countAndSetPossibleStartBranches();
+        qsTree.countAndSetPossibleStartBranches();
 
         // Ensure BEAST knows to recalculate affected likelihood:
         node.makeDirty(QuasiSpeciesTree.IS_FILTHY);

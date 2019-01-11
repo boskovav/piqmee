@@ -1,6 +1,7 @@
 package piqmee.operators;
 
 import beast.core.Description;
+import beast.core.Input;
 import beast.evolution.tree.Node;
 import piqmee.tree.QuasiSpeciesNode;
 import piqmee.tree.QuasiSpeciesTree;
@@ -161,7 +162,7 @@ public class QuasiSpeciesSequenceAttachmentUniform extends QuasiSpeciesTreeOpera
         }
 
         // recalculate countPossibleStartBranches
-        //qsTree.countAndSetPossibleStartBranches();
+        qsTree.countAndSetPossibleStartBranches();
 
         // Ensure BEAST knows to recalculate affected likelihood:
         node.makeDirty(QuasiSpeciesTree.IS_FILTHY);
