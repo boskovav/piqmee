@@ -18,6 +18,9 @@ import java.util.ArrayList;
         + "of another sequence from the same haplotype.")
 public class QuasiSpeciesSequenceAttachmentUniform extends QuasiSpeciesTreeOperator{
 
+    final public Input<Boolean> firstAttachTimeOnly = new Input<>("firstAttachmentOnly",
+            "re-attach the first attachment time of the haplotype only (default false)", false);
+
     @Override
     public void initAndValidate() {
         super.initAndValidate();
@@ -52,7 +55,6 @@ public class QuasiSpeciesSequenceAttachmentUniform extends QuasiSpeciesTreeOpera
                 node = (QuasiSpeciesNode) thisNode;
                 // change index is event +1 as our arrays are 1-#haplotype repetition instances
                 // and position 0 in the array is the haplotype starting point
-                // NOTE: haplotype starting time changes by another operator QuasiSpeciesHaplotypeStartRandom
                 changeIdx = event + 1;
                 break;
             }
@@ -62,6 +64,12 @@ public class QuasiSpeciesSequenceAttachmentUniform extends QuasiSpeciesTreeOpera
         // if we did not assign the node at this stage, throw exception
         if (node == null)
             throw new IllegalStateException("Event selection loop fell through!");
+
+        // If we want to move the root of a haplotype only - make this one to be the changeIdx
+        // Instead of index changeIdx between 2-#haplotype repetition instance, just change
+        //      changeIdx to 1 to mean the start time of the chosen haplo
+        if (firstAttachTimeOnly.get())
+            changeIdx = 1;
 
         // reposition the event (i.e. haplotype sequence changeIdx attachment time)
         double tmin, tmax;
