@@ -48,17 +48,22 @@ public class QuasiSpeciesTreeFromFullNewick extends QuasiSpeciesTree implements 
         if (dataInput.get() == null)
             throw new RuntimeException("The data input needs to be specified");
 
-        if (haplotypeCountsInput.get() != null || !haplotypeCountIsAll1(haplotypeCountsInput.get())){
+        if (haplotypeCountsInput.get() != null && !haplotypeCountIsAll1(haplotypeCountsInput.get())){
             throw new RuntimeException("The haplotypeCounts input contains other entries than 1, so it looks the tree is " +
                     "the unique sequence tree. This is not the proper class to initiate such tree. Use QuasiSpeciesTreeFromNewick.");
         }
 
         initFromFullTree(inputTree,dataInput.get(),collapseIdenticalSequencesInput.get());
 
+        initStateNodes();
+
     }
 
     @Override
     public void initStateNodes(){
+        if (m_initial.get() != null) {
+            m_initial.get().assignFromWithoutID(this);
+        }
     }
 
     @Override

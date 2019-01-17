@@ -40,14 +40,24 @@ public class QuasiSpeciesClusterTree extends QuasiSpeciesTree implements StateNo
         if (dataInput.get() == null)
             throw new RuntimeException("The data input needs to be specified");
 
-        if (haplotypeCountsInput.get() != null || !haplotypeCountIsAll1(haplotypeCountsInput.get()))
+        if (haplotypeCountsInput.get() != null && !haplotypeCountIsAll1(haplotypeCountsInput.get()))
             initFromUniqueHaploTree(inputTree, dataInput.get(),collapseIdenticalSequencesInput.get(),haplotypeCountsInput.get());
         else
             initFromFullTree(inputTree, dataInput.get(),collapseIdenticalSequencesInput.get());
+
+        if (m_initial.get() != null)
+            processTraits(m_initial.get().m_traitList.get());
+        else
+            processTraits(m_traitList.get());
+
+        initStateNodes();
     }
 
     @Override
-    public void initStateNodes(){
+    public void initStateNodes() {
+        if (m_initial.get() != null) {
+            m_initial.get().assignFromWithoutID(this);
+        }
     }
 
     @Override

@@ -1,5 +1,6 @@
 package piqmee.tree;
 
+import beast.app.beauti.BeautiDoc;
 import beast.core.Input;
 import beast.core.StateNode;
 import beast.core.StateNodeInitialiser;
@@ -28,9 +29,9 @@ public class QuasiSpeciesTree extends Tree {
             new Input<TraitSet>("haplotypeCounts","Count of sequences for each haplotype (including the one representative of each haplotype in the tree input)");//,
            // Input.Validate.REQUIRED);
 
-
+    protected TraitSet haplotypeCountsTraitSet;
     private Map<String,Integer> haplotypeCounts;
-    private String qsLabel;
+    private String qsLabel = "qscounts";
 
     public QuasiSpeciesTree() { }
 
@@ -103,26 +104,13 @@ public class QuasiSpeciesTree extends Tree {
             initArrays();
         }
 
+        haplotypeCounts = new HashMap<>();
+
         processTraits(m_traitList.get());
 
         // Ensure tree is compatible with traits.
         if (hasDateTrait())
             adjustTreeNodeHeights(root);
-
-        haplotypeCounts = new HashMap<>();
-
-        if (haplotypeCountsInput.get()!=null){
-            TraitSet haplotypeCountsTrait= haplotypeCountsInput.get();
-            qsLabel = haplotypeCountsTrait.getTraitName();
-
-            setHaploCounts(haplotypeCountsTrait);
-
-//            initAttachmentTimes();
-//
-//            fillParentHaplo();
-////
-//            startBranchCounts = countPossibleStartBranches();
-        }
 
     }
 
@@ -133,6 +121,29 @@ public class QuasiSpeciesTree extends Tree {
     //
     //
     */
+
+    @Override
+    protected void processTraits(List<TraitSet> traitList) {
+        super.processTraits(traitList);
+
+        // Record trait set associated with leaf types.
+        for (TraitSet traitSet : traitList) {
+            if (traitSet.getTraitName().equals(qsLabel)) {
+                haplotypeCountsTraitSet = traitSet;
+                break;
+            }
+        }
+
+        // Use explicitly-identified type trait set if available.
+        // Seems dumb, but needed for BEAUti as ListInputEditors
+        // muck things up...
+
+        if (haplotypeCountsInput.get() != null) {
+            haplotypeCountsTraitSet = haplotypeCountsInput.get();
+            qsLabel = haplotypeCountsTraitSet.getTraitName();
+            setHaploCounts(haplotypeCountsTraitSet);
+        }
+    }
 
     /**
      * Function to initiate the array list of attachment times for each haplotype in quasispecies
@@ -472,6 +483,8 @@ public class QuasiSpeciesTree extends Tree {
         nodeCount = qsTree.nodeCount;
         internalNodeCount = qsTree.internalNodeCount;
         leafNodeCount = qsTree.leafNodeCount;
+        if (qsTree.haplotypeCounts != null)
+            haplotypeCounts = qsTree.haplotypeCounts;
         initArrays();
     }
 

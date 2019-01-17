@@ -51,10 +51,15 @@ public class QuasiSpeciesTreeFromNewick extends QuasiSpeciesTree implements Stat
             throw new RuntimeException("The data input needs to be specified");
 
         initFromUniqueHaploTree(inputTree, dataInput.get(),collapseIdenticalSequencesInput.get(),haplotypeCountsInput.get());
+
+        initStateNodes();
     }
 
     @Override
     public void initStateNodes(){
+        if (m_initial.get() != null) {
+            m_initial.get().assignFromWithoutID(this);
+        }
     }
 
     @Override
