@@ -29,7 +29,7 @@ public class QuasiSpeciesTree extends Tree {
             new Input<TraitSet>("haplotypeCounts","Count of sequences for each haplotype (including the one representative of each haplotype in the tree input)");//,
            // Input.Validate.REQUIRED);
 
-    protected TraitSet haplotypeCountsTraitSet;
+    protected TraitSet haplotypeCountsSet;
     private Map<String,Integer> haplotypeCounts;
     private String qsLabel = "qscounts";
 
@@ -129,7 +129,7 @@ public class QuasiSpeciesTree extends Tree {
         // Record trait set associated with leaf types.
         for (TraitSet traitSet : traitList) {
             if (traitSet.getTraitName().equals(qsLabel)) {
-                haplotypeCountsTraitSet = traitSet;
+                haplotypeCountsSet = traitSet;
                 break;
             }
         }
@@ -139,10 +139,33 @@ public class QuasiSpeciesTree extends Tree {
         // muck things up...
 
         if (haplotypeCountsInput.get() != null) {
-            haplotypeCountsTraitSet = haplotypeCountsInput.get();
-            qsLabel = haplotypeCountsTraitSet.getTraitName();
-            setHaploCounts(haplotypeCountsTraitSet);
+            haplotypeCountsSet = haplotypeCountsInput.get();
+            qsLabel = haplotypeCountsSet.getTraitName();
         }
+
+        if (haplotypeCountsSet == null) {
+
+            if (getTaxonset() != null) {
+                TraitSet dummyTraitSet = new TraitSet();
+
+                StringBuilder sb = new StringBuilder();
+                for (int i = 0; i < getTaxonset().getTaxonCount(); i++) {
+                    if (i > 0)
+                        sb.append(",\n");
+                    sb.append(getTaxonset().getTaxonId(i)).append("=1");
+                }
+                try {
+                    dummyTraitSet.initByName("traitname", "qscounts", "taxa", getTaxonset(), "value", sb.toString());
+                    dummyTraitSet.setID("haplotypeCountsTraitSetInput.t:" + BeautiDoc.parsePartition(getID()));
+                    setHaplotypeCountsTrait(dummyTraitSet);
+                } catch (Exception ex) {
+                    System.out.println("Error setting default haplotype count trait.");
+                }
+            }
+        }
+
+        setHaploCounts(haplotypeCountsSet);
+
     }
 
     /**
@@ -403,6 +426,42 @@ public class QuasiSpeciesTree extends Tree {
         return(true);
     }
 
+
+    /**
+     * @return Haplotype counts trait set if available, null otherwise.
+     */
+    public TraitSet getHaplotypeCountsTrait() {
+        if (!traitsProcessed)
+            processTraits(m_traitList.get());
+
+        return haplotypeCountsSet;
+    }
+
+    /**
+     * Determine whether tree has a haplotype counts trait set associated with it.
+     *
+     * @return true if so
+     */
+    public boolean hasHaplotypeCountsTrait() {
+        return getHaplotypeCountsTrait() != null;
+    }
+
+    /**
+     * Specifically set the haplotype counts trait set for this tree. A null value simply
+     * removes the existing trait set.
+     *
+     * @param traitSet
+     */
+    public void setHaplotypeCountsTrait(TraitSet traitSet) {
+        if (hasHaplotypeCountsTrait()) {
+            m_traitList.get().remove(haplotypeCountsSet);
+        }
+
+        if (traitSet != null)
+            m_traitList.get().add(traitSet);
+
+        haplotypeCountsSet = traitSet;
+    }
 
 
     /*
