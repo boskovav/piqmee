@@ -164,8 +164,8 @@
             <plugin spec='SiteModel' id="SiteModel.s:$(n)" gammaCategoryCount='0'>
                 <!--substModel will be automatically detected /-->
                 <proportionInvariant spec='parameter.RealParameter' id='proportionInvariant.s:$(n)' value='0.0' lower='0' upper='1' estimate='false'/>
-                <mutationRate        spec='parameter.RealParameter' id='mutationRate.s:$(n)' value='1.0'        estimate='false'/>
-                <shape               spec='parameter.RealParameter' id='gammaShape.s:$(n)' value='1.0'         estimate='false'/>
+                <mutationRate        spec='parameter.RealParameter' id='mutationRate.s:$(n)' value='1.0' estimate='false'/>
+                <shape               spec='parameter.RealParameter' id='gammaShape.s:$(n)' value='1.0' estimate='false'/>
             </plugin>
 
             <!-- Tree prior -->
@@ -255,11 +255,12 @@
 
             <!-- Tree operators -->
 	        <operator id='piqmeeTreeScaler.t:$(n)' spec='piqmee.operators.QuasiSpeciesTreeScale' scaleFactor="0.5" weight="3.0" origin="@origin.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
-	        <operator id='piqmeeTreeRootScaler.t:$(n)' spec='piqmee.operators.QuasiSpeciesTreeScale' scaleFactor="0.7"  weight="3.0" origin="@origin.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)" rootOnly="true" />
-            <operator id='piqmeeUniformOperator.t:$(n)' spec='piqmee.operators.QuasiSpeciesUniform' weight="5.0" origin="@origin.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
-	        <operator id='piqmeeTreeHaploScaler.t:$(n)' spec='piqmee.operators.QuasiSpeciesHaplotypeScale' weight="3.0" origin="@origin.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
-            <operator id='piqmeeTreeHaploSeqReAttachRandom.t:$(n)' spec='piqmee.operators.QuasiSpeciesSequenceAttachmentRandom' weight="15.0" origin="@origin.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
-            <operator id='piqmeeTreeHaploSeqReAttachUniform.t:$(n)' spec='piqmee.operators.QuasiSpeciesSequenceAttachmentUniform' weight="10.0" origin="@origin.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
+	        <operator id='piqmeeTreeRootScaler.t:$(n)' spec='piqmee.operators.QuasiSpeciesTreeScale' scaleFactor="0.7" weight="3.0" origin="@origin.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)" rootOnly="true" />
+            <operator id='piqmeeNodeUniformOperator.t:$(n)' spec='piqmee.operators.QuasiSpeciesUniform' weight="5.0" origin="@origin.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
+	        <operator id='piqmeeHaploScaler.t:$(n)' spec='piqmee.operators.QuasiSpeciesHaplotypeScale' weight="3.0" origin="@origin.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
+            <operator id='piqmeeHaploSequenceReAttachRandom.t:$(n)' spec='piqmee.operators.QuasiSpeciesSequenceAttachmentRandom' weight="10.0" origin="@origin.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
+            <operator id='piqmeeHaploSequenceReAttachUniform.t:$(n)' spec='piqmee.operators.QuasiSpeciesSequenceAttachmentUniform' weight="10.0" origin="@origin.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
+            <operator id="piqmeeHaploStartTimeReAttachUniform" spec="piqmee.operators.QuasiSpeciesSequenceAttachmentUniform" weight="5.0" origin="@origin.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)" firstAttachmentOnly="true"/>
             <operator id='piqmeeNarrow.t:$(n)' spec='piqmee.operators.QuasiSpeciesSubtreeExchange' isNarrow='true' weight="5.0" origin="@origin.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
 	        <operator id='piqmeeWide.t:$(n)' spec='piqmee.operators.QuasiSpeciesSubtreeExchange' isNarrow='false' weight="1.0" origin="@origin.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
 	        <operator id='piqmeeWilsonBalding.t:$(n)' spec='piqmee.operators.QuasiSpeciesWilsonBalding' alpha="0.2" weight="0.5" origin="@origin.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
@@ -267,10 +268,15 @@
 	        <operator id='piqmeeWideeasy.t:$(n)' spec='piqmee.operators.QuasiSpeciesSubtreeExchangeEasy' isNarrow='false' weight="2.0" origin="@origin.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
 	        <operator id='piqmeeWilsonBaldingeasy.t:$(n)' spec='piqmee.operators.QuasiSpeciesWilsonBaldingEasy' alpha="0.2" weight="2.5" origin="@origin.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
 
-			<upDownOperator id='strictClockUpDownOperator.c:$(n)' spec='UpDownOperator' scaleFactor="0.75" weight="3">
+			<upDownOperator id='strictClockTreeUpDownOperator.c:$(n)' spec='UpDownOperator' scaleFactor="0.75" weight="3">
 				<up idref="clockRate.c:$(n)"/>
 				<down idref="Tree.t:$(n)"/>
 			</upDownOperator>
+
+			<operator id="R0TreeUpDownOperator.c:$(n)" spec="UpDownOperator" scaleFactor="0.75" weight="3.0">
+                <up idref="reproductiveNumber.t:$(n)"/>
+                <down idref="Tree.t:$(n)"/>
+            </operator>
 
             <!-- Tree log -->
 
@@ -286,89 +292,98 @@
 
 ]]>
 
-            <!-- Ensure locus is present in tree -->
-            <connect srcID="locus.$(n)" targetID="Tree.t:$(n)" inputName="locus"
-                     if="inlikelihood(Tree.t:$(n))"/>
+            <!-- CONNECT: tree and likelihood -->
+            <connect srcID='ClusterTree.t:$(n)'     targetID='mcmc'         inputName='init'          if='isInitializing'/>
+            <connect srcID='Tree.t:$(n)'            targetID='state'        inputName='stateNode'     if='inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'/>
+            <connect srcID='treeLikelihood.$(n)'    targetID='likelihood'   inputName='distribution'  if="isInitializing"/>
+            <connect method="beast.app.beauti.SiteModelInputEditor.customConnector"/>
 
-            <connect srcID='treeLikelihood.$(n)'            targetID='likelihood' inputName='distribution' if="isInitializing"/>
-            <connect srcID='YuleModel.t:$(n)'               targetID='prior' inputName='distribution' if="isInitializing"/>
-			<connect method="beast.app.beauti.SiteModelInputEditor.customConnector"/>
+            <!-- CONNECT: Priors -->
+            <!-- Tree prior priors-->
+            <connect srcID='QSBirthDeathSkySerial.t:$(n)'   targetID='prior' inputName='distribution' if="isInitializing"/>
+            <connect srcID='originPrior.t:$(n)'             targetID='prior' inputName='distribution' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and origin.t:$(n)/estimate=true'>prior on origin.t:$(n)</connect>
+            <connect srcID='samplingProportionPrior.t:$(n)' targetID='prior' inputName='distribution' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and samplingProportion.t:$(n)/estimate=true'>prior on sampling proportion t:$(n)</connect>
+            <connect srcID='becomeUninfectiousRatePrior.t:$(n)' targetID='prior' inputName='distribution' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and becomeUninfectiousRate.t:$(n)/estimate=true'>prior on becomeUninfectiousRate.t:$(n)</connect>
+            <connect srcID='reproductiveNumberPrior.t:$(n)' targetID='prior' inputName='distribution' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and reproductiveNumber.t:$(n)/estimate=true'>prior on reproductiveNumber.t:$(n)</connect>
+            <!-- Likelihoood priors-->
+            <connect srcID='MutationRatePrior.s:$(n)'       targetID='prior' inputName='distribution' if='nooperator(FixMeanMutationRatesOperator) and inlikelihood(mutationRate.s:$(n)) and mutationRate.s:$(n)/estimate=true'/>
+            <connect srcID='GammaShapePrior.s:$(n)'         targetID='prior' inputName='distribution' if='inlikelihood(gammaShape.s:$(n)) and gammaShape.s:$(n)/estimate=true'>Prior on gamma shape for partition s:$(n)</connect>
+            <connect srcID='PropInvariantPrior.s:$(n)'      targetID='prior' inputName='distribution' if='inlikelihood(proportionInvariant.s:$(n)) and proportionInvariant.s:$(n)/estimate=true'>Prior on proportion invariant for partition s:$(n)</connect>
+            <connect srcID='ClockPrior.c:$(n)'              targetID='prior' inputName='distribution' if='inlikelihood(clockRate.c:$(n)) and clockRate.c:$(n)/estimate=true'/>
 
-            <!--<connect srcID='treelog.t:$(n)'                 targetID='mcmc' inputName='logger' if='inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'/>-->
-            <!--<connect srcID='RandomTree.t:$(n)'                targetID='mcmc' inputName='init'   if='isInitializing'/>-->
-			<!--<connect method="beast.app.beauti.StateNodeInitialiserListInputEditor.customConnector"/>-->
+            <!-- CONNECT: State -->
+            <connect srcID='Tree.t:$(n)'                targetID='state' inputName='stateNode' if='inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'/>
+            <!-- Tree prior states -->
+            <plate var='p' range='origin,samplingProportion,becomeUninfectiousRate,reproductiveNumber'>
+                <connect srcID='$(p).t:$(n)'            targetID='state' inputName='stateNode' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and $(p).t:$(n)/estimate=true'/>
+            </plate>
+            <!-- Likelihood states -->
+            <connect srcID='mutationRate.s:$(n)'        targetID='state' inputName='stateNode' if='inlikelihood(mutationRate.s:$(n)) and mutationRate.s:$(n)/estimate=true'/>
+            <connect srcID='proportionInvariant.s:$(n)' targetID='state' inputName='stateNode' if='inlikelihood(proportionInvariant.s:$(n)) and proportionInvariant.s:$(n)/estimate=true'/>
+            <connect srcID='gammaShape.s:$(n)'          targetID='state' inputName='stateNode' if='inlikelihood(gammaShape.s:$(n)) and gammaShape.s:$(n)/estimate=true'/>
+            <connect srcID='clockRate.c:$(n)'           targetID='state' inputName='stateNode' if='inlikelihood(clockRate.c:$(n)) and clockRate.c:$(n)/estimate=true'/>
 
-            <connect srcID='ClockPrior.c:$(n)'                targetID='prior' inputName='distribution' if='inlikelihood(clockRate.c:$(n)) and clockRate.c:$(n)/estimate=true'/>
-<!-- when FixMeanMutationRatesOperator, the prior is uniform due to the operator -->
-           <!-- <connect srcID='MutationRatePrior.s:$(n)'         targetID='prior' inputName='distribution' if='nooperator(FixMeanMutationRatesOperator) and inlikelihood(mutationRate.s:$(n)) and mutationRate.s:$(n)/estimate=true'/>
+            <!-- CONNECT: Operators -->
+            <!-- Tree prior operators -->
+            <connect srcID='becomeUninfectiousRateScaler.t:$(n)'    targetID='mcmc' inputName='operator'     if='inposterior(QSBirthDeathSkySerial.t:$(n)) and becomeUninfectiousRate.t:$(n)/estimate=true'/>
+            <connect srcID='samplingScaler.t:$(n)'                  targetID='mcmc' inputName='operator'     if='inposterior(QSBirthDeathSkySerial.t:$(n)) and samplingProportion.t:$(n)/estimate=true'/>
+            <connect srcID='reproductiveNumberScaler.t:$(n)'        targetID='mcmc' inputName='operator'     if='inposterior(QSBirthDeathSkySerial.t:$(n)) and reproductiveNumber.t:$(n)/estimate=true'/>
+            <connect srcID='updownBD.t:$(n)'                        targetID='mcmc' inputName='operator'     if='inposterior(QSBirthDeathSkySerial.t:$(n)) and reproductiveNumber.t:$(n)/estimate=true and becomeUninfectiousRate.t:$(n)/estimate=true'/>
+            <connect srcID='origScaler.t:$(n)'                      targetID='mcmc' inputName='operator'     if='inposterior(QSBirthDeathSkySerial.t:$(n)) and origin.t:$(n)/estimate=true'/>
+            <!-- Likelihood operators -->
+            <connect srcID='mutationRateScaler.s:$(n)'          targetID='mcmc' inputName='operator' if='nooperator(FixMeanMutationRatesOperator) and inlikelihood(mutationRate.s:$(n)) and mutationRate.s:$(n)/estimate=true'>Scales mutation rate of partition s:$(n)</connect>
+            <connect srcID='proportionInvariantScaler.s:$(n)'   targetID='mcmc' inputName='operator' if='inlikelihood(proportionInvariant.s:$(n)) and proportionInvariant.s:$(n)/estimate=true'>Scales proportion of invariant sites parameter of partition $(n)</connect>
+            <connect srcID='gammaShapeScaler.s:$(n)'            targetID='mcmc' inputName='operator' if='inlikelihood(gammaShape.s:$(n)) and gammaShape.s:$(n)/estimate=true'>Scales gamma shape parameter of partition s:$(n)</connect>
+            <connect srcID='StrictClockRateScaler.c:$(n)'       targetID='mcmc' inputName='operator' if='inlikelihood(clockRate.c:$(n)) and clockRate.c:$(n)/estimate=true'>Scale clock rate of partition c:$(n)</connect>
+            <!-- Tree prior and likelihood operators -->
+            <connect srcID='strictClockTreeUpDownOperator.c:$(n)'   targetID='mcmc' inputName='operator' if='nooperator(FixMeanRatesOperator) and inlikelihood(clockRate.c:$(n)) and inlikelihood(Tree.t:$(n)) and Tree.t:$(n)/estimate=true and clockRate.c:$(n)/estimate=true'></connect>
+            <connect srcID='R0TreeUpDownOperator.c:$(n)'            targetID='mcmc' inputName='operator' if='inlikelihood(reproductiveNumber.t:$(n)) and inlikelihood(Tree.t:$(n)) and Tree.t:$(n)/estimate=true and reproductiveNumber.t:$(n)/estimate=true'></connect>
+            <!-- Tree operators -->
+            <connect srcID='piqmeeTreeScaler.t:$(n)'                    targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Scales all internal nodes for tree t:$(n)</connect>
+            <connect srcID='piqmeeTreeRootScaler.t:$(n)'                targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Scales root node for tree t:$(n)</connect>
+            <connect srcID='piqmeeNodeUniformOperator.t:$(n)'           targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Draws new internal node heights uniformally for tree t:$(n)</connect>
+            <connect srcID='piqmeeHaploScaler.t:$(n)'                   targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Scales all attachment times of one haplotype/sequence type in the tree t:$(n)</connect>
+            <connect srcID='piqmeeHaploSequenceReAttachRandom.t:$(n)'   targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Changes one attachment time of a haplotype/sequence type in the tree t:$(n)</connect>
+            <connect srcID='piqmeeHaploSequenceReAttachUniform.t:$(n)'  targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Changes one attachment time of a haplotype/sequence type in the tree t:$(n)</connect>
+            <connect srcID='piqmeeHaploStartTimeReAttachUniform.t:$(n)' targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Changes the first attachment time of a haplotype/sequence type in the tree t:$(n)</connect>
+            <connect srcID='piqmeeNarrow.t:$(n)'                        targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Narrow exchange performs local rearrangement of tree t:$(n)</connect>
+            <connect srcID='piqmeeWide.t:$(n)'                          targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Wide exchange performs global rearrangement of tree t:$(n)</connect>
+            <connect srcID='piqmeeWilsonBalding.t:$(n)'                 targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Performs Wilson-Balding global rearrangement of tree t:$(n)</connect>
+            <connect srcID='piqmeeNarroweasy.t:$(n)'                    targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>NarrowEasy exchange performs local rearrangement of tree t:$(n) without distrurbing the haplotype/sequence type attachment times</connect>
+            <connect srcID='piqmeeWideeasy.t:$(n)'                      targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>WideEasy exchange performs global rearrangement of tree t:$(n) without distrurbing the haplotype/sequence type attachment times</connect>
+            <connect srcID='piqmeeWilsonBaldingeasy.t:$(n)'             targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Performs Wilson-Balding global rearrangement of tree t:$(n) without distrurbing the haplotype/sequence type attachment times</connect>
 
-            <connect srcID='Tree.t:$(n)'                      targetID='state' inputName='stateNode' if='inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'/>
-            <connect srcID='proportionInvariant.s:$(n)'       targetID='state' inputName='stateNode' if='inlikelihood(proportionInvariant.s:$(n)) and proportionInvariant.s:$(n)/estimate=true'/>
-            <connect srcID='mutationRate.s:$(n)'              targetID='state' inputName='stateNode' if='inlikelihood(mutationRate.s:$(n)) and mutationRate.s:$(n)/estimate=true'/>
-            <connect srcID='gammaShape.s:$(n)'                targetID='state' inputName='stateNode' if='inlikelihood(gammaShape.s:$(n)) and gammaShape.s:$(n)/estimate=true'/>
-            <connect srcID='clockRate.c:$(n)'                 targetID='state' inputName='stateNode' if='inlikelihood(clockRate.c:$(n)) and clockRate.c:$(n)/estimate=true'/>
-            <connect srcID='birthRate.t:$(n)'                 targetID='state' inputName='stateNode' if='inposterior(YuleModel.t:$(n)) and inposterior(Tree.t:$(n)) and birthRate.t:$(n)/estimate=true'/>
+            <!-- CONNECT: Logs -->
+            <!-- Tree prior logs -->
+            <connect srcID='QSBirthDeathSkySerial.t:$(n)' targetID='tracelog' inputName='log' if='inposterior(QSBirthDeathSkySerial.t:$(n))'/>
+            <plate var='p' range='birth,death,sampling'>
+                <connect srcID='$(p).t:$(n)'        targetID='tracelog' inputName='log' if='inposterior(QSBirthDeathSkySerial.t:$(n))'/>
+            </plate>
+            <plate var='p' range='origin,samplingProportion,becomeUninfectiousRate,reproductiveNumber'>
+                <connect srcID='$(p).t:$(n)'        targetID='tracelog' inputName='log' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and $(p).t:$(n)/estimate=true'/>
+            </plate>
+            <!-- Likelihood logs -->
+            <connect srcID='treeLikelihood.$(n)'        targetID='tracelog' inputName='log' if='inlikelihood(treeLikelihood.$(n))'/>
+            <connect srcID='mutationRate.s:$(n)'        targetID='tracelog' inputName='log' if='inlikelihood(mutationRate.s:$(n)) and mutationRate.s:$(n)/estimate=true'/>
+            <connect srcID='proportionInvariant.s:$(n)' targetID='tracelog' inputName='log' if='inposterior(proportionInvariant.s:$(n)) and proportionInvariant.s:$(n)/estimate=true'/>
+            <connect srcID='gammaShape.s:$(n)'          targetID='tracelog' inputName='log' if='inlikelihood(gammaShape.s:$(n)) and gammaShape.s:$(n)/estimate=true'/>
+            <connect srcID='clockRate.c:$(n)'           targetID='tracelog' inputName='log' if='inlikelihood(clockRate.c:$(n)) and clockRate.c:$(n)/estimate=true'/>
+            <!-- Tree logs -->
+            <connect srcID='treelog.t:$(n)'         targetID='mcmc'     inputName='logger' if='inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'/>
+            <connect srcID='QSTreeHeight.t:$(n)'    targetID='tracelog' inputName='log' if='inposterior(Tree.t:$(n))  and Tree.t:$(n)/estimate=true'/>
+            <connect srcID='TreeHeight.t:$(n)'      targetID='tracelog' inputName='log' if='inposterior(Tree.t:$(n))  and Tree.t:$(n)/estimate=true'/>
 
-
-            <connect srcID='proportionInvariantScaler.s:$(n)' targetID='mcmc' inputName='operator' if='inlikelihood(proportionInvariant.s:$(n)) and proportionInvariant.s:$(n)/estimate=true'>Scales proportion of invariant sites parameter of partition $(n)</connect>
-            <connect srcID='mutationRateScaler.s:$(n)'        targetID='mcmc' inputName='operator' if='nooperator(FixMeanMutationRatesOperator) and inlikelihood(mutationRate.s:$(n)) and mutationRate.s:$(n)/estimate=true'>Scales mutation rate of partition s:$(n)</connect>
-            <connect srcID='gammaShapeScaler.s:$(n)'          targetID='mcmc' inputName='operator' if='inlikelihood(gammaShape.s:$(n)) and gammaShape.s:$(n)/estimate=true'>Scales gamma shape parameter of partition s:$(n)</connect>
-            <connect srcID='StrictClockRateScaler.c:$(n)'     targetID='mcmc' inputName='operator' if='inlikelihood(clockRate.c:$(n)) and clockRate.c:$(n)/estimate=true'>Scale clock rate of partition c:$(n)</connect>
-            <connect srcID='YuleBirthRateScaler.t:$(n)'       targetID='mcmc' inputName='operator' if='inposterior(birthRate.t:$(n)) and birthRate.t:$(n)/estimate=true'>Scales birth rate of Yule prior for partition t:$(n)</connect>
-            <connect srcID='strictClockUpDownOperator.c:$(n)' targetID='mcmc' inputName='operator'
-                     if='nooperator(FixMeanRatesOperator) and inlikelihood(clockRate.c:$(n)) and inlikelihood(Tree.t:$(n)) and Tree.t:$(n)/estimate=true and clockRate.c:$(n)/estimate=true'>
-                Scale up substitution rate c:$(n) and scale down tree t:($n)
-            </connect>
-
-            <connect srcID='allTipDatesRandomWalker.t:$(n)'   targetID='mcmc' inputName='operator' if='inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true and allTipDatesRandomWalker.t:$(n)/weight!=0.0'>Estimates tip dates for tree t:$(n)</connect>
-
-            <connect if="inposterior(YuleModel.t:$(n)) and Tree.t:$(n)/estimate=true" inputName="operator" srcID="YuleModelTreeScaler.t:$(n)" targetID="mcmc">Scales all internal nodes for tree t:$(n)</connect>
-            <connect if="inposterior(YuleModel.t:$(n)) and Tree.t:$(n)/estimate=true" inputName="operator" srcID="YuleModelTreeRootScaler.t:$(n)" targetID="mcmc">Scales root node for tree t:$(n)</connect>
-            <connect if="inposterior(YuleModel.t:$(n)) and Tree.t:$(n)/estimate=true" inputName="operator" srcID="YuleModelUniformOperator.t:$(n)" targetID="mcmc">Draws new internal node heights uniformally for tree t:$(n)</connect>
-            <connect if="inposterior(YuleModel.t:$(n)) and Tree.t:$(n)/estimate=true" inputName="operator" srcID="YuleModelSubtreeSlide.t:$(n)" targetID="mcmc">Performs subtree slide rearrangement of tree t:$(n)</connect>
-            <connect if="inposterior(YuleModel.t:$(n)) and Tree.t:$(n)/estimate=true" inputName="operator" srcID="YuleModelNarrow.t:$(n)" targetID="mcmc">Narrow exchange performs local rearrangement of tree t:$(n)</connect>
-            <connect if="inposterior(YuleModel.t:$(n)) and Tree.t:$(n)/estimate=true" inputName="operator" srcID="YuleModelWide.t:$(n)" targetID="mcmc">Wide exchange performs global rearrangement of tree t:$(n)</connect>
-            <connect if="inposterior(YuleModel.t:$(n)) and Tree.t:$(n)/estimate=true" inputName="operator" srcID="YuleModelWilsonBalding.t:$(n)" targetID="mcmc">Performs Wilson-Balding global rearrangement of tree t:$(n)</connect>
--->
-<!--            <connect srcID='treeLikelihood.$(n)'              targetID='tracelog' inputName='log' if='inlikelihood(treeLikelihood.$(n))'/>
-            <connect srcID='TreeHeight.t:$(n)'                targetID='tracelog' inputName='log' if='inposterior(Tree.t:$(n))  and Tree.t:$(n)/estimate=true'/>
-            <connect srcID='proportionInvariant.s:$(n)'       targetID='tracelog' inputName='log' if='inposterior(proportionInvariant.s:$(n)) and proportionInvariant.s:$(n)/estimate=true'/>
-            <connect srcID='mutationRate.s:$(n)'              targetID='tracelog' inputName='log' if='inlikelihood(mutationRate.s:$(n)) and mutationRate.s:$(n)/estimate=true'/>
-            <connect srcID='gammaShape.s:$(n)'                targetID='tracelog' inputName='log' if='inlikelihood(gammaShape.s:$(n)) and gammaShape.s:$(n)/estimate=true'/>
-            <connect srcID='clockRate.c:$(n)'                 targetID='tracelog' inputName='log' if='inlikelihood(clockRate.c:$(n)) and clockRate.c:$(n)/estimate=true'/>
-            <connect srcID='YuleModel.t:$(n)'                 targetID='tracelog' inputName='log' if='inposterior(YuleModel.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'/>
-            <connect srcID='birthRate.t:$(n)'                 targetID='tracelog' inputName='log' if='inposterior(YuleModel.t:$(n)) and birthRate.t:$(n)/estimate=true'/>
-
-            <connect srcID='GammaShapePrior.s:$(n)'           targetID='prior' inputName='distribution' if='inlikelihood(gammaShape.s:$(n)) and gammaShape.s:$(n)/estimate=true'>Prior on gamma shape for partition s:$(n)</connect>
-            <connect srcID='PropInvariantPrior.s:$(n)'        targetID='prior' inputName='distribution' if='inlikelihood(proportionInvariant.s:$(n)) and proportionInvariant.s:$(n)/estimate=true'>Prior on proportion invariant for partition s:$(n)</connect>
-            <connect srcID='YuleBirthRatePrior.t:$(n)'        targetID='prior' inputName='distribution' if='inposterior(YuleModel.t:$(n)) and inposterior(Tree.t:$(n)) and birthRate.t:$(n)/estimate=true'>Prior on Yule birth rate for partition s:$(n)</connect>
-
-			<mergepoint id='aux-partitiontemplate'/>-->
         </partitiontemplate>
 
+        <!--<mergepoint id='mttClockModelTemplates'/>-->
+
+
 		<mergepoint id='substModelTemplates'/>
-		<mergepoint id='clockModelTemplates'/>
-		<mergepoint id='piqmeeTreePriorTemplates'/>
+		<mergepoint id='piqmeeClockModelTemplates'/>
         <mergepoint id='parametricDistributions'/>
-
-<!-- Tree initialisation -->
-
-<!-- Cluster tree (defaults to UPGMA) -->
-
-        <!--<subtemplate id='ClusterTree' class='piqmee.tree.QuasiSpeciesClusterTree' mainid='ClusterTree.t:$(n)'>-->
-<!--<![CDATA[-->
-        <!--&lt;!&ndash;<tree spec='piqmee.tree.QuasiSpeciesClusterTree' id='ClusterTree.t:$(n)' trait='@datetrait.$(n)' haplotypeCounts='@counts' initial="@Tree.t:$(n)" estimate='false'>&ndash;&gt;-->
-        <!--<tree spec='piqmee.tree.QuasispeciesClusterTree' id='ClusterTree.t:$(n)' initial="@Tree.t:$(n)" estimate='false'>-->
-                <!--<taxonset idref='taxonSet.$(n)'/>-->
-        <!--</tree>-->
-<!--]]>-->
-        <!--</subtemplate>-->
+		<mergepoint id='piqmeeTreePriorTemplates'/>
 
     </beauticonfig>
-
-
-	<mergepoint id='misc'/>
-
 
 <!-- framework for main model -->
 
@@ -382,7 +397,7 @@
             <distribution spec="CompoundDistribution" id="likelihood"/>
         </distribution>
 
-        <logger id='tracelog' logEvery="1000" fileName="$(filebase).log" sort="smart" sanitiseHeaders='true'>
+        <logger id='tracelog' logEvery="1000" fileName="$(filebase).log">
             <log idref="posterior"/>
             <log idref="likelihood"/>
             <log idref="prior"/>
@@ -397,4 +412,3 @@
     </run>
 
 </beast>
-
