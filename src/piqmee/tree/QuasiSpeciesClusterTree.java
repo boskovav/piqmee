@@ -31,24 +31,19 @@ public class QuasiSpeciesClusterTree extends QuasiSpeciesTree implements StateNo
     public void initAndValidate() {
         super.initAndValidate();
 
+        if (dataInput.get() == null)
+            throw new RuntimeException("The data input needs to be specified");
+
         ClusterTree inputTree = new ClusterTree();
         inputTree.setDateTrait(timeTraitSet);
         inputTree.initByName(
                 "clusterType", "upgma",
                 "taxa", dataInput.get());
 
-        if (dataInput.get() == null)
-            throw new RuntimeException("The data input needs to be specified");
-
-        if (haplotypeCountsInput.get() != null && !haplotypeCountIsAll1(haplotypeCountsInput.get()))
-            initFromUniqueHaploTree(inputTree, dataInput.get(),collapseIdenticalSequencesInput.get(),haplotypeCountsInput.get());
+        if (haplotypeCountsSet != null && !haplotypeCountIsAll1(haplotypeCountsSet))
+            initFromUniqueHaploTree(inputTree, dataInput.get(),collapseIdenticalSequencesInput.get(),haplotypeCountsSet);
         else
             initFromFullTree(inputTree, dataInput.get(),collapseIdenticalSequencesInput.get());
-
-        if (m_initial.get() != null)
-            processTraits(m_initial.get().m_traitList.get());
-        else
-            processTraits(m_traitList.get());
 
         initStateNodes();
     }

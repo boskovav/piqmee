@@ -24,7 +24,6 @@ import java.util.regex.Pattern;
 
 public class QuasiSpeciesTree extends Tree {
 
-// TODO the haplotype count can be input as Integer counts only -- implement uncertainty? A:100-120 reads, B: 3200-3700reads, etc
     public Input<TraitSet> haplotypeCountsInput =
             new Input<TraitSet>("haplotypeCounts","Count of sequences for each haplotype (including the one representative of each haplotype in the tree input)");//,
            // Input.Validate.REQUIRED);
