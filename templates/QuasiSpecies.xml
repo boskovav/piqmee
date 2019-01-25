@@ -88,6 +88,8 @@
                            beast.core.Logger.model,
                            piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.tree,
                            piqmee.tree.QuasiSpeciesClusterTree.tree,
+                           piqmee.tree.QuasiSpeciesClusterTree.trait,
+                           piqmee.tree.QuasiSpeciesClusterTree.haplotypeCounts,
                            piqmee.tree.QuasiSpeciesTree.tree'>
 
         <panel spec='BeautiPanelConfig' panelname="Partitions" tiptext="Data Partitions"
@@ -142,15 +144,12 @@
 
             <!-- Quasi-species tree -->
 
-            <plugin spec='piqmee.tree.QuasiSpeciesTree' id='Tree.t:$(n)' estimate='true' taxonset='@taxonSet.$(n)'>
-                <!--<haplotypeCounts id="counts" spec="beast.evolution.tree.TraitSet" traitname="qscounts" taxa='@taxonSet.$(n)'/>-->
-            </plugin>
+            <!--<plugin spec='piqmee.tree.QuasiSpeciesTree' id='Tree.t:$(n)' estimate='true' taxonset='@taxonSet.$(n)'>-->
+                <!--&lt;!&ndash;<haplotypeCounts id="counts" spec="beast.evolution.tree.TraitSet" traitname="qscounts" taxa='@taxonSet.$(n)'/>&ndash;&gt;-->
+            <!--</plugin>-->
 
-
-            <!-- Starting tree -->
-
-            <!--<plugin spec='piqmee.tree.QuasiSpeciesClusterTree' id='ClusterTree.t:$(n)' trait='@datetrait.$(n)' haplotypeCounts='@counts' estimate='false' initial='@Tree.t:$(n)'>-->
-            <plugin spec='piqmee.tree.QuasiSpeciesClusterTree' id='ClusterTree.t:$(n)' estimate='false' initial='@Tree.t:$(n)' data='@$(n)' taxonset='@taxonSet.$(n)'/>
+            <!--<plugin spec='piqmee.tree.QuasiSpeciesClusterTree' id='ClusterTree.t:$(n)' initial='@Tree.t:$(n)' data='@$(n)' trait='@dateTrait.t:$(n)' haplotypeCounts='@haplotypeCounts.t:$(n)' estimate='false'>-->
+            <plugin spec='piqmee.tree.QuasiSpeciesClusterTree' id='Tree.t:$(n)' data='@$(n)' estimate='true' taxonset='@taxonSet.$(n)'/>
 
             <!-- Tree likelihood -->
 
@@ -293,7 +292,7 @@
 ]]>
 
             <!-- CONNECT: tree and likelihood -->
-            <connect srcID='ClusterTree.t:$(n)'     targetID='mcmc'         inputName='init'          if='isInitializing'/>
+            <!--<connect srcID='ClusterTree.t:$(n)'     targetID='mcmc'         inputName='init'          if='isInitializing'/>-->
             <connect srcID='Tree.t:$(n)'            targetID='state'        inputName='stateNode'     if='inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'/>
             <connect srcID='treeLikelihood.$(n)'    targetID='likelihood'   inputName='distribution'  if="isInitializing"/>
             <connect method="beast.app.beauti.SiteModelInputEditor.customConnector"/>
@@ -312,7 +311,6 @@
             <connect srcID='ClockPrior.c:$(n)'              targetID='prior' inputName='distribution' if='inlikelihood(clockRate.c:$(n)) and clockRate.c:$(n)/estimate=true'/>
 
             <!-- CONNECT: State -->
-            <connect srcID='Tree.t:$(n)'                targetID='state' inputName='stateNode' if='inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'/>
             <!-- Tree prior states -->
             <plate var='p' range='origin,samplingProportion,becomeUninfectiousRate,reproductiveNumber'>
                 <connect srcID='$(p).t:$(n)'            targetID='state' inputName='stateNode' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and $(p).t:$(n)/estimate=true'/>
