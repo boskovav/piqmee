@@ -44,7 +44,7 @@ public class HaplotypeCountsTraitSetInputEditor extends TipDatesInputEditor {
     @Override
     public void init(Input<?> input, BEASTInterface plugin, int itemNr, ExpandOption bExpandOption, boolean bAddButtons) {
 
-        if (plugin.getClass().equals("beast.app.beauti.BeautiConfig") && !((BeautiPanelConfig) plugin).getName().equals("Sequence Counts")){
+        if (plugin.getClass().getName().equals("beast.app.beauti.BeautiPanelConfig") && !((BeautiPanelConfig) plugin).getName().equals("Sequence Counts")){
             super.init(input, plugin, itemNr, bExpandOption, bAddButtons);
         } else {
 
