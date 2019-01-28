@@ -26,10 +26,6 @@ public class QuasiSpeciesTreeFromFullNewick extends QuasiSpeciesTree implements 
                     "Default true.", true);
 
     public QuasiSpeciesTreeFromFullNewick() {
-
-        // When specifying the input tree with full newick tree, we do not allow for duplicate counts input on the top.
-        haplotypeCountsInput.setRule(Input.Validate.OPTIONAL);
-
     }
 
     public void initAndValidate() {
@@ -48,7 +44,8 @@ public class QuasiSpeciesTreeFromFullNewick extends QuasiSpeciesTree implements 
         if (dataInput.get() == null)
             throw new RuntimeException("The data input needs to be specified");
 
-        if (haplotypeCountsInput.get() != null && !haplotypeCountIsAll1(haplotypeCountsInput.get())){
+        // When specifying the input tree with full newick tree, we do not allow for duplicate counts input on the top.
+        if (haplotypeCountsSet != null && !haplotypeCountIsAll1(haplotypeCountsSet)){
             throw new RuntimeException("The haplotypeCounts input contains other entries than 1, so it looks the tree is " +
                     "the unique sequence tree. This is not the proper class to initiate such tree. Use QuasiSpeciesTreeFromNewick.");
         }

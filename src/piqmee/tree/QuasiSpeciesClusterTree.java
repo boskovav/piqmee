@@ -22,10 +22,6 @@ public class QuasiSpeciesClusterTree extends QuasiSpeciesTree implements StateNo
                     "Default true.", true);
 
     public QuasiSpeciesClusterTree() {
-
-        // When specifying the input tree with full newick tree, we do not allow for duplicate counts input on the top.
-        haplotypeCountsInput.setRule(Input.Validate.OPTIONAL);
-
     }
 
     public void initAndValidate() {
@@ -40,8 +36,8 @@ public class QuasiSpeciesClusterTree extends QuasiSpeciesTree implements StateNo
                 "clusterType", "upgma",
                 "taxa", dataInput.get());
 
-        if (haplotypeCountsInput.get() != null && !haplotypeCountIsAll1(haplotypeCountsInput.get()))
-            initFromUniqueHaploTree(inputTree, dataInput.get(),collapseIdenticalSequencesInput.get(),haplotypeCountsInput.get());
+        if (haplotypeCountsSet != null && !haplotypeCountIsAll1(haplotypeCountsSet))
+            initFromUniqueHaploTree(inputTree, dataInput.get(),collapseIdenticalSequencesInput.get(),haplotypeCountsSet);
         else
             initFromFullTree(inputTree, dataInput.get(),collapseIdenticalSequencesInput.get());
 
