@@ -156,7 +156,7 @@ public class QuasiSpeciesTree extends Tree {
                 try {
                     dummyTraitSet.initByName("traitname", "qscounts", "taxa", getTaxonset(), "value", sb.toString());
                     dummyTraitSet.setID("haplotypeCountsTraitSetInput.t:" + BeautiDoc.parsePartition(getID()));
-                    haplotypeCountsSet = dummyTraitSet;
+                    setHaplotypeCountsTrait(dummyTraitSet);
                 } catch (Exception ex) {
                     System.out.println("Error setting default haplotype count trait.");
                 }
@@ -434,6 +434,34 @@ public class QuasiSpeciesTree extends Tree {
 
         return haplotypeCountsSet;
     }
+
+    /**
+     * Determine whether tree has a haplotype counts trait set associated with it.
+     *
+     * @return true if so
+     */
+    public boolean hasHaplotypeCountsTrait() {
+        return getHaplotypeCountsTrait() != null;
+    }
+
+
+    /**
+     * Specifically set the haplotype counts trait set for this tree. A null value simply
+     * removes the existing trait set. -- needed for BEAUti to correctly make XML
+     *
+     * @param traitSet
+     */
+    public void setHaplotypeCountsTrait(TraitSet traitSet) {
+        if (hasHaplotypeCountsTrait()) {
+            m_traitList.get().remove(haplotypeCountsSet);
+        }
+
+        if (traitSet != null)
+            m_traitList.get().add(traitSet);
+
+        haplotypeCountsSet = traitSet;
+    }
+
 
 
     /*
