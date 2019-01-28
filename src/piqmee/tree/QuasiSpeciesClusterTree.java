@@ -40,8 +40,8 @@ public class QuasiSpeciesClusterTree extends QuasiSpeciesTree implements StateNo
                 "clusterType", "upgma",
                 "taxa", dataInput.get());
 
-        if (haplotypeCountsSet != null && !haplotypeCountIsAll1(haplotypeCountsSet))
-            initFromUniqueHaploTree(inputTree, dataInput.get(),collapseIdenticalSequencesInput.get(),haplotypeCountsSet);
+        if (haplotypeCountsInput.get() != null && !haplotypeCountIsAll1(haplotypeCountsInput.get()))
+            initFromUniqueHaploTree(inputTree, dataInput.get(),collapseIdenticalSequencesInput.get(),haplotypeCountsInput.get());
         else
             initFromFullTree(inputTree, dataInput.get(),collapseIdenticalSequencesInput.get());
 

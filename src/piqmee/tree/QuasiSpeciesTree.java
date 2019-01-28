@@ -156,7 +156,7 @@ public class QuasiSpeciesTree extends Tree {
                 try {
                     dummyTraitSet.initByName("traitname", "qscounts", "taxa", getTaxonset(), "value", sb.toString());
                     dummyTraitSet.setID("haplotypeCountsTraitSetInput.t:" + BeautiDoc.parsePartition(getID()));
-                    setHaplotypeCountsTrait(dummyTraitSet);
+                    haplotypeCountsSet = dummyTraitSet;
                 } catch (Exception ex) {
                     System.out.println("Error setting default haplotype count trait.");
                 }
@@ -425,7 +425,6 @@ public class QuasiSpeciesTree extends Tree {
         return(true);
     }
 
-
     /**
      * @return Haplotype counts trait set if available, null otherwise.
      */
@@ -434,32 +433,6 @@ public class QuasiSpeciesTree extends Tree {
             processTraits(m_traitList.get());
 
         return haplotypeCountsSet;
-    }
-
-    /**
-     * Determine whether tree has a haplotype counts trait set associated with it.
-     *
-     * @return true if so
-     */
-    public boolean hasHaplotypeCountsTrait() {
-        return getHaplotypeCountsTrait() != null;
-    }
-
-    /**
-     * Specifically set the haplotype counts trait set for this tree. A null value simply
-     * removes the existing trait set.
-     *
-     * @param traitSet
-     */
-    public void setHaplotypeCountsTrait(TraitSet traitSet) {
-        if (hasHaplotypeCountsTrait()) {
-            m_traitList.get().remove(haplotypeCountsSet);
-        }
-
-        if (traitSet != null)
-            m_traitList.get().add(traitSet);
-
-        haplotypeCountsSet = traitSet;
     }
 
 
@@ -591,6 +564,13 @@ public class QuasiSpeciesTree extends Tree {
         // the second assignFromFragile Helper is called because root may not be the node with
         //  the highest number but needs special treatment as opposed to the rest of the nodes
         assignFromFragileHelper(iRoot + 1, nodeCount, otherNodes);
+
+        //make sure to correctly assign the haplotypeCounts array
+        haplotypeCounts.clear();
+
+        for (Node node : this.getExternalNodes()){
+            setHaploCounts(node, ((QuasiSpeciesNode) node).getHaplotypeCountsFromTips());
+        }
     }
 
     /**
@@ -905,6 +885,8 @@ public class QuasiSpeciesTree extends Tree {
         fillParentHaplo();
 
         countAndSetPossibleStartBranches();
+
+        haplotypeCounts.clear();
 
         for (Node node : this.getExternalNodes()){
             setHaploCounts(node, ((QuasiSpeciesNode) node).getHaplotypeCountsFromTips());
@@ -1407,7 +1389,7 @@ public class QuasiSpeciesTree extends Tree {
             String string = getFlattenedHaploTree().getRoot().toShortNewick(true);
 
             // Sanitize ampersands if this is destined for a state file.
-            return string.replaceAll("&", "&amp;");
+            return string;//.replaceAll("&", "&amp;");
         } else{
             return getFlattenedHaploTree().getRoot().toSortedNewick(new int[1], true);
         }
