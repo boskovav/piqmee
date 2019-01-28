@@ -571,6 +571,8 @@ public class QuasiSpeciesTree extends Tree {
         for (Node node : this.getExternalNodes()){
             setHaploCounts(node, ((QuasiSpeciesNode) node).getHaplotypeCountsFromTips());
         }
+
+        initArrays();
     }
 
     /**
