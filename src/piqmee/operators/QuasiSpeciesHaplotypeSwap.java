@@ -22,17 +22,19 @@ import java.util.ArrayList;
         +" above the currently chosen one that we can SWAP with.")
 public class QuasiSpeciesHaplotypeSwap extends QuasiSpeciesTreeOperator{
 
+    int canbeused = 0;
+
     @Override
     public void initAndValidate() {
         super.initAndValidate();
         // check if this operator can be used at all?
-        int canbeused = 0;
+
         for (Node node : qsTree.getExternalNodes()){
             if (qsTree.getHaplotypeCounts(node) > 0)
                 canbeused++;
         }
         if (canbeused<1){
-            throw new IllegalArgumentException("QuasiSpeciesHaplotypeSwap operator cannot be " +
+            System.out.println("QuasiSpeciesHaplotypeSwap operator cannot be " +
                     "used since there are no or just one haplotype with duplicates! Remove this " +
                     "operator from your XML file.");
         }
@@ -45,6 +47,10 @@ public class QuasiSpeciesHaplotypeSwap extends QuasiSpeciesTreeOperator{
      */
     @Override
     public double proposal() {
+
+        if (canbeused<1){
+            return 0.0;
+        }
 
         // check that this operator can actually perform a move
         int haplowithparents = 0;

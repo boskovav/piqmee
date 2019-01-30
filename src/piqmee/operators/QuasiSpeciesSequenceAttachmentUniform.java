@@ -25,7 +25,7 @@ public class QuasiSpeciesSequenceAttachmentUniform extends QuasiSpeciesTreeOpera
     public void initAndValidate() {
         super.initAndValidate();
         if (qsTree.getTotalAttachmentCounts() == 0){
-            throw new IllegalArgumentException("In QuasiSpeciesSequenceAttachmentUniform operator --- "
+            System.out.println("In QuasiSpeciesSequenceAttachmentUniform operator --- "
                     + "there are no QS duplicates. The QuasiSpeciesSequenceAttachmentUniform "
                     + "operator cannot be used. Please remove it from your xml file.");
         }
@@ -38,6 +38,11 @@ public class QuasiSpeciesSequenceAttachmentUniform extends QuasiSpeciesTreeOpera
      */
     @Override
     public double proposal() {
+
+        if (qsTree.getTotalAttachmentCounts() == 0){
+            return 0.0;
+        }
+
         // Randomly select event on tree:
         // weighted by the number of events (i.e. count of each haplotype)
         int event = Randomizer.nextInt(qsTree.getTotalAttachmentCounts());

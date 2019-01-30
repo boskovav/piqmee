@@ -21,7 +21,7 @@ public class QuasiSpeciesSequenceAttachmentRandom extends QuasiSpeciesTreeOperat
     public void initAndValidate() {
         super.initAndValidate();
         if (qsTree.getTotalAttachmentCounts() == 0) {
-            throw new IllegalArgumentException("In QuasiSpeciesSequenceAttachmentRandom operator --- "
+            System.out.println("In QuasiSpeciesSequenceAttachmentRandom operator --- "
                     + "there are no QS duplicates. The QuasiSpeciesSequenceAttachmentRandom "
                     + "operator cannot be used. Please remove it from your xml file.");
         }
@@ -34,6 +34,10 @@ public class QuasiSpeciesSequenceAttachmentRandom extends QuasiSpeciesTreeOperat
      */
     @Override
     public double proposal() {
+
+        if (qsTree.getTotalAttachmentCounts() == 0) {
+            return 0.0;
+        }
 
         double logHastingsRatio = 0.0;
 

@@ -22,7 +22,7 @@ public class QuasiSpeciesHaplotypeScale extends QuasiSpeciesTreeOperator{
     public void initAndValidate() {
         super.initAndValidate();
         if (qsTree.getTotalAttachmentCounts()==0){
-            throw new IllegalArgumentException("In QuasiSpeciesHaploScale operator --- "
+            System.out.println("In QuasiSpeciesHaploScale operator --- "
                     +"there are no QS duplicates. The QuasiSpeciesHaplotypeScale "
                     +"operator cannot be used. Please remove it from your xml file.");
         }
@@ -35,6 +35,10 @@ public class QuasiSpeciesHaplotypeScale extends QuasiSpeciesTreeOperator{
      */
     @Override
     public double proposal() {
+
+        if (qsTree.getTotalAttachmentCounts()==0){
+            return 0.0;
+        }
 
         // keep track of the Hastings ratio
         double logHastingsRatio = 0.0;
