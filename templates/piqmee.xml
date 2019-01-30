@@ -417,7 +417,7 @@
             <distribution spec="CompoundDistribution" id="likelihood"/>
         </distribution>
 
-        <logger id='tracelog' logEvery="1000" fileName="$(filebase).log">
+        <logger id='tracelog' logEvery="1000" fileName="$(filebase).$(n).log">
             <log idref="posterior"/>
             <log idref="likelihood"/>
             <log idref="prior"/>
