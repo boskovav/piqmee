@@ -47,7 +47,7 @@ public class QuasiSpeciesTreeFromNewick extends QuasiSpeciesTree implements Stat
             throw new RuntimeException("The data input needs to be specified");
 
         // When specifying the input tree with newick tree, duplicate counts input NEEDS to be specified
-        if (haplotypeCountsSet != null && !haplotypeCountIsAll1(haplotypeCountsSet)){
+        if (haplotypeCountsSet == null || haplotypeCountIsAll1(haplotypeCountsSet)){
             throw new RuntimeException("The haplotypeCounts input was not specified. " +
                     "This is not the proper class to initiate such tree. Use QuasiSpeciesTreeFromFullNewick.");
         }
