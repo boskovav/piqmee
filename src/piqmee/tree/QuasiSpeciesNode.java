@@ -200,8 +200,8 @@ public class QuasiSpeciesNode extends Node {
      *
      * @param scale scale factor
      */
-    @Override
-    public void scale(final double scale) {
+//    @Override
+    public int scale(final double scale) {
         startEditing();
         this.makeDirty(QuasiSpeciesTree.IS_DIRTY);
         // Scale internal node heights
@@ -244,6 +244,7 @@ public class QuasiSpeciesNode extends Node {
                 }
             }
         }
+        return 0;
     }
 
     /////////////////////////////////////////////////
