@@ -79,7 +79,7 @@ public class QuasiSpeciesTreeLikelihoodTests {
 
         // QS likelihood
         QuasiSpeciesTreeLikelihood likelihood = newQSTreeLikelihood();
-        likelihood.initByName("data", data, "tree", tree, "siteModel", siteModel, "origin", new RealParameter("1.000000000000000000000000000000000001"));
+        likelihood.initByName("data", data, "tree", tree, "siteModel", siteModel);
         double logQSP = 0;
         logQSP = likelihood.calculateLogP();
 
@@ -96,13 +96,14 @@ public class QuasiSpeciesTreeLikelihoodTests {
         assertEquals(logP+Math.log(Math.exp(rates[3] * 0.5))+Math.log(Math.exp(rates[1] * 1)), logQSP, BEASTTestCase.PRECISION);
 
         // with ambiguities
-        likelihood.initByName("useAmbiguities", true, "data", data, "tree", tree, "siteModel", siteModel, "origin", new RealParameter("1.000000000000000000000000000000000001"));
+        likelihood.initByName("useAmbiguities", true, "data", data, "tree", tree, "siteModel", siteModel);
         logQSP = likelihood.calculateLogP();
-        likelihoodNormal.initByName("useAmbiguities", true, "data", data, "tree", tree, "siteModel", siteModel);
+        likelihoodNormal.initByName("useAmbiguities", true, "data", dataNormal, "tree", treeNormal, "siteModel", siteModel);
         logP = likelihoodNormal.calculateLogP();
         assertEquals(logP+Math.log(Math.exp(rates[3] * 0.5))+Math.log(Math.exp(rates[1] * 1)), logQSP, BEASTTestCase.PRECISION);
     }
 
+// todo how to test uncertain characters in our case? Use orig beast tree? or make a new one, and then what would be the likelihood? calc by hand?
 //    @Test
 //    public void testJC69LikelihoodWithUncertainCharacters() throws Exception {
 //
@@ -139,5 +140,9 @@ public class QuasiSpeciesTreeLikelihoodTests {
 //        assertEquals(logL_uncertain[1], 2 * x4, BEASTTestCase.PRECISION);
 //
 //    }
+
+
+    // todo make a test where one qs is above another === and use ambiguities (todo from 26.02)
+
 
 }

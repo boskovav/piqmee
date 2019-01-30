@@ -33,8 +33,8 @@ public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
     public static enum Scaling {none, always, _default};
     final public Input<Scaling> scaling = new Input<>("scaling", "type of scaling to use, one of " + Arrays.toString(Scaling.values()) + ". If not specified, the -beagle_scaling flag is used.", Scaling._default, Scaling.values());
 
-    public Input<RealParameter> origin =
-            new Input<RealParameter>("origin", "The time from origin to last sample (must be larger than tree height)", (RealParameter) null, Input.Validate.REQUIRED);
+//    public Input<RealParameter> origin =
+//            new Input<RealParameter>("origin", "The time from origin to last sample (must be larger than tree height)", (RealParameter) null, Input.Validate.REQUIRED);
 
     /**
      * flag to indicate the
@@ -488,7 +488,12 @@ public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
     int traverse(final QuasiSpeciesNode node){
 
         QuasiSpeciesTree Tree = (QuasiSpeciesTree) treeInput.get();
-        Double originHeight = origin.get().getValue();
+        Double originHeight = 0.0;
+        if (Tree.getNodeCount() > 1) {
+            originHeight = Tree.getRoot().getHeight();
+        } else {
+            originHeight = ((QuasiSpeciesNode) Tree.getNode(0)).getAttachmentTimesList()[0];
+        }
 
         int update = (node.isDirty() | hasDirt);
 
