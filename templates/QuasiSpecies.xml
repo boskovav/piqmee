@@ -86,11 +86,36 @@
                            beast.evolution.operators.ScaleOperator.indicator,
                            beast.core.Operator.weight,
                            beast.core.Logger.model,
-                           piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.tree,
-                           piqmee.tree.QuasiSpeciesClusterTree.tree,
-                           piqmee.tree.QuasiSpeciesClusterTree.trait,
+                           piqmee.tree.QuasiSpeciesTree.haplotypeCounts,
                            piqmee.tree.QuasiSpeciesClusterTree.haplotypeCounts,
-                           piqmee.tree.QuasiSpeciesTree.tree'>
+                           piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.intervalTimes,
+                           piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.birthRate,
+                           piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.deathRate,
+                           piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.samplingRate,
+                           piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.rho,
+                           piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.contemp,
+                           piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.S0,
+                           piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.tree,
+                           piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.treeIntervals,
+                           piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.forceRateChange,
+                           piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.conditionOnSurvival,
+                           beast.math.distributions.MarkovChainDistribution.parameter,
+                           piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.reverseTimeArrays,
+                           piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.originIsRootEdge,
+                           piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.rhoSamplingTimes,
+                           piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.deathRateChangeTimes,
+                           piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.samplingRateChangeTimes,
+                           piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.birthRateTimesRelative,
+                           piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.deathRateTimesRelative,
+                           piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.samplingRateTimesRelative,
+                           piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.birthRateChangeTimes,
+                           piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.removalProbabilityChangeTimes,
+                           piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.removalProbability,
+                           piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.turnOver,
+                           piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.netDiversification,
+                           piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.conditionOnRhoSampling,
+	                       piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.taxon,
+	                       piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.SAtaxon'>
 
         <panel spec='BeautiPanelConfig' panelname="Partitions" tiptext="Data Partitions"
             path='distribution/distribution[id="likelihood"]/distribution/data'
@@ -153,7 +178,7 @@
 
             <!-- Tree likelihood -->
 
-            <plugin spec='piqmee.likelihood.QuasiSpeciesTreeLikelihood' id="treeLikelihood.$(n)" tree="@Tree.t:$(n)" origin="@origin.t:$(n)" data="@data">
+            <plugin spec='piqmee.likelihood.QuasiSpeciesTreeLikelihood' id="treeLikelihood.$(n)" tree="@Tree.t:$(n)" data="@data">
                 <siteModel idref="SiteModel.s:$(n)"/>
                 <branchRateModel spec='StrictClockModel' id='StrictClock.c:$(n)'>
                     <clock.rate id='clockRate.c:$(n)' spec='parameter.RealParameter' value='1.0' estimate='false'/>
@@ -241,7 +266,7 @@
             <operator id='proportionInvariantScaler.s:$(n)' spec='ScaleOperator' scaleFactor="0.5" weight="0.1" parameter="@proportionInvariant.s:$(n)"/>
             <operator id='mutationRateScaler.s:$(n)' spec='ScaleOperator' scaleFactor="0.5" weight="0.1" parameter="@mutationRate.s:$(n)"/>
             <operator id='gammaShapeScaler.s:$(n)' spec='ScaleOperator' scaleFactor="0.5" weight="0.1" parameter="@gammaShape.s:$(n)"/>
-	        <operator id='StrictClockRateScaler.c:$(n)' spec='ScaleOperator' scaleFactor="0.75" weight="3" parameter='@clockRate.c:$(n)'/>
+	        <operator id='strictClockRateScaler.c:$(n)' spec='ScaleOperator' scaleFactor="0.75" weight="3" parameter='@clockRate.c:$(n)'/>
 	        <operator id='becomeUninfectiousRateScaler.t:$(n)' spec='ScaleOperator' scaleFactor=".75" weight="2" parameter="@becomeUninfectiousRate.t:$(n)"/>
 	        <operator id='samplingScaler.t:$(n)' spec='ScaleOperator' scaleFactor=".75" weight="2" parameter="@samplingProportion.t:$(n)"/>
 	        <operator id='reproductiveNumberScaler.t:$(n)' spec='ScaleOperator' scaleFactor=".75" weight="10" parameter="@reproductiveNumber.t:$(n)"/>
@@ -259,7 +284,7 @@
 	        <operator id='piqmeeHaploScaler.t:$(n)' spec='piqmee.operators.QuasiSpeciesHaplotypeScale' weight="3.0" origin="@origin.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
             <operator id='piqmeeHaploSequenceReAttachRandom.t:$(n)' spec='piqmee.operators.QuasiSpeciesSequenceAttachmentRandom' weight="10.0" origin="@origin.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
             <operator id='piqmeeHaploSequenceReAttachUniform.t:$(n)' spec='piqmee.operators.QuasiSpeciesSequenceAttachmentUniform' weight="10.0" origin="@origin.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
-            <operator id="piqmeeHaploStartTimeReAttachUniform" spec="piqmee.operators.QuasiSpeciesSequenceAttachmentUniform" weight="5.0" origin="@origin.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)" firstAttachmentOnly="true"/>
+            <operator id="piqmeeHaploStartTimeReAttachUniform.t:$(n)" spec="piqmee.operators.QuasiSpeciesSequenceAttachmentUniform" weight="5.0" origin="@origin.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)" firstAttachmentOnly="true"/>
             <operator id='piqmeeNarrow.t:$(n)' spec='piqmee.operators.QuasiSpeciesSubtreeExchange' isNarrow='true' weight="5.0" origin="@origin.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
 	        <operator id='piqmeeWide.t:$(n)' spec='piqmee.operators.QuasiSpeciesSubtreeExchange' isNarrow='false' weight="1.0" origin="@origin.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
 	        <operator id='piqmeeWilsonBalding.t:$(n)' spec='piqmee.operators.QuasiSpeciesWilsonBalding' alpha="0.2" weight="0.5" origin="@origin.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
@@ -267,7 +292,7 @@
 	        <operator id='piqmeeWideeasy.t:$(n)' spec='piqmee.operators.QuasiSpeciesSubtreeExchangeEasy' isNarrow='false' weight="2.0" origin="@origin.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
 	        <operator id='piqmeeWilsonBaldingeasy.t:$(n)' spec='piqmee.operators.QuasiSpeciesWilsonBaldingEasy' alpha="0.2" weight="2.5" origin="@origin.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
 
-			<upDownOperator id='strictClockTreeUpDownOperator.c:$(n)' spec='UpDownOperator' scaleFactor="0.75" weight="3">
+			<upDownOperator id='strictClockUpDownOperator.c:$(n)' spec='UpDownOperator' scaleFactor="0.75" weight="3">
 				<up idref="clockRate.c:$(n)"/>
 				<down idref="Tree.t:$(n)"/>
 			</upDownOperator>
@@ -332,10 +357,10 @@
             <connect srcID='mutationRateScaler.s:$(n)'          targetID='mcmc' inputName='operator' if='nooperator(FixMeanMutationRatesOperator) and inlikelihood(mutationRate.s:$(n)) and mutationRate.s:$(n)/estimate=true'>Scales mutation rate of partition s:$(n)</connect>
             <connect srcID='proportionInvariantScaler.s:$(n)'   targetID='mcmc' inputName='operator' if='inlikelihood(proportionInvariant.s:$(n)) and proportionInvariant.s:$(n)/estimate=true'>Scales proportion of invariant sites parameter of partition $(n)</connect>
             <connect srcID='gammaShapeScaler.s:$(n)'            targetID='mcmc' inputName='operator' if='inlikelihood(gammaShape.s:$(n)) and gammaShape.s:$(n)/estimate=true'>Scales gamma shape parameter of partition s:$(n)</connect>
-            <connect srcID='StrictClockRateScaler.c:$(n)'       targetID='mcmc' inputName='operator' if='inlikelihood(clockRate.c:$(n)) and clockRate.c:$(n)/estimate=true'>Scale clock rate of partition c:$(n)</connect>
+            <connect srcID='strictClockRateScaler.c:$(n)'       targetID='mcmc' inputName='operator' if='inlikelihood(clockRate.c:$(n)) and clockRate.c:$(n)/estimate=true'>Scale clock rate of partition c:$(n)</connect>
             <!-- Tree prior and likelihood operators -->
-            <connect srcID='strictClockTreeUpDownOperator.c:$(n)'   targetID='mcmc' inputName='operator' if='nooperator(FixMeanRatesOperator) and inlikelihood(clockRate.c:$(n)) and inlikelihood(Tree.t:$(n)) and Tree.t:$(n)/estimate=true and clockRate.c:$(n)/estimate=true'></connect>
-            <connect srcID='R0TreeUpDownOperator.c:$(n)'            targetID='mcmc' inputName='operator' if='inlikelihood(reproductiveNumber.t:$(n)) and inlikelihood(Tree.t:$(n)) and Tree.t:$(n)/estimate=true and reproductiveNumber.t:$(n)/estimate=true'></connect>
+            <connect srcID='strictClockUpDownOperator.c:$(n)'   targetID='mcmc' inputName='operator' if='nooperator(FixMeanRatesOperator) and inlikelihood(clockRate.c:$(n)) and inlikelihood(Tree.t:$(n)) and Tree.t:$(n)/estimate=true and clockRate.c:$(n)/estimate=true'></connect>
+            <connect srcID='R0TreeUpDownOperator.c:$(n)'            targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkySerial.t:$(n))and inlikelihood(Tree.t:$(n)) and Tree.t:$(n)/estimate=true and reproductiveNumber.t:$(n)/estimate=true'></connect>
             <!-- Tree operators -->
             <connect srcID='piqmeeTreeScaler.t:$(n)'                    targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Scales all internal nodes for tree t:$(n)</connect>
             <connect srcID='piqmeeTreeRootScaler.t:$(n)'                targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Scales root node for tree t:$(n)</connect>
@@ -372,9 +397,6 @@
             <connect srcID='TreeHeight.t:$(n)'      targetID='tracelog' inputName='log' if='inposterior(Tree.t:$(n))  and Tree.t:$(n)/estimate=true'/>
 
         </partitiontemplate>
-
-        <!--<mergepoint id='mttClockModelTemplates'/>-->
-
 
 		<mergepoint id='substModelTemplates'/>
 		<mergepoint id='piqmeeClockModelTemplates'/>

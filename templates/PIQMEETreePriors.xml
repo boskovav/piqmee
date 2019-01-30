@@ -1,0 +1,489 @@
+<beast version='2.0'
+       namespace='beast.app.beauti:beast.core:beast.evolution.branchratemodel:beast.evolution.speciation:beast.evolution.tree.coalescent:beast.core.util:beast.evolution.nuc:beast.evolution.operators:beast.evolution.sitemodel:beast.evolution.substitutionmodel:beast.evolution.likelihood:beast.evolution:beast.math.distributions'>
+
+    <!-- tree priors -->
+    <mergewith point='piqmeeTreePriorTemplates'>
+
+
+
+        <!-- BDSKY serial sampling-->
+
+        <subtemplate id='BirthDeathSkylineSerial' class='piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel'
+                     mainid='QSBirthDeathSkySerial.t:$(n)'
+                     suppressInputs='
+    piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.intervalTimes,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.birthRate,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.deathRate,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.samplingRate,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.rho,
+    piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.removalProbability,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.turnOver,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.netDiversification,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.contemp,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.S0,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.tree,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.treeIntervals,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.forceRateChange,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.conditionOnSurvival,
+    piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.conditionOnRhoSampling,
+	beast.math.distributions.MarkovChainDistribution.parameter,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.reverseTimeArrays,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.originIsRootEdge,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.rhoSamplingTimes,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.birthRateChangeTimes,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.deathRateChangeTimes,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.samplingRateChangeTimes,
+    piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.removalProbabilityChangeTimes,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.birthRateTimesRelative,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.deathRateTimesRelative,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.samplingRateTimesRelative,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.taxon,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.SAtaxon'>
+            <![CDATA[
+<!-- Sequential Birth Death Skyline model-->
+    <plugin spec="piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel" id="QSBirthDeathSkySerial.t:$(n)" tree="@Tree.t:$(n)">
+        <origin spec='parameter.RealParameter' id="origin.t:$(n)" value="100" lower="0." upper="Infinity"/>
+	    <reproductiveNumber spec='parameter.RealParameter' id="reproductiveNumber.t:$(n)" value="2" lower="0." dimension ="10" upper="Infinity"/>
+		<becomeUninfectiousRate spec='parameter.RealParameter' id="becomeUninfectiousRate.t:$(n)" value="1." lower="0." upper="Infinity" dimension ="1"/>
+		<samplingProportion spec='parameter.RealParameter' id="samplingProportion.t:$(n)" value="0.01" lower="0." upper="1." dimension ="1"/>
+	</plugin>
+
+	<distribution  id='originPrior.t:$(n)' x="@origin.t:$(n)" spec="beast.math.distributions.Prior">
+	    <distr spec='beast.math.distributions.Uniform' lower="0." upper="Infinity"/>
+	</distribution>
+
+	<distribution id="samplingProportionPrior.t:$(n)" x="@samplingProportion.t:$(n)" spec="beast.math.distributions.Prior">
+	    <distr spec="beast.math.distributions.Beta" offset="0.">
+	        <parameter name="alpha" value="1." estimate="false"/>
+	        <parameter name="beta" value="1." estimate="false"/>
+	    </distr>
+	</distribution>
+
+	<distribution id="becomeUninfectiousRatePrior.t:$(n)" x="@becomeUninfectiousRate.t:$(n)" spec="beast.math.distributions.Prior">
+	    <distr spec='beast.math.distributions.LogNormalDistributionModel' offset="0.0" meanInRealSpace="false">
+	        <parameter name="M" value="0." estimate="false"/>
+	        <parameter name="S" value="1." estimate="false"/>
+	    </distr>
+	</distribution>
+
+	<distribution id="reproductiveNumberPrior.t:$(n)" x="@reproductiveNumber.t:$(n)" spec="beast.math.distributions.Prior">
+	    <distr spec='beast.math.distributions.LogNormalDistributionModel' offset="0.0" meanInRealSpace="false">
+	        <parameter name="M" value="0." estimate="false"/>
+			<parameter name="S" value="1." estimate="false"/>
+	    </distr>
+    </distribution>
+
+    <!-- RPN calculator -->
+    <RPNcalculator spec="beast.math.statistic.RPNcalculator" id="birth.t:$(n)" expression="reproductiveNumber.t:$(n) becomeUninfectiousRate.t:$(n) *"> <!-- s/(d+s) -->
+        <parameter idref="becomeUninfectiousRate.t:$(n)"/>
+        <parameter idref="reproductiveNumber.t:$(n)"/>
+    </RPNcalculator>
+
+    <RPNcalculator spec="beast.math.statistic.RPNcalculator" id="sampling.t:$(n)" expression="becomeUninfectiousRate.t:$(n) samplingProportion.t:$(n) *">
+        <parameter idref="becomeUninfectiousRate.t:$(n)"/>
+        <parameter idref="samplingProportion.t:$(n)"/>
+    </RPNcalculator>
+
+    <RPNcalculator spec="beast.math.statistic.RPNcalculator" id="death.t:$(n)" expression="becomeUninfectiousRate.t:$(n) 1 samplingProportion.t:$(n) - *"> <!-- b*S0/(d+s) -->
+        <parameter idref="becomeUninfectiousRate.t:$(n)"/>
+        <parameter idref="samplingProportion.t:$(n)"/>
+    </RPNcalculator>
+
+    <!-- Parameter operators -->
+	<operator id='becomeUninfectiousRateScaler.t:$(n)' spec='ScaleOperator' scaleFactor=".75" weight="2" parameter="@becomeUninfectiousRate.t:$(n)"/>
+	<operator id='samplingScaler.t:$(n)' spec='ScaleOperator' scaleFactor=".75" weight="2" parameter="@samplingProportion.t:$(n)"/>
+	<operator id='reproductiveNumberScaler.t:$(n)' spec='ScaleOperator' scaleFactor=".75" weight="10" parameter="@reproductiveNumber.t:$(n)"/>
+	<operator id="updownBD.t:$(n)" spec="UpDownOperator" scaleFactor=".75" weight="2">
+        <up idref="reproductiveNumber.t:$(n)"/>
+        <down idref="becomeUninfectiousRate.t:$(n)"/>
+    </operator>
+    <operator id='origScaler.t:$(n)' spec='ScaleOperator' scaleFactor=".75" weight="1" parameter="@origin.t:$(n)"/>
+
+	<!-- Tree operators -->
+    <operator id='piqmeeTreeScaler.t:$(n)' spec='piqmee.operators.QuasiSpeciesTreeScale' scaleFactor="0.5" weight="3.0" origin="@origin.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
+    <operator id='piqmeeTreeRootScaler.t:$(n)' spec='piqmee.operators.QuasiSpeciesTreeScale' scaleFactor="0.7" weight="3.0" origin="@origin.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)" rootOnly="true" />
+    <operator id='piqmeeNodeUniformOperator.t:$(n)' spec='piqmee.operators.QuasiSpeciesUniform' weight="5.0" origin="@origin.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
+    <operator id='piqmeeHaploScaler.t:$(n)' spec='piqmee.operators.QuasiSpeciesHaplotypeScale' weight="3.0" origin="@origin.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
+    <operator id='piqmeeHaploSequenceReAttachRandom.t:$(n)' spec='piqmee.operators.QuasiSpeciesSequenceAttachmentRandom' weight="10.0" origin="@origin.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
+    <operator id='piqmeeHaploSequenceReAttachUniform.t:$(n)' spec='piqmee.operators.QuasiSpeciesSequenceAttachmentUniform' weight="10.0" origin="@origin.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
+    <operator id="piqmeeHaploStartTimeReAttachUniform.t:$(n)" spec="piqmee.operators.QuasiSpeciesSequenceAttachmentUniform" weight="5.0" origin="@origin.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)" firstAttachmentOnly="true"/>
+    <operator id='piqmeeNarrow.t:$(n)' spec='piqmee.operators.QuasiSpeciesSubtreeExchange' isNarrow='true' weight="5.0" origin="@origin.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
+    <operator id='piqmeeWide.t:$(n)' spec='piqmee.operators.QuasiSpeciesSubtreeExchange' isNarrow='false' weight="1.0" origin="@origin.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
+    <operator id='piqmeeWilsonBalding.t:$(n)' spec='piqmee.operators.QuasiSpeciesWilsonBalding' alpha="0.2" weight="0.5" origin="@origin.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
+    <operator id='piqmeeNarroweasy.t:$(n)' spec='piqmee.operators.QuasiSpeciesSubtreeExchangeEasy' isNarrow='true' weight="10.0" origin="@origin.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
+    <operator id='piqmeeWideeasy.t:$(n)' spec='piqmee.operators.QuasiSpeciesSubtreeExchangeEasy' isNarrow='false' weight="2.0" origin="@origin.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
+    <operator id='piqmeeWilsonBaldingeasy.t:$(n)' spec='piqmee.operators.QuasiSpeciesWilsonBaldingEasy' alpha="0.2" weight="2.5" origin="@origin.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
+
+    <operator id="R0TreeUpDownOperator.c:$(n)" spec="UpDownOperator" scaleFactor="0.75" weight="3.0">
+        <up idref="reproductiveNumber.t:$(n)"/>
+        <down idref="Tree.t:$(n)"/>
+    </operator>
+]]>
+            <connect srcID='Tree.t:$(n)'            targetID='state'        inputName='stateNode'     if='inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'/>
+
+            <connect srcID='QSBirthDeathSkySerial.t:$(n)'       targetID='prior' inputName='distribution' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and inlikelihood(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'/>
+            <connect srcID='originPrior.t:$(n)'                 targetID='prior' inputName='distribution' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and origin.t:$(n)/estimate=true'>prior on origin.t:$(n)</connect>
+            <connect srcID='samplingProportionPrior.t:$(n)'     targetID='prior' inputName='distribution' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and samplingProportion.t:$(n)/estimate=true'>prior on sampling proportion t:$(n)</connect>
+            <connect srcID='becomeUninfectiousRatePrior.t:$(n)' targetID='prior' inputName='distribution' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and becomeUninfectiousRate.t:$(n)/estimate=true'>prior on becomeUninfectiousRate.t:$(n)</connect>
+            <connect srcID='reproductiveNumberPrior.t:$(n)'     targetID='prior' inputName='distribution' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and reproductiveNumber.t:$(n)/estimate=true'>prior on reproductiveNumber.t:$(n)</connect>
+
+            <plate var='p' range='origin,samplingProportion,becomeUninfectiousRate,reproductiveNumber'>
+                <connect srcID='$(p).t:$(n)'            targetID='state' inputName='stateNode' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and $(p).t:$(n)/estimate=true'/>
+            </plate>
+
+            <connect srcID='becomeUninfectiousRateScaler.t:$(n)'    targetID='mcmc' inputName='operator'     if='inposterior(QSBirthDeathSkySerial.t:$(n)) and becomeUninfectiousRate.t:$(n)/estimate=true'/>
+            <connect srcID='samplingScaler.t:$(n)'                  targetID='mcmc' inputName='operator'     if='inposterior(QSBirthDeathSkySerial.t:$(n)) and samplingProportion.t:$(n)/estimate=true'/>
+            <connect srcID='reproductiveNumberScaler.t:$(n)'        targetID='mcmc' inputName='operator'     if='inposterior(QSBirthDeathSkySerial.t:$(n)) and reproductiveNumber.t:$(n)/estimate=true'/>
+            <connect srcID='updownBD.t:$(n)'                        targetID='mcmc' inputName='operator'     if='inposterior(QSBirthDeathSkySerial.t:$(n)) and reproductiveNumber.t:$(n)/estimate=true and becomeUninfectiousRate.t:$(n)/estimate=true'/>
+            <connect srcID='origScaler.t:$(n)'                      targetID='mcmc' inputName='operator'     if='inposterior(QSBirthDeathSkySerial.t:$(n)) and origin.t:$(n)/estimate=true'/>
+
+            <connect srcID='R0TreeUpDownOperator.c:$(n)'            targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and inlikelihood(Tree.t:$(n)) and Tree.t:$(n)/estimate=true and reproductiveNumber.t:$(n)/estimate=true'></connect>
+
+            <connect srcID='piqmeeTreeScaler.t:$(n)'                    targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Scales all internal nodes for tree t:$(n)</connect>
+            <connect srcID='piqmeeTreeRootScaler.t:$(n)'                targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Scales root node for tree t:$(n)</connect>
+            <connect srcID='piqmeeNodeUniformOperator.t:$(n)'           targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Draws new internal node heights uniformally for tree t:$(n)</connect>
+            <connect srcID='piqmeeHaploScaler.t:$(n)'                   targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Scales all attachment times of one haplotype/sequence type in the tree t:$(n)</connect>
+            <connect srcID='piqmeeHaploSequenceReAttachRandom.t:$(n)'   targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Changes one attachment time of a haplotype/sequence type in the tree t:$(n)</connect>
+            <connect srcID='piqmeeHaploSequenceReAttachUniform.t:$(n)'  targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Changes one attachment time of a haplotype/sequence type in the tree t:$(n)</connect>
+            <connect srcID='piqmeeHaploStartTimeReAttachUniform.t:$(n)' targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Changes the first attachment time of a haplotype/sequence type in the tree t:$(n)</connect>
+            <connect srcID='piqmeeNarrow.t:$(n)'                        targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Narrow exchange performs local rearrangement of tree t:$(n)</connect>
+            <connect srcID='piqmeeWide.t:$(n)'                          targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Wide exchange performs global rearrangement of tree t:$(n)</connect>
+            <connect srcID='piqmeeWilsonBalding.t:$(n)'                 targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Performs Wilson-Balding global rearrangement of tree t:$(n)</connect>
+            <connect srcID='piqmeeNarroweasy.t:$(n)'                    targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>NarrowEasy exchange performs local rearrangement of tree t:$(n) without distrurbing the haplotype/sequence type attachment times</connect>
+            <connect srcID='piqmeeWideeasy.t:$(n)'                      targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>WideEasy exchange performs global rearrangement of tree t:$(n) without distrurbing the haplotype/sequence type attachment times</connect>
+            <connect srcID='piqmeeWilsonBaldingeasy.t:$(n)'             targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Performs Wilson-Balding global rearrangement of tree t:$(n) without distrurbing the haplotype/sequence type attachment times</connect>
+
+            <connect srcID='QSBirthDeathSkySerial.t:$(n)' targetID='tracelog' inputName='log' if='inposterior(QSBirthDeathSkySerial.t:$(n))'/>
+            <plate var='p' range='birth,death,sampling'>
+                <connect srcID='$(p).t:$(n)'        targetID='tracelog' inputName='log' if='inposterior(QSBirthDeathSkySerial.t:$(n))'/>
+            </plate>
+            <plate var='p' range='origin,samplingProportion,becomeUninfectiousRate,reproductiveNumber'>
+                <connect srcID='$(p).t:$(n)'        targetID='tracelog' inputName='log' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and $(p).t:$(n)/estimate=true'/>
+            </plate>
+        </subtemplate>
+
+
+
+        <!-- BDSKY contemporaneous sampling-->
+
+        <subtemplate id='BirthDeathSkylineContemporary' class='piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel'
+                     mainid='QSBirthDeathSkyContemporary.t:$(n)'
+                     suppressInputs='
+    piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.intervalTimes,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.birthRate,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.deathRate,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.samplingRate,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.rho,
+    piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.removalProbability,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.turnOver,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.netDiversification,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.contemp,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.S0,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.tree,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.treeIntervals,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.forceRateChange,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.conditionOnSurvival,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.conditionOnRhoSampling,
+	beast.math.distributions.MarkovChainDistribution.parameter,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.reverseTimeArrays,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.originIsRootEdge,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.rhoSamplingTimes,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.birthRateChangeTimes,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.deathRateChangeTimes,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.samplingRateChangeTimes,
+    piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.removalProbabilityChangeTimes,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.birthRateTimesRelative,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.deathRateTimesRelative,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.samplingRateTimesRelative,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.taxon,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.SAtaxon'>
+            <![CDATA[
+<!-- Sequential Birth Death Skyline model-->
+    <plugin spec="piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel" id="QSBirthDeathSkyContemporary.t:$(n)" tree="@Tree.t:$(n)">
+        <origin spec='parameter.RealParameter' id="originContemp.t:$(n)" value="100" lower="0." upper="Infinity"/>
+	    <reproductiveNumber spec='parameter.RealParameter' id="reproductiveNumberContemp.t:$(n)" value="2" lower="0." dimension ="10" upper="Infinity"/>
+		<becomeUninfectiousRate spec='parameter.RealParameter' id="becomeUninfectiousRateContemp.t:$(n)" value="1." lower="0." upper="Infinity" dimension ="1"/>
+		<samplingProportion spec='parameter.RealParameter' id="samplingProportionContemp.t:$(n)" value="0."/>
+		<rho spec='parameter.RealParameter' id="rhoContemp.t:$(n)" value="0.01" lower="0." upper="1."/>
+	</plugin>
+
+	<distribution  id='originPriorContemp.t:$(n)' x="@originContemp.t:$(n)" spec="beast.math.distributions.Prior">
+	    <distr spec='beast.math.distributions.Uniform' lower="0." upper="Infinity"/>
+	</distribution>
+
+	<distribution id="rhoPriorContemp.t:$(n)" x="@rhoContemp.t:$(n)" spec="beast.math.distributions.Prior">
+		<distr spec="beast.math.distributions.Beta" offset="0.">
+			<parameter name="alpha" value="1." estimate="false"/>
+			<parameter name="beta" value="1." estimate="false"/>
+		</distr>
+	</distribution>
+
+	<distribution id="becomeUninfectiousRatePriorContemp.t:$(n)" x="@becomeUninfectiousRateContemp.t:$(n)" spec="beast.math.distributions.Prior">
+	    <distr spec='beast.math.distributions.LogNormalDistributionModel' offset="0.0" meanInRealSpace="false">
+	        <parameter name="M" value="0." estimate="false"/>
+	        <parameter name="S" value="1." estimate="false"/>
+	    </distr>
+	</distribution>
+
+	<distribution id="reproductiveNumberPriorContemp.t:$(n)" x="@reproductiveNumberContemp.t:$(n)" spec="beast.math.distributions.Prior">
+	    <distr spec='beast.math.distributions.LogNormalDistributionModel' offset="0.0" meanInRealSpace="false">
+	        <parameter name="M" value="0." estimate="false"/>
+			<parameter name="S" value="1." estimate="false"/>
+	    </distr>
+    </distribution>
+
+    <!-- RPN calculator -->
+    <RPNcalculator spec="beast.math.statistic.RPNcalculator" id="birthContemp.t:$(n)" expression="reproductiveNumberContemp.t:$(n) becomeUninfectiousRateContemp.t:$(n) *"> <!-- s/(d+s) -->
+        <parameter idref="becomeUninfectiousRateContemp.t:$(n)"/>
+        <parameter idref="reproductiveNumberContemp.t:$(n)"/>
+    </RPNcalculator>
+
+    <RPNcalculator spec="beast.math.statistic.RPNcalculator" id="samplingContemp.t:$(n)" expression="becomeUninfectiousRateContemp.t:$(n) samplingProportionContemp.t:$(n) *">
+        <parameter idref="becomeUninfectiousRateContemp.t:$(n)"/>
+        <parameter idref="samplingProportionContemp.t:$(n)"/>
+    </RPNcalculator>
+
+    <RPNcalculator spec="beast.math.statistic.RPNcalculator" id="deathContemp.t:$(n)" expression="becomeUninfectiousRateContemp.t:$(n) 1 samplingProportionContemp.t:$(n) - *"> <!-- b*S0/(d+s) -->
+        <parameter idref="becomeUninfectiousRateContemp.t:$(n)"/>
+        <parameter idref="samplingProportionContemp.t:$(n)"/>
+    </RPNcalculator>
+
+    <!-- Parameter operators -->
+	<operator id='becomeUninfectiousRateScalerContemp.t:$(n)' spec='ScaleOperator' scaleFactor=".75" weight="2" parameter="@becomeUninfectiousRateContemp.t:$(n)"/>
+    <operator id='rhoScalerContemp.t:$(n)' spec='ScaleOperator' scaleFactor=".75" weight="2" parameter="@rhoContemp.t:$(n)"/>
+	<operator id='reproductiveNumberScalerContemp.t:$(n)' spec='ScaleOperator' scaleFactor=".75" weight="10" parameter="@reproductiveNumberContemp.t:$(n)"/>
+	<operator id="updownBDContemp.t:$(n)" spec="UpDownOperator" scaleFactor=".75" weight="2">
+        <up idref="reproductiveNumberContemp.t:$(n)"/>
+        <down idref="becomeUninfectiousRateContemp.t:$(n)"/>
+    </operator>
+    <operator id='origScalerContemp.t:$(n)' spec='ScaleOperator' scaleFactor=".75" weight="1" parameter="@originContemp.t:$(n)"/>
+
+	<!-- Tree operators -->
+    <operator id='piqmeeTreeScalerContemp.t:$(n)' spec='piqmee.operators.QuasiSpeciesTreeScale' scaleFactor="0.5" weight="3.0" origin="@originContemp.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
+    <operator id='piqmeeTreeRootScalerContemp.t:$(n)' spec='piqmee.operators.QuasiSpeciesTreeScale' scaleFactor="0.7" weight="3.0" origin="@originContemp.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)" rootOnly="true" />
+    <operator id='piqmeeNodeUniformOperatorContemp.t:$(n)' spec='piqmee.operators.QuasiSpeciesUniform' weight="5.0" origin="@originContemp.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
+    <operator id='piqmeeHaploScalerContemp.t:$(n)' spec='piqmee.operators.QuasiSpeciesHaplotypeScale' weight="3.0" origin="@originContemp.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
+    <operator id='piqmeeHaploSequenceReAttachRandomContemp.t:$(n)' spec='piqmee.operators.QuasiSpeciesSequenceAttachmentRandom' weight="10.0" origin="@originContemp.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
+    <operator id='piqmeeHaploSequenceReAttachUniformContemp.t:$(n)' spec='piqmee.operators.QuasiSpeciesSequenceAttachmentUniform' weight="10.0" origin="@originContemp.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
+    <operator id="piqmeeHaploStartTimeReAttachUniformContemp.t:$(n)" spec="piqmee.operators.QuasiSpeciesSequenceAttachmentUniform" weight="5.0" origin="@originContemp.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)" firstAttachmentOnly="true"/>
+    <operator id='piqmeeNarrowContemp.t:$(n)' spec='piqmee.operators.QuasiSpeciesSubtreeExchange' isNarrow='true' weight="5.0" origin="@originContemp.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
+    <operator id='piqmeeWideContemp.t:$(n)' spec='piqmee.operators.QuasiSpeciesSubtreeExchange' isNarrow='false' weight="1.0" origin="@originContemp.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
+    <operator id='piqmeeWilsonBaldingContemp.t:$(n)' spec='piqmee.operators.QuasiSpeciesWilsonBalding' alpha="0.2" weight="0.5" origin="@originContemp.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
+    <operator id='piqmeeNarroweasyContemp.t:$(n)' spec='piqmee.operators.QuasiSpeciesSubtreeExchangeEasy' isNarrow='true' weight="10.0" origin="@originContemp.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
+    <operator id='piqmeeWideeasyContemp.t:$(n)' spec='piqmee.operators.QuasiSpeciesSubtreeExchangeEasy' isNarrow='false' weight="2.0" origin="@originContemp.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
+    <operator id='piqmeeWilsonBaldingeasyContemp.t:$(n)' spec='piqmee.operators.QuasiSpeciesWilsonBaldingEasy' alpha="0.2" weight="2.5" origin="@originContemp.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
+
+    <operator id="R0TreeUpDownOperatorContemp.c:$(n)" spec="UpDownOperator" scaleFactor="0.75" weight="3.0">
+        <up idref="reproductiveNumberContemp.t:$(n)"/>
+        <down idref="Tree.t:$(n)"/>
+    </operator>
+]]>
+            <connect srcID='Tree.t:$(n)'            targetID='state'        inputName='stateNode'     if='inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'/>
+
+            <connect srcID='QSBirthDeathSkyContemporary.t:$(n)' targetID='prior' inputName='distribution' if='inposterior(QSBirthDeathSkyContemporary.t:$(n)) and inlikelihood(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'/>
+            <connect srcID='originPriorContemp.t:$(n)'                 targetID='prior' inputName='distribution' if='inposterior(QSBirthDeathSkyContemporary.t:$(n)) and originContemp.t:$(n)/estimate=true'>prior on origin.t:$(n)</connect>
+            <connect srcID='rhoPriorContemp.t:$(n)'                    targetID='prior' inputName='distribution' if='inposterior(QSBirthDeathSkyContemporary.t:$(n)) and rhoContemp.t:$(n)/estimate=true'>prior on sampling proportion t:$(n)</connect>
+            <connect srcID='becomeUninfectiousRatePriorContemp.t:$(n)' targetID='prior' inputName='distribution' if='inposterior(QSBirthDeathSkyContemporary.t:$(n)) and becomeUninfectiousRateContemp.t:$(n)/estimate=true'>prior on becomeUninfectiousRate.t:$(n)</connect>
+            <connect srcID='reproductiveNumberPriorContemp.t:$(n)'     targetID='prior' inputName='distribution' if='inposterior(QSBirthDeathSkyContemporary.t:$(n)) and reproductiveNumberContemp.t:$(n)/estimate=true'>prior on reproductiveNumber.t:$(n)</connect>
+
+            <plate var='p' range='originContemp,rhoContemp,becomeUninfectiousRateContemp,reproductiveNumberContemp'>
+                <connect srcID='$(p).t:$(n)'            targetID='state' inputName='stateNode' if='inposterior(QSBirthDeathSkyContemporary.t:$(n)) and $(p).t:$(n)/estimate=true'/>
+            </plate>
+
+            <connect srcID='becomeUninfectiousRateScalerContemp.t:$(n)'    targetID='mcmc' inputName='operator'     if='inposterior(QSBirthDeathSkyContemporary.t:$(n)) and becomeUninfectiousRateContemp.t:$(n)/estimate=true'/>
+            <connect srcID='rhoScalerContemp.t:$(n)'                       targetID='mcmc' inputName='operator'     if='inposterior(QSBirthDeathSkyContemporary.t:$(n)) and rhoContemp.t:$(n)/estimate=true'/>
+            <connect srcID='reproductiveNumberScalerContemp.t:$(n)'        targetID='mcmc' inputName='operator'     if='inposterior(QSBirthDeathSkyContemporary.t:$(n)) and reproductiveNumberContemp.t:$(n)/estimate=true'/>
+            <connect srcID='updownBDContemp.t:$(n)'                        targetID='mcmc' inputName='operator'     if='inposterior(QSBirthDeathSkyContemporary.t:$(n)) and reproductiveNumberContemp.t:$(n)/estimate=true and becomeUninfectiousRateContemp.t:$(n)/estimate=true'/>
+            <connect srcID='origScalerContemp.t:$(n)'                      targetID='mcmc' inputName='operator'     if='inposterior(QSBirthDeathSkyContemporary.t:$(n)) and originContemp.t:$(n)/estimate=true'/>
+
+            <connect srcID='R0TreeUpDownOperatorContemp.c:$(n)'            targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkyContemporary.t:$(n)) and inlikelihood(Tree.t:$(n)) and Tree.t:$(n)/estimate=true and reproductiveNumber.t:$(n)/estimate=true'></connect>
+
+            <connect srcID='piqmeeTreeScalerContemp.t:$(n)'                    targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkyContemporary.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Scales all internal nodes for tree t:$(n)</connect>
+            <connect srcID='piqmeeTreeRootScalerContemp.t:$(n)'                targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkyContemporary.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Scales root node for tree t:$(n)</connect>
+            <connect srcID='piqmeeNodeUniformOperatorContemp.t:$(n)'           targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkyContemporary.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Draws new internal node heights uniformally for tree t:$(n)</connect>
+            <connect srcID='piqmeeHaploScalerContemp.t:$(n)'                   targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkyContemporary.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Scales all attachment times of one haplotype/sequence type in the tree t:$(n)</connect>
+            <connect srcID='piqmeeHaploSequenceReAttachRandomContemp.t:$(n)'   targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkyContemporary.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Changes one attachment time of a haplotype/sequence type in the tree t:$(n)</connect>
+            <connect srcID='piqmeeHaploSequenceReAttachUniformContemp.t:$(n)'  targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkyContemporary.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Changes one attachment time of a haplotype/sequence type in the tree t:$(n)</connect>
+            <connect srcID='piqmeeHaploStartTimeReAttachUniformContemp.t:$(n)' targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkyContemporary.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Changes the first attachment time of a haplotype/sequence type in the tree t:$(n)</connect>
+            <connect srcID='piqmeeNarrowContemp.t:$(n)'                        targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkyContemporary.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Narrow exchange performs local rearrangement of tree t:$(n)</connect>
+            <connect srcID='piqmeeWideContemp.t:$(n)'                          targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkyContemporary.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Wide exchange performs global rearrangement of tree t:$(n)</connect>
+            <connect srcID='piqmeeWilsonBaldingContemp.t:$(n)'                 targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkyContemporary.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Performs Wilson-Balding global rearrangement of tree t:$(n)</connect>
+            <connect srcID='piqmeeNarroweasyContemp.t:$(n)'                    targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkyContemporary.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>NarrowEasy exchange performs local rearrangement of tree t:$(n) without distrurbing the haplotype/sequence type attachment times</connect>
+            <connect srcID='piqmeeWideeasyContemp.t:$(n)'                      targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkyContemporary.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>WideEasy exchange performs global rearrangement of tree t:$(n) without distrurbing the haplotype/sequence type attachment times</connect>
+            <connect srcID='piqmeeWilsonBaldingeasyContemp.t:$(n)'             targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkyContemporary.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Performs Wilson-Balding global rearrangement of tree t:$(n) without distrurbing the haplotype/sequence type attachment times</connect>
+
+            <connect srcID='QSBirthDeathSkyContemporary.t:$(n)' targetID='tracelog' inputName='log' if='inposterior(QSBirthDeathSkyContemporary.t:$(n))'/>
+            <plate var='p' range='birthContemp,deathContemp,samplingContemp'>
+                <connect srcID='$(p).t:$(n)'        targetID='tracelog' inputName='log' if='inposterior(QSBirthDeathSkyContemporary.t:$(n))'/>
+            </plate>
+            <plate var='p' range='originContemp,rhoContemp,becomeUninfectiousRateContemp,reproductiveNumberContemp'>
+                <connect srcID='$(p).t:$(n)'        targetID='tracelog' inputName='log' if='inposterior(QSBirthDeathSkyContemporary.t:$(n)) and $(p).t:$(n)/estimate=true'/>
+            </plate>
+        </subtemplate>
+
+
+
+        <!-- BDSKY multi-rho sampling-->
+
+        <subtemplate id='BirthDeathSkylineMultiRho' class='piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel'
+                     mainid='QSBirthDeathSkyMultiRho.t:$(n)'
+                     suppressInputs='
+    piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.intervalTimes,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.birthRate,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.deathRate,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.samplingRate,
+    piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.removalProbability,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.turnOver,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.netDiversification,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.contemp,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.S0,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.tree,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.treeIntervals,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.forceRateChange,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.conditionOnSurvival,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.conditionOnRhoSampling,
+	beast.math.distributions.MarkovChainDistribution.parameter,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.reverseTimeArrays,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.originIsRootEdge,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.birthRateChangeTimes,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.deathRateChangeTimes,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.samplingRateChangeTimes,
+    piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.removalProbabilityChangeTimes,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.birthRateTimesRelative,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.deathRateTimesRelative,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.samplingRateTimesRelative,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.taxon,
+	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.SAtaxon'>
+            <![CDATA[
+<!-- Sequential Birth Death Skyline model-->
+    <plugin spec="piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel" id="QSBirthDeathSkyMultiRho.t:$(n)" tree="@Tree.t:$(n)">
+        <origin spec='parameter.RealParameter' id="originMultiRho.t:$(n)" value="100" lower="0." upper="Infinity"/>
+	    <reproductiveNumber spec='parameter.RealParameter' id="reproductiveNumberMultiRho.t:$(n)" value="2" lower="0." dimension ="10" upper="Infinity"/>
+		<becomeUninfectiousRate spec='parameter.RealParameter' id="becomeUninfectiousRateMultiRho.t:$(n)" value="1." lower="0." upper="Infinity" dimension ="1"/>
+		<samplingProportion spec='parameter.RealParameter' id="samplingProportionMultiRho.t:$(n)" value="0."/>
+		<rho spec='parameter.RealParameter' id="rhoMultiRho.t:$(n)" value="0.01 0.1" lower="0." upper="1."/>
+		<rhoSamplingTimes spec='parameter.RealParameter' id="rhoChangeTimes.t:$(n)" value="0.0 1.0" lower="0."/>
+        <reverseTimeArrays spec='parameter.BooleanParameter' value='false false false true false'/>
+	</plugin>
+
+	<distribution  id='originPriorMultiRho.t:$(n)' x="@originMultiRho.t:$(n)" spec="beast.math.distributions.Prior">
+	    <distr spec='beast.math.distributions.Uniform' lower="0." upper="Infinity"/>
+	</distribution>
+
+	<distribution id="rhoPriorMultiRho.t:$(n)" x="@rhoMultiRho.t:$(n)" spec="beast.math.distributions.Prior">
+		<distr spec="beast.math.distributions.Beta" offset="0.">
+			<parameter name="alpha" value="1." estimate="false"/>
+			<parameter name="beta" value="1." estimate="false"/>
+		</distr>
+	</distribution>
+
+	<distribution id="becomeUninfectiousRatePriorMultiRho.t:$(n)" x="@becomeUninfectiousRateMultiRho.t:$(n)" spec="beast.math.distributions.Prior">
+	    <distr spec='beast.math.distributions.LogNormalDistributionModel' offset="0.0" meanInRealSpace="false">
+	        <parameter name="M" value="0." estimate="false"/>
+	        <parameter name="S" value="1." estimate="false"/>
+	    </distr>
+	</distribution>
+
+	<distribution id="reproductiveNumberPriorMultiRho.t:$(n)" x="@reproductiveNumberMultiRho.t:$(n)" spec="beast.math.distributions.Prior">
+	    <distr spec='beast.math.distributions.LogNormalDistributionModel' offset="0.0" meanInRealSpace="false">
+	        <parameter name="M" value="0." estimate="false"/>
+			<parameter name="S" value="1." estimate="false"/>
+	    </distr>
+    </distribution>
+
+   <!-- RPN calculator -->
+    <RPNcalculator spec="beast.math.statistic.RPNcalculator" id="birthMultiRho.t:$(n)" expression="reproductiveNumberMultiRho.t:$(n) becomeUninfectiousRateMultiRho.t:$(n) *"> <!-- s/(d+s) -->
+        <parameter idref="becomeUninfectiousRateMultiRho.t:$(n)"/>
+        <parameter idref="reproductiveNumberMultiRho.t:$(n)"/>
+    </RPNcalculator>
+
+    <RPNcalculator spec="beast.math.statistic.RPNcalculator" id="samplingMultiRho.t:$(n)" expression="becomeUninfectiousRateMultiRho.t:$(n) samplingProportionMultiRho.t:$(n) *">
+        <parameter idref="becomeUninfectiousRateMultiRho.t:$(n)"/>
+        <parameter idref="samplingProportionMultiRho.t:$(n)"/>
+    </RPNcalculator>
+
+    <RPNcalculator spec="beast.math.statistic.RPNcalculator" id="deathMultiRho.t:$(n)" expression="becomeUninfectiousRateMultiRho.t:$(n) 1 samplingProportionMultiRho.t:$(n) - *"> <!-- b*S0/(d+s) -->
+        <parameter idref="becomeUninfectiousRateMultiRho.t:$(n)"/>
+        <parameter idref="samplingProportionMultiRho.t:$(n)"/>
+    </RPNcalculator>
+
+    <!-- Parameter operators -->
+	<operator id='becomeUninfectiousRateScalerMultiRho.t:$(n)' spec='ScaleOperator' scaleFactor=".75" weight="2" parameter="@becomeUninfectiousRateMultiRho.t:$(n)"/>
+    <operator id='rhoScalerMultiRho.t:$(n)' spec='ScaleOperator' scaleFactor=".75" weight="2" parameter="@rhoMultiRho.t:$(n)"/>
+	<operator id='reproductiveNumberScalerMultiRho.t:$(n)' spec='ScaleOperator' scaleFactor=".75" weight="10" parameter="@reproductiveNumberMultiRho.t:$(n)"/>
+	<operator id="updownBDMultiRho.t:$(n)" spec="UpDownOperator" scaleFactor=".75" weight="2">
+        <up idref="reproductiveNumberMultiRho.t:$(n)"/>
+        <down idref="becomeUninfectiousRateMultiRho.t:$(n)"/>
+    </operator>
+    <operator id='origScalerMultiRho.t:$(n)' spec='ScaleOperator' scaleFactor=".75" weight="1" parameter="@originMultiRho.t:$(n)"/>
+
+	<!-- Tree operators -->
+    <operator id='piqmeeTreeScalerMultiRho.t:$(n)' spec='piqmee.operators.QuasiSpeciesTreeScale' scaleFactor="0.5" weight="3.0" origin="@originMultiRho.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
+    <operator id='piqmeeTreeRootScalerMultiRho.t:$(n)' spec='piqmee.operators.QuasiSpeciesTreeScale' scaleFactor="0.7" weight="3.0" origin="@originMultiRho.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)" rootOnly="true" />
+    <operator id='piqmeeNodeUniformOperatorMultiRho.t:$(n)' spec='piqmee.operators.QuasiSpeciesUniform' weight="5.0" origin="@originMultiRho.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
+    <operator id='piqmeeHaploScalerMultiRho.t:$(n)' spec='piqmee.operators.QuasiSpeciesHaplotypeScale' weight="3.0" origin="@originMultiRho.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
+    <operator id='piqmeeHaploSequenceReAttachRandomMultiRho.t:$(n)' spec='piqmee.operators.QuasiSpeciesSequenceAttachmentRandom' weight="10.0" origin="@originMultiRho.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
+    <operator id='piqmeeHaploSequenceReAttachUniformMultiRho.t:$(n)' spec='piqmee.operators.QuasiSpeciesSequenceAttachmentUniform' weight="10.0" origin="@originMultiRho.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
+    <operator id="piqmeeHaploStartTimeReAttachUniformMultiRho.t:$(n)" spec="piqmee.operators.QuasiSpeciesSequenceAttachmentUniform" weight="5.0" origin="@originMultiRho.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)" firstAttachmentOnly="true"/>
+    <operator id='piqmeeNarrowMultiRho.t:$(n)' spec='piqmee.operators.QuasiSpeciesSubtreeExchange' isNarrow='true' weight="5.0" origin="@originMultiRho.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
+    <operator id='piqmeeWideMultiRho.t:$(n)' spec='piqmee.operators.QuasiSpeciesSubtreeExchange' isNarrow='false' weight="1.0" origin="@originMultiRho.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
+    <operator id='piqmeeWilsonBaldingMultiRho.t:$(n)' spec='piqmee.operators.QuasiSpeciesWilsonBalding' alpha="0.2" weight="0.5" origin="@originMultiRho.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
+    <operator id='piqmeeNarroweasyMultiRho.t:$(n)' spec='piqmee.operators.QuasiSpeciesSubtreeExchangeEasy' isNarrow='true' weight="10.0" origin="@originMultiRho.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
+    <operator id='piqmeeWideeasyMultiRho.t:$(n)' spec='piqmee.operators.QuasiSpeciesSubtreeExchangeEasy' isNarrow='false' weight="2.0" origin="@originMultiRho.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
+    <operator id='piqmeeWilsonBaldingeasyMultiRho.t:$(n)' spec='piqmee.operators.QuasiSpeciesWilsonBaldingEasy' alpha="0.2" weight="2.5" origin="@originMultiRho.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
+
+    <operator id="R0TreeUpDownOperatorMultiRho.c:$(n)" spec="UpDownOperator" scaleFactor="0.75" weight="3.0">
+        <up idref="reproductiveNumberMultiRho.t:$(n)"/>
+        <down idref="Tree.t:$(n)"/>
+    </operator>
+]]>
+
+            <connect srcID='Tree.t:$(n)'            targetID='state'        inputName='stateNode'     if='inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'/>
+
+            <connect srcID='QSBirthDeathSkyMultiRho.t:$(n)' targetID='prior' inputName='distribution' if='inposterior(QSBirthDeathSkyMultiRho.t:$(n)) and inlikelihood(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'/>
+            <connect srcID='originPriorMultiRho.t:$(n)'                 targetID='prior' inputName='distribution' if='inposterior(QSBirthDeathSkyMultiRho.t:$(n)) and originMultiRho.t:$(n)/estimate=true'>prior on origin.t:$(n)</connect>
+            <connect srcID='rhoPriorMultiRho.t:$(n)'                    targetID='prior' inputName='distribution' if='inposterior(QSBirthDeathSkyMultiRho.t:$(n)) and rhoMultiRho.t:$(n)/estimate=true'>prior on sampling proportion t:$(n)</connect>
+            <connect srcID='becomeUninfectiousRatePriorMultiRho.t:$(n)' targetID='prior' inputName='distribution' if='inposterior(QSBirthDeathSkyMultiRho.t:$(n)) and becomeUninfectiousRateMultiRho.t:$(n)/estimate=true'>prior on becomeUninfectiousRate.t:$(n)</connect>
+            <connect srcID='reproductiveNumberPriorMultiRho.t:$(n)'     targetID='prior' inputName='distribution' if='inposterior(QSBirthDeathSkyMultiRho.t:$(n)) and reproductiveNumberMultiRho.t:$(n)/estimate=true'>prior on reproductiveNumber.t:$(n)</connect>
+
+            <plate var='p' range='originMultiRho,rhoMultiRho,becomeUninfectiousRateMultiRho,reproductiveNumberMultiRho'>
+                <connect srcID='$(p).t:$(n)'            targetID='state' inputName='stateNode' if='inposterior(QSBirthDeathSkyMultiRho.t:$(n)) and $(p).t:$(n)/estimate=true'/>
+            </plate>
+
+            <connect srcID='becomeUninfectiousRateScalerMultiRho.t:$(n)'    targetID='mcmc' inputName='operator'     if='inposterior(QSBirthDeathSkyMultiRho.t:$(n)) and becomeUninfectiousRateMultiRho.t:$(n)/estimate=true'/>
+            <connect srcID='rhoScalerMultiRho.t:$(n)'                       targetID='mcmc' inputName='operator'     if='inposterior(QSBirthDeathSkyMultiRho.t:$(n)) and rhoMultiRho.t:$(n)/estimate=true'/>
+            <connect srcID='reproductiveNumberScalerMultiRho.t:$(n)'        targetID='mcmc' inputName='operator'     if='inposterior(QSBirthDeathSkyMultiRho.t:$(n)) and reproductiveNumberMultiRho.t:$(n)/estimate=true'/>
+            <connect srcID='updownBDMultiRho.t:$(n)'                        targetID='mcmc' inputName='operator'     if='inposterior(QSBirthDeathSkyMultiRho.t:$(n)) and reproductiveNumberMultiRho.t:$(n)/estimate=true and becomeUninfectiousRateMultiRho.t:$(n)/estimate=true'/>
+            <connect srcID='origScalerMultiRho.t:$(n)'                      targetID='mcmc' inputName='operator'     if='inposterior(QSBirthDeathSkyMultiRho.t:$(n)) and originMultiRho.t:$(n)/estimate=true'/>
+
+            <connect srcID='R0TreeUpDownOperatorMultiRho.c:$(n)'            targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkyMultiRho.t:$(n)) and inlikelihood(Tree.t:$(n)) and Tree.t:$(n)/estimate=true and reproductiveNumber.t:$(n)/estimate=true'></connect>
+
+            <connect srcID='piqmeeTreeScalerMultiRho.t:$(n)'                    targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkyMultiRho.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Scales all internal nodes for tree t:$(n)</connect>
+            <connect srcID='piqmeeTreeRootScalerMultiRho.t:$(n)'                targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkyMultiRho.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Scales root node for tree t:$(n)</connect>
+            <connect srcID='piqmeeNodeUniformOperatorMultiRho.t:$(n)'           targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkyMultiRho.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Draws new internal node heights uniformally for tree t:$(n)</connect>
+            <connect srcID='piqmeeHaploScalerMultiRho.t:$(n)'                   targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkyMultiRho.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Scales all attachment times of one haplotype/sequence type in the tree t:$(n)</connect>
+            <connect srcID='piqmeeHaploSequenceReAttachRandomMultiRho.t:$(n)'   targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkyMultiRho.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Changes one attachment time of a haplotype/sequence type in the tree t:$(n)</connect>
+            <connect srcID='piqmeeHaploSequenceReAttachUniformMultiRho.t:$(n)'  targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkyMultiRho.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Changes one attachment time of a haplotype/sequence type in the tree t:$(n)</connect>
+            <connect srcID='piqmeeHaploStartTimeReAttachUniformMultiRho.t:$(n)' targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkyMultiRho.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Changes the first attachment time of a haplotype/sequence type in the tree t:$(n)</connect>
+            <connect srcID='piqmeeNarrowMultiRho.t:$(n)'                        targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkyMultiRho.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Narrow exchange performs local rearrangement of tree t:$(n)</connect>
+            <connect srcID='piqmeeWideMultiRho.t:$(n)'                          targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkyMultiRho.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Wide exchange performs global rearrangement of tree t:$(n)</connect>
+            <connect srcID='piqmeeWilsonBaldingMultiRho.t:$(n)'                 targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkyMultiRho.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Performs Wilson-Balding global rearrangement of tree t:$(n)</connect>
+            <connect srcID='piqmeeNarroweasyMultiRho.t:$(n)'                    targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkyMultiRho.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>NarrowEasy exchange performs local rearrangement of tree t:$(n) without distrurbing the haplotype/sequence type attachment times</connect>
+            <connect srcID='piqmeeWideeasyMultiRho.t:$(n)'                      targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkyMultiRho.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>WideEasy exchange performs global rearrangement of tree t:$(n) without distrurbing the haplotype/sequence type attachment times</connect>
+            <connect srcID='piqmeeWilsonBaldingeasyMultiRho.t:$(n)'             targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkyMultiRho.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Performs Wilson-Balding global rearrangement of tree t:$(n) without distrurbing the haplotype/sequence type attachment times</connect>
+
+            <connect srcID='QSBirthDeathSkyMultiRho.t:$(n)' targetID='tracelog' inputName='log' if='inposterior(QSBirthDeathSkyMultiRho.t:$(n))'/>
+            <plate var='p' range='birthMultiRho,deathMultiRho,samplingMultiRho'>
+                <connect srcID='$(p).t:$(n)'        targetID='tracelog' inputName='log' if='inposterior(QSBirthDeathSkyMultiRho.t:$(n))'/>
+            </plate>
+            <plate var='p' range='originMultiRho,rhoMultiRho,becomeUninfectiousRateMultiRho,reproductiveNumberMultiRho'>
+                <connect srcID='$(p).t:$(n)'        targetID='tracelog' inputName='log' if='inposterior(QSBirthDeathSkyMultiRho.t:$(n)) and $(p).t:$(n)/estimate=true'/>
+            </plate>
+        </subtemplate>
+
+    </mergewith>
+
+</beast>
+
+
+
