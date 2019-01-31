@@ -488,12 +488,7 @@ public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
     int traverse(final QuasiSpeciesNode node){
 
         QuasiSpeciesTree Tree = (QuasiSpeciesTree) treeInput.get();
-        Double originHeight = 0.0;
-        if (Tree.getNodeCount() > 1) {
-            originHeight = Tree.getRoot().getHeight();
-        } else {
-            originHeight = ((QuasiSpeciesNode) Tree.getNode(0)).getAttachmentTimesList()[0];
-        }
+//        Double originHeight = origin.get().getValue();
 
         int update = (node.isDirty() | hasDirt);
 
@@ -508,7 +503,8 @@ public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
         if (node.isLeaf())
             totalBranchTime = node.getTotalBranchLengths();
         else if (node.isRoot())
-            totalBranchTime = originHeight - node.getHeight();
+//            totalBranchTime = originHeight - node.getHeight();
+            totalBranchTime = 0.0;
         else
             totalBranchTime = node.getLength();
 
@@ -549,7 +545,8 @@ public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
                 if (parent != null)
                     substitutionModel.getTransitionProbabilities(null, parent.getHeight(), ((QuasiSpeciesNode) Tree.getNode(node.getHaploAboveName())).getAttachmentTimesList()[0], jointBranchRate, probabilities);
                 else
-                    substitutionModel.getTransitionProbabilities(null, originHeight, ((QuasiSpeciesNode) Tree.getNode(node.getHaploAboveName())).getAttachmentTimesList()[0], jointBranchRate, probabilities);
+//                    substitutionModel.getTransitionProbabilities(null, originHeight, ((QuasiSpeciesNode) Tree.getNode(node.getHaploAboveName())).getAttachmentTimesList()[0], jointBranchRate, probabilities);
+                    substitutionModel.getTransitionProbabilities(null, ((QuasiSpeciesNode) Tree.getNode(node.getHaploAboveName())).getAttachmentTimesList()[0], ((QuasiSpeciesNode) Tree.getNode(node.getHaploAboveName())).getAttachmentTimesList()[0], jointBranchRate, probabilities);
                 likelihoodCore.setNodeMatrix(nodeCount + node.getHaploAboveName(), i, probabilities);
             }
             update |= Tree.IS_DIRTY;
@@ -573,7 +570,8 @@ public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
             likelihoodCore.setNodeMatrixForUpdate(nodeIndex);
             for (int i = 0; i < siteModel.getCategoryCount(); i++) {
                 final double jointBranchRate = siteModel.getRateForCategory(i, node) * branchRate;
-                substitutionModel.getTransitionProbabilities(node, originHeight, node.getHeight(), jointBranchRate, probabilities);
+//                substitutionModel.getTransitionProbabilities(node, originHeight, node.getHeight(), jointBranchRate, probabilities);
+                substitutionModel.getTransitionProbabilities(node, node.getHeight(), node.getHeight(), jointBranchRate, probabilities);
                 likelihoodCore.setNodeMatrix(nodeIndex, i, probabilities);
             }
             update |= Tree.IS_DIRTY;
