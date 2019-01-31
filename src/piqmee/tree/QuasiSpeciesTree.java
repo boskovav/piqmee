@@ -1096,7 +1096,7 @@ public class QuasiSpeciesTree extends Tree {
                         // since the sequence has been seen already, assign the tip time to array
                         double[] tipTimesListTmp = seenNode.getTipTimesList();
                         int[] tipTimesCountListTmp = seenNode.getTipTimesCountList();
-                        if (!haplotypeCountIsAll1(haplotypeCountsSet)) {
+                        if (haplotypeCounts.size() != 0 && !haplotypeCountIsAll1(haplotypeCountsSet)) {
                             // throw an error if if tip has already been found with same seq and at the same time...
                             // the user wants to use full tree? or did not correctly merge duplicate sequences?
                             for (int j = 0; j < tipTimesListTmp.length; j++) {
