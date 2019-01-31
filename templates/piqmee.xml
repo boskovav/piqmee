@@ -195,7 +195,7 @@
             <!-- Tree prior -->
 
 	        <plugin spec="piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel" id="QSBirthDeathSkySerial.t:$(n)" tree="@Tree.t:$(n)">
-                <origin spec='parameter.RealParameter' id="origin.t:$(n)" value="100" lower="0." upper="Infinity"/>
+                <origin spec='parameter.RealParameter' id="origin.t:$(n)" value="1000" lower="0." upper="Infinity"/>
 		        <reproductiveNumber spec='parameter.RealParameter' id="reproductiveNumber.t:$(n)" value="2" lower="0." dimension ="10" upper="Infinity"/>
 		        <becomeUninfectiousRate spec='parameter.RealParameter' id="becomeUninfectiousRate.t:$(n)" value="1." lower="0." upper="Infinity" dimension ="1"/>
 		        <samplingProportion spec='parameter.RealParameter' id="samplingProportion.t:$(n)" value="0.01" lower="0." upper="1." dimension ="1"/>
