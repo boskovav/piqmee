@@ -250,7 +250,7 @@
 
     <!-- Parameter operators -->
 	<operator id='becomeUninfectiousRateScalerContemp.t:$(n)' spec='ScaleOperator' scaleFactor=".75" weight="2" parameter="@becomeUninfectiousRateContemp.t:$(n)"/>
-    <operator id='rhoScalerContemp.t:$(n)' spec='ScaleOperator' scaleFactor=".75" weight="2" parameter="@rhoContemp.t:$(n)"/>
+    <operator id='rhoScalerContemp.t:$(n)' spec='ScaleOperator' scaleFactor=".75" weight="1" parameter="@rhoContemp.t:$(n)"/>
 	<operator id='reproductiveNumberScalerContemp.t:$(n)' spec='ScaleOperator' scaleFactor=".75" weight="10" parameter="@reproductiveNumberContemp.t:$(n)"/>
 	<operator id="updownBDContemp.t:$(n)" spec="UpDownOperator" scaleFactor=".75" weight="2">
         <up idref="reproductiveNumberContemp.t:$(n)"/>
@@ -409,7 +409,7 @@
 
     <!-- Parameter operators -->
 	<operator id='becomeUninfectiousRateScalerMultiRho.t:$(n)' spec='ScaleOperator' scaleFactor=".75" weight="2" parameter="@becomeUninfectiousRateMultiRho.t:$(n)"/>
-    <operator id='rhoScalerMultiRho.t:$(n)' spec='ScaleOperator' scaleFactor=".75" weight="2" parameter="@rhoMultiRho.t:$(n)"/>
+    <operator id='rhoScalerMultiRho.t:$(n)' spec='ScaleOperator' scaleFactor=".75" weight="1" parameter="@rhoMultiRho.t:$(n)"/>
 	<operator id='reproductiveNumberScalerMultiRho.t:$(n)' spec='ScaleOperator' scaleFactor=".75" weight="10" parameter="@reproductiveNumberMultiRho.t:$(n)"/>
 	<operator id="updownBDMultiRho.t:$(n)" spec="UpDownOperator" scaleFactor=".75" weight="2">
         <up idref="reproductiveNumberMultiRho.t:$(n)"/>

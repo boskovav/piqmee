@@ -417,7 +417,8 @@
             <distribution spec="CompoundDistribution" id="likelihood"/>
         </distribution>
 
-        <logger id='tracelog' logEvery="1000" fileName="$(filebase).$(tree).log">
+        <logger id='tracelog' logEvery="1000" fileName="$(filebase).$(tree).log" sanitiseHeaders="true" sort="smart">
+            <model idref='posterior'/>
             <log idref="posterior"/>
             <log idref="likelihood"/>
             <log idref="prior"/>
