@@ -194,9 +194,6 @@ public class QuasiSpeciesTree extends Tree {
                 else
 //                    initAttachmentTimesHelper(tempqstimes,temptiptimes,temptiptimescount,originInput.get().getValue(),attachmentTimesListOld);
                     initAttachmentTimesHelper(tempqstimes,temptiptimes,temptiptimescount,attachmentTimesListOld[0],attachmentTimesListOld);
-
-                Arrays.sort(tempqstimes);
-                tempqstimes[0] = tempqstimes[tempqstimes.length-1];
             }
             else
                 tempqstimes[0] = node.getHeight();
@@ -205,6 +202,7 @@ public class QuasiSpeciesTree extends Tree {
             ((QuasiSpeciesNode) node).setContinuingHaploName(node.getNr());
             // attachment time list defined as "node" height, going from present (0) to past (positive height)
             ((QuasiSpeciesNode) node).setAttachmentTimesList(tempqstimes);
+            ((QuasiSpeciesNode) node).setFirstEntryAndSortAttachTimeList();
         }
     }
 
@@ -214,15 +212,16 @@ public class QuasiSpeciesTree extends Tree {
     private void initAttachmentTimesHelper(double[] tempqstimes, double[] temptiptimes, int[] temptiptimescount,
                                                 double maxTime, double[] maxTimeArray) {
         int currentPosition = 0;
-        for (int j = 1; j < temptiptimescount[0]; j++) {
-            tempqstimes[currentPosition] = maxTime - (j + 1) * ((maxTime - temptiptimes[0]) / (1 + temptiptimescount[0]));
+        for (int j = 1; j < temptiptimescount[temptiptimes.length - 1]; j++) {
+            tempqstimes[currentPosition] = maxTime - (j + 1) * ((maxTime - temptiptimes[temptiptimes.length - 1]) / (1 + temptiptimescount[temptiptimes.length - 1]));
             currentPosition++;
         }
-        for (int i = 1; i < temptiptimes.length; i++) {
-            tempqstimes[currentPosition] = maxTimeArray[i-1];
+        for (int i = temptiptimes.length - 2; i >= 0; i--) {
+            double currentMaxTime = maxTimeArray[maxTimeArray.length-i-2];
+            tempqstimes[currentPosition] = currentMaxTime;
             currentPosition++;
             for (int j = 0; j < temptiptimescount[i] - 1; j++) {
-                tempqstimes[currentPosition] = maxTimeArray[i-1] - (j + 1) * ((maxTimeArray[i-1] - temptiptimes[i]) / (1 + temptiptimescount[i]));
+                tempqstimes[currentPosition] = currentMaxTime - (j + 1) * ((currentMaxTime - temptiptimes[i]) / (1 + temptiptimescount[i]));
                 currentPosition++;
             }
         }
@@ -958,14 +957,6 @@ public class QuasiSpeciesTree extends Tree {
         // Assign tree topology:
         assignFromWithoutID(new QuasiSpeciesTree(newRoot));
 
-        // Make sure to properly assign the attachmentTimes
-        // Set start of haplotype times as default to belong to the leaf node
-        // treeNode.setHaploname(treeNode.getID());
-        // done in initAndValidate!!!
-        initAttachmentTimes();
-
-        initArrays();
-
         // tipTimesList created on a go...
         for (Node node : getExternalNodes()){
             // sort and reverse the rest of the array to start with the largest value
@@ -973,6 +964,14 @@ public class QuasiSpeciesTree extends Tree {
             // sort tip times
             ((QuasiSpeciesNode) node).sortTipTimeAndCountList();
         }
+
+        // Make sure to properly assign the attachmentTimes
+        // Set start of haplotype times as default to belong to the leaf node
+        // treeNode.setHaploname(treeNode.getID());
+        // done in initAndValidate!!!
+        initAttachmentTimes();
+
+        initArrays();
 
         //traverse a tree and assign nodes above and continuing haplo annotations
         assignContinuingHaploAndHaploAbove();
@@ -1021,7 +1020,6 @@ public class QuasiSpeciesTree extends Tree {
 
         // Assign tree topology:
         assignFromWithoutID(new QuasiSpeciesTree(newRoot));
-        initArrays();
 
         //attachmentTimesList and tipTimesList created on a go...
         // do not use initAttachmentTimes();
@@ -1031,6 +1029,8 @@ public class QuasiSpeciesTree extends Tree {
             // sort tip times
             ((QuasiSpeciesNode) node).sortTipTimeAndCountList();
         }
+
+        initArrays();
 
         //traverse a tree and assign nodes above and continuing haplo annotations
         assignContinuingHaploAndHaploAbove();
