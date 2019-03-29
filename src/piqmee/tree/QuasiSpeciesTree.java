@@ -877,6 +877,9 @@ public class QuasiSpeciesTree extends Tree {
                         thisQuasiSpeciesNode.sortAttachTimeList();
                         thisQuasiSpeciesNode.sortTipTimeAndCountList();
 
+                        // reassign the tip heights from the tiptimes array
+                        thisQuasiSpeciesNode.setHeight(thisQuasiSpeciesNode.getTipTimesList()[0]);
+
                         break;
 
                     case 2:
