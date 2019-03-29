@@ -7,6 +7,7 @@ import beast.evolution.tree.Node;
 import beast.math.statistic.DiscreteStatistics;
 import piqmee.tree.QuasiSpeciesNode;
 import piqmee.tree.QuasiSpeciesTree;
+import java.util.Arrays;
 
 /**
  *  @author Veronika Boskova created on 08/02/2018
@@ -70,6 +71,7 @@ public class QuasiSpeciesRateStatistic extends RateStatistic {
         // these are the rates for each branch length, where branch length for the tip is the total
         //  branch length spanned by the haplotype (minus the internal QS branch lengths -- in internalQSBranchLengths)
         final double[] ratesForBranchLengths = new double[lengthBL];
+        Arrays.fill(ratesForBranchLengths, Double.NaN );
         // need those only for mean
         final double[] branchLengths = new double[lengthBL];
 
@@ -93,21 +95,10 @@ public class QuasiSpeciesRateStatistic extends RateStatistic {
                     rates[k] = rate;
                     k++;
                 }
-                // and now for each "external branch" from QS duplicates
+                // and now for QS duplicates
                 else {
-                    double[] tipTimes = child.getTipTimesList();
-                    branchLengths[i] = child.getTotalBranchLengths() - (attachTimes[0] - tipTimes[0]);
+                    branchLengths[i] = child.getTotalBranchLengths();
 
-                    // the first external branch can be till the real internal node or till the next attachment time
-                    if (parent.getHeight() > attachTimes[attachTimeArrayLength - 1]) {
-                        branchLengths[i] += attachTimes[attachTimeArrayLength - 1] - tipTimes[0];
-                        internalQSBranchLengths[i] = attachTimes[0] - attachTimes[attachTimeArrayLength - 1];
-                    }
-                    else {
-                        branchLengths[i] += parent.getHeight() - tipTimes[0];
-                        internalQSBranchLengths[i] = attachTimes[0] - parent.getHeight();
-                    }
-                    internalQSBranchRates[i] = rate;
                     // for each branch of the haplotype add contribution to rates array (also for 0 - first = "true" branch)
                     for (int q = 0; q < attachTimeArrayLength; q++) {
                         rates[k + q] = rate;
@@ -125,7 +116,7 @@ public class QuasiSpeciesRateStatistic extends RateStatistic {
             final int n = tree.getNodeCount();
             int k = offset;
             int l = offsetForBranchLengthsAndRates;
-            // contribution from the internal QS branches
+            // contribution from the partial QS branches
             for (int i = 0; i < nrOfLeafs; i++){
                 final QuasiSpeciesNode child = (QuasiSpeciesNode) nodes[i];
                 double rate = branchRateModel.getRateForBranch(child);
@@ -135,6 +126,7 @@ public class QuasiSpeciesRateStatistic extends RateStatistic {
                 //      (else above another internal node --- treated in internal node loop)
                 if (attachTimeArrayLength > 1){
                    if (attachTimes[0] < child.getParent().getHeight()){
+                        branchLengths[i] += child.getParent().getHeight() - attachTimes[0];
                         rates[k] = rate;
                         k++;
                     }
@@ -185,12 +177,10 @@ public class QuasiSpeciesRateStatistic extends RateStatistic {
         double totalTreeLength = 0.0;
 
         for (int i = 0; i < ratesForBranchLengths.length ; i++) {
-            totalWeightedRate += ratesForBranchLengths[i] * branchLengths[i];
-            totalTreeLength += branchLengths[i];
-        }
-        for (int i = 0; i < internalQSBranchLengths.length ; i++) {
-            totalWeightedRate += internalQSBranchRates[i] * internalQSBranchLengths[i];
-            totalTreeLength += internalQSBranchLengths[i];
+            if (! Double.isNaN(ratesForBranchLengths[i])) {
+                totalWeightedRate += ratesForBranchLengths[i] * branchLengths[i];
+                totalTreeLength += branchLengths[i];
+            }
         }
 
         // from here as in original RateStatistic class //
@@ -199,9 +189,9 @@ public class QuasiSpeciesRateStatistic extends RateStatistic {
         //  final double mean = DiscreteStatistics.mean(rates);
         //        values[VARIANCE] = DiscreteStatistics.variance(rates, mean);
         //        values[COEFFICIENT_OF_VARIATION] = Math.sqrt(D values[VARIANCE]) / mean;
-        values[VARIANCE] = DiscreteStatistics.variance(rates);
-        final double mean = DiscreteStatistics.mean(rates);
-        values[COEFFICIENT_OF_VARIATION] = Math.sqrt(DiscreteStatistics.variance(rates, mean)) / mean;
+        values[VARIANCE] = DiscreteStatistics.variance(ratesForBranchLengths);
+        final double mean = DiscreteStatistics.mean(ratesForBranchLengths);
+        values[COEFFICIENT_OF_VARIATION] = Math.sqrt(DiscreteStatistics.variance(ratesForBranchLengths, mean)) / mean;
         return values;
     }
 
