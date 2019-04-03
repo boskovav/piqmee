@@ -950,7 +950,32 @@ public class QuasiSpeciesTree extends Tree {
         // renumber tips to match the number of tips in the qsTree (so far matching fullTree node numbers)
         // need to match the tip times and attach time and haplo count lists!! -- this should not affect the order
         //  in these arrays, as the values were put in in the order of tips put in qsTips array
-        for (int i = 0; i<qsTips.size(); i++){
+        QuasiSpeciesNode[] qsTipsTmp = new QuasiSpeciesNode[qsTips.size()];
+        System.arraycopy(qsTips.toArray(),0,qsTipsTmp,0,qsTips.size());
+
+        int[] labelsold = new int[qsTipsTmp.length];
+        int[] labelsnew = new int[qsTipsTmp.length];
+        int[] index = new int[qsTipsTmp.length];
+        List<String> taxanames = m_taxonset.get().asStringList();
+        for (int i = 0; i<qsTipsTmp.length; i++){
+            for (int j = 0; j<taxanames.size(); j++) {
+                if (qsTipsTmp[i].getID()==taxanames.get(j)) {
+                    labelsold[i] = j;
+                    labelsnew[i] = j;
+                }
+            }
+        }
+        Arrays.sort(labelsnew);
+        for (int i = 0; i<labelsnew.length; i++){
+            for (int j = 0; j<labelsold.length; j++){
+                if (labelsnew[i]==labelsold[j]){
+                    index[i]=j;
+                    break;
+                }
+            }
+        }
+        for (int i = 0; i<qsTipsTmp.length; i++){
+            qsTips.set(i,qsTipsTmp[index[i]]);
             qsTips.get(i).setNr(i);
         }
         QuasiSpeciesNode newRoot = (QuasiSpeciesNode) result.get(0);
@@ -1014,7 +1039,32 @@ public class QuasiSpeciesTree extends Tree {
         // renumber tips to match the number of tips in the qsTree (so far matching fullTree node numbers)
         // need to match the tip times and attach time and haplo count lists!! -- this should not affect the order
         //  in these arrays, as the values were put in in the order of tips put in qsTips array
-        for (int i = 0; i<qsTips.size(); i++){
+        QuasiSpeciesNode[] qsTipsTmp = new QuasiSpeciesNode[qsTips.size()];
+        System.arraycopy(qsTips.toArray(),0,qsTipsTmp,0,qsTips.size());
+
+        int[] labelsold = new int[qsTipsTmp.length];
+        int[] labelsnew = new int[qsTipsTmp.length];
+        int[] index = new int[qsTipsTmp.length];
+        List<String> taxanames = m_taxonset.get().asStringList();
+        for (int i = 0; i<qsTipsTmp.length; i++){
+            for (int j = 0; j<taxanames.size(); j++) {
+                if (qsTipsTmp[i].getID()==taxanames.get(j)) {
+                    labelsold[i] = j;
+                    labelsnew[i] = j;
+                }
+            }
+        }
+        Arrays.sort(labelsnew);
+        for (int i = 0; i<labelsnew.length; i++){
+            for (int j = 0; j<labelsold.length; j++){
+                if (labelsnew[i]==labelsold[j]){
+                    index[i]=j;
+                    break;
+                }
+            }
+        }
+        for (int i = 0; i<qsTipsTmp.length; i++){
+            qsTips.set(i,qsTipsTmp[index[i]]);
             qsTips.get(i).setNr(i);
         }
         QuasiSpeciesNode newRoot = (QuasiSpeciesNode) result.get(0);
