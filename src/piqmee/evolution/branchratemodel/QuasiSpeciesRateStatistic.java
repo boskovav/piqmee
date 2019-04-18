@@ -24,6 +24,8 @@ public class QuasiSpeciesRateStatistic extends RateStatistic {
     final static int VARIANCE = 1;
     final static int COEFFICIENT_OF_VARIATION = 2;
 
+    Node toyNode = new Node();
+
     // Empty constructor as required:
 //    public QuasiSpeciesRateStatistic() { };
 
@@ -60,14 +62,14 @@ public class QuasiSpeciesRateStatistic extends RateStatistic {
         }
         if (internal) {
             length += tree.getInternalNodeCount() - 1 + nrOfQSDupl;
-            lengthBL += tree.getInternalNodeCount() - 1;
+            lengthBL += tree.getInternalNodeCount() - 1 + nrOfLeafs;
         }
 
         // these are the rates for each branch as in the full tree when reconstructed from the QS tree
         final double[] rates = new double[length];
         // for internal QS branches and lengths...need to split from external QS branch lengths
-        final double[] internalQSBranchLengths = new double[nrOfLeafs];
-        final double[] internalQSBranchRates = new double[nrOfLeafs];
+//        final double[] internalQSBranchLengths = new double[nrOfLeafs];
+//        final double[] internalQSBranchRates = new double[nrOfLeafs];
         // these are the rates for each branch length, where branch length for the tip is the total
         //  branch length spanned by the haplotype (minus the internal QS branch lengths -- in internalQSBranchLengths)
         final double[] ratesForBranchLengths = new double[lengthBL];
@@ -126,9 +128,13 @@ public class QuasiSpeciesRateStatistic extends RateStatistic {
                 //      (else above another internal node --- treated in internal node loop)
                 if (attachTimeArrayLength > 1){
                    if (attachTimes[0] < child.getParent().getHeight()){
-                        branchLengths[i] += child.getParent().getHeight() - attachTimes[0];
+                        toyNode.setNr(tree.getNodeCount()+child.getNr());
+                        rate = branchRateModel.getRateForBranch(toyNode);
+                        branchLengths[l] = child.getParent().getHeight() - attachTimes[0];
+                        ratesForBranchLengths[l] = rate;
                         rates[k] = rate;
                         k++;
+                        l++;
                     }
                     // this is for the QS duplicate branches and respective internal QS branches
                     for (int q = 0; q < attachTimeArrayLength - 2; q++) {

@@ -8,6 +8,7 @@ import beast.core.parameter.RealParameter;
 import beast.evolution.alignment.Alignment;
 import beast.evolution.branchratemodel.BranchRateModel;
 import beast.evolution.branchratemodel.StrictClockModel;
+import beast.evolution.branchratemodel.UCRelaxedClockModel;
 import beast.evolution.substitutionmodel.EigenDecomposition;
 import beast.evolution.tree.Node;
 import beast.evolution.tree.TreeInterface;
@@ -81,6 +82,8 @@ public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
     double proportionInvariant = 0;
     List<Integer> constantPattern = null;
 
+    Node toyNode = new Node();
+
 
     @Override
     public void initAndValidate(){
@@ -123,6 +126,9 @@ public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
 
         if (branchRateModelInput.get() != null) {
             branchRateModel = branchRateModelInput.get();
+//            if (!(branchRateModel instanceof StrictClockModel))
+//                throw new IllegalArgumentException("PIQMEE currently only" +
+//                        "supports strict clock model.");
         } else {
             branchRateModel = new StrictClockModel();
         }
@@ -514,10 +520,23 @@ public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
         //  if YES, then have to split the branch into part that evolves normally and a part that does not evolve
         //  Note that we create a new variable since the QS can also start directly above the tip and we want the
         //    tip node to hold the probability of no change in the QS sequence for the whole duration of the QS
+        //  For the relaxed clock model, this also means we need to create a new "branch rate category" for when haplo
+        //    starts just above the tip by splitting the rate for the branch before and after the the haplo start
         double partBranchTime = 0;
-        if (node.getHaploAboveName() != -1)
-            partBranchTime = ( node.getLength() - (((QuasiSpeciesNode) Tree.getNode(node.getHaploAboveName())).getAttachmentTimesList()[0]-node.getHeight()) ) * branchRate;
-
+        double partBranchRate = 0;
+        if (node.getHaploAboveName() != -1) {
+            if (node.isLeaf()){
+                toyNode.setNr(nodeCount+node.getNr());
+                partBranchRate = branchRateModel.getRateForBranch(toyNode);
+                partBranchTime = (node.getLength() - (((QuasiSpeciesNode)
+                        Tree.getNode(node.getHaploAboveName())).getAttachmentTimesList()[0] - node.getHeight())) * partBranchRate;
+            }
+            else {
+                partBranchRate = branchRate;
+                partBranchTime = (node.getLength() - (((QuasiSpeciesNode)
+                        Tree.getNode(node.getHaploAboveName())).getAttachmentTimesList()[0] - node.getHeight())) * partBranchRate;
+            }
+        }
         // First update the transition probability matrix(ices) for this branch
         // Update the transition probability for the branches that do not evolve
         // if the node is at tip, it holds the probability that the sequence does not change from the tip to the start of the haplo
@@ -541,7 +560,7 @@ public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
             final Node parent = node.getParent();
             likelihoodCore.setNodeMatrixForUpdate(nodeCount + node.getHaploAboveName());
             for (int i = 0; i < siteModel.getCategoryCount(); i++) {
-                final double jointBranchRate = siteModel.getRateForCategory(i, node) * branchRate;
+                final double jointBranchRate = siteModel.getRateForCategory(i, node) * partBranchRate;
                 if (parent != null)
                     substitutionModel.getTransitionProbabilities(null, parent.getHeight(), ((QuasiSpeciesNode) Tree.getNode(node.getHaploAboveName())).getAttachmentTimesList()[0], jointBranchRate, probabilities);
                 else
