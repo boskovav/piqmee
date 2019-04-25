@@ -1401,6 +1401,7 @@ public class QuasiSpeciesTree extends Tree {
             double maxHaploTime = ((QuasiSpeciesNode) thisNode).getAttachmentTimesList()[0];
             while (thisNode.getParent() != null && thisNode.getParent().getHeight() < maxHaploTime){
                 ((QuasiSpeciesNode) thisNode).setContinuingHaploName(haplo);
+                ((QuasiSpeciesNode) thisNode).setHaploAboveName(-1);
                 thisNode = thisNode.getParent();
             }
             ((QuasiSpeciesNode) thisNode).setHaploAboveName(haplo);
