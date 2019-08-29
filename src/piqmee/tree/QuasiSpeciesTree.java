@@ -155,6 +155,9 @@ public class QuasiSpeciesTree extends Tree {
                 }
                 try {
                     dummyTraitSet.initByName("traitname", "qscounts", "taxa", getTaxonset(), "value", sb.toString());
+                    if (getID() == null)
+                        dummyTraitSet.setID("haplotypeCountsTraitSetInput.t:dummy");
+                    else
                     dummyTraitSet.setID("haplotypeCountsTraitSetInput.t:" + BeautiDoc.parsePartition(getID()));
                     setHaplotypeCountsTrait(dummyTraitSet);
                 } catch (Exception ex) {
@@ -959,7 +962,7 @@ public class QuasiSpeciesTree extends Tree {
         List<String> taxanames = m_taxonset.get().asStringList();
         for (int i = 0; i<qsTipsTmp.length; i++){
             for (int j = 0; j<taxanames.size(); j++) {
-                if (qsTipsTmp[i].getID()==taxanames.get(j)) {
+                if (qsTipsTmp[i].getID().equals(taxanames.get(j))) {
                     labelsold[i] = j;
                     labelsnew[i] = j;
                 }
@@ -1048,7 +1051,7 @@ public class QuasiSpeciesTree extends Tree {
         List<String> taxanames = m_taxonset.get().asStringList();
         for (int i = 0; i<qsTipsTmp.length; i++){
             for (int j = 0; j<taxanames.size(); j++) {
-                if (qsTipsTmp[i].getID()==taxanames.get(j)) {
+                if (qsTipsTmp[i].getID().equals(taxanames.get(j))) {
                     labelsold[i] = j;
                     labelsnew[i] = j;
                 }

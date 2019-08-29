@@ -179,17 +179,20 @@ public class QuasiSpeciesBDskyModelTests {
                 // before height 5 there are new 5 attachment points, and one lineage existing from height A
                 + Math.log(6*5*5*4*4*3*3*2*2*1)
                 // at the same time, at height 5 there is in total 6 + 1 (G) lineages
-//                    - Math.log(7*6*6*5*5*4*4*3*3*2)
+                    - Math.log(7*6*6*5*5*4*4*3*3*2)
+//                - Math.log(4*3*3*2)
                 // before height 1.5 there are 3 surviving A lineages from previous interval, plus
                 // 4 new attachment points
                 + Math.log(7*6*6*5*5*4*4*3)
                 // at the same time, at height 1.5 there is in total 7 + 1 (G) lineages
-//                    - Math.log(8*7*7*6*6*5*5*4)
+                    - Math.log(8*7*7*6*6*5*5*4)
+//                - Math.log(6*5*5*4*4*3*3*2)
                 // before height 0 there are 2 surviving A lineages from previous interval, plus
                 // 1 new attachment points
                 + Math.log(3*2)
                 // at the same time, at height 0 there is in total 3 + 1 (G) lineages
-//                    - Math.log(4*3)
+                    - Math.log(4*3)
+//                - Math.log(3*2)
                 ;
 
         assertEquals(qsbdsky,bdsky,1e-10);
@@ -225,12 +228,12 @@ public class QuasiSpeciesBDskyModelTests {
                 // before height 5 there are new 6 attachment points, and one lineage existing from height A
                 + Math.log(7*6*6*5*5*4*4*3*3*2*2*1)
                 // at the same time, at height 5 there is in total 7 (A) lineages
-//                    - Math.log(7*6*6*5*5*4*4*3*3*2*2*1)
+                    - Math.log(7*6*6*5*5*4*4*3*3*2*2*1)
                 // before height 2 there are 4 surviving A lineages from previous interval, plus
                 // 3 new attachment points
                 + Math.log(7*6*6*5*5*4)
                 // at the same time, at height 2 there is in total 7 (A) lineages
-//                    - Math.log(7*6*6*5*5*4)
+                    - Math.log(7*6*6*5*5*4)
                 // at height 2, G lineage is born through true internal node
                 // there are thus 7 qs A lineages to be attached to for G (node t2) so there is gamma contribution
                 + Math.log(7)
@@ -243,7 +246,7 @@ public class QuasiSpeciesBDskyModelTests {
                 // 1 new attachment points
                 + Math.log(3*2)
                 // at the same time, at height 0 there is in total 3 + 1 (G) lineages
-//                    - Math.log(4*3)
+                    - Math.log(4*3)
                 ;
 
         assertEquals(qsbdsky,bdsky,1e-10);
@@ -280,12 +283,12 @@ public class QuasiSpeciesBDskyModelTests {
                 // before height 5 there are new 6 attachment points, and one lineage existing from height A
                 + Math.log(7*6*6*5*5*4*4*3*3*2*2*1)
                 // at the same time, at height 5 there is in total 7 (A) lineages
-//                    - Math.log(7*6*6*5*5*4*4*3*3*2*2*1)
+                    - Math.log(7*6*6*5*5*4*4*3*3*2*2*1)
                 // before height 3.5 there are 4 surviving A lineages from previous interval, plus
                 // 1 new attachment points
                 + Math.log(5*4)
                 // at the same time, at height 3.5 there are in total 5 (A) lineages
-//                    - Math.log(5*4)
+                    - Math.log(5*4)
                 // at height 3.5, T lineage is born through true internal node
                 // there are thus 5 qs A lineages to be attached to for T (node t4) so there is gamma contribution
                 + Math.log(5)
@@ -293,7 +296,7 @@ public class QuasiSpeciesBDskyModelTests {
                 // 1 new attachment points
                 + Math.log(6*5)
                 // at the same time, at height 2 there is in total 6 (A) lineages and one T lineage
-//                    - Math.log(7*6)
+                    - Math.log(7*6)
                 // at height 2, G lineage is born through true internal node
                 // there are thus 6 qs A lineages to be attached to for G (node t2) so there is gamma contribution
                 + Math.log(6)
@@ -306,7 +309,7 @@ public class QuasiSpeciesBDskyModelTests {
                 // 1 new attachment points
                 + Math.log(3*2)
                 // at the same time, at height 0 there is in total 3 + 1 (G) lineages
-//                    - Math.log(4*3)
+                    - Math.log(4*3)
                 ;
 
         assertEquals(qsbdsky,bdsky,1e-10);

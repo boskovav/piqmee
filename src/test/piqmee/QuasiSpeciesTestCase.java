@@ -43,11 +43,13 @@ public class QuasiSpeciesTestCase {
         }
 
         Alignment alignment = new Alignment(seqList, "nucleotide");
+        TaxonSet taxonSet = new TaxonSet(alignment);
 
         QuasiSpeciesTree tree = new QuasiSpeciesTreeFromFullNewick();
 
         tree.setInputValue("newick", inputTree);
         tree.setInputValue("adjustTipHeights", "false");
+        tree.setInputValue("taxonset", taxonSet);
         tree.setInputValue("data", alignment);
         tree.initAndValidate();
 
@@ -81,9 +83,9 @@ public class QuasiSpeciesTestCase {
 
         tree.setInputValue("newick", inputTree);
         tree.setInputValue("adjustTipHeights", "false");
+        tree.setInputValue("taxonset", taxonSet);
         tree.setInputValue("haplotypeCounts",haploCounts);
         tree.setInputValue("data",alignment);
-        tree.initAndValidate();
         tree.initAndValidate();
 
         return tree;
