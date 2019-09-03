@@ -22,6 +22,8 @@ Work on this project is made possible by the support of the following institutio
 
 * [SIB Zurich](https://www.sib.swiss)
 
-* [European Research Council under the Seventh Framework Programme of the European Commission (PhyPD: grant agreement number 335529)]
+* [European Research Council under the Seventh Framework Programme of the European Commission (PhyPD: grant agreement number 335529)]*
+
+*[Swiss National Science Foundation (Early PostDoc.mobility: grant number P2EZP3_184543)]
 
 [1]: Boskova and Stadler, PIQMEE model, Publication In Preparation
