@@ -177,9 +177,9 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel{
         int[] nrqsattachments = new int[allTimes.length];
         int[] nrqslineages = new int[allTimes.length];
         // total
-        int[] nrtotalqsattachments = new int[allTimes.length];
-        int[] nrtotallineages = new int[allTimes.length];
-        Arrays.fill(nrtotallineages,1);
+//        int[] nrtotalqsattachments = new int[allTimes.length];
+//        int[] nrtotallineages = new int[allTimes.length];
+//        Arrays.fill(nrtotallineages,1);
 
         // count for each haplo at each time point the n's and add to total count
         for (Node node : tree.getExternalNodes()){
@@ -225,8 +225,8 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel{
                     }
                 }
 
-                nrtotallineages[i] += nrqslineages[i];
-                nrtotalqsattachments[i] += nrqsattachments[i];
+//                nrtotallineages[i] += nrqslineages[i];
+//                nrtotalqsattachments[i] += nrqsattachments[i];
                 // this factor is only needed for trees with tips sampled through time
                 if (uniqueSampTimes.length > 1) {
                     // include all the (gammaj) factors for the possible combinations of QS lineages at each merge point
@@ -243,29 +243,29 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel{
                         node.getNr() + ". Please check line 242 in QuasiSpeciesBirthDeathSkylineModel class.");
             }
         }
-
-        if (uniqueSampTimes.length > 1) {
-            // add factor for the possible combinations of QS lineages with all the lineages presentx in tree at time i
-            for (int i = 0; i < allTimes.length; i++) {
-                // add lineage count for when there is a birth of new lineage through true internal node
-                // This was not done above as we looped through each external node, so we had many possibilities to increase
-                //      the lineage due to the internal node. We could have opted to increase the lineage count due to the
-                //      internal node when the node's gamma contribution above was added, but it can happen that there is
-                //      no QS lineage passing through the node and we would then never have increased the lineage count.
-                for (Node node : tree.getInternalNodes()) {
-                    if ((allTimes[i] == allTimes[0] || allTimes[i] != allTimes[i-1]) && node.getHeight() == allTimes[i]) {
-                        for (int j = i + 1; j < allTimes.length; j++) {
-                            nrtotallineages[j] += 1;
-                        }
-                    }
-                }
-                //
-                for (int lineage = nrtotallineages[i]; lineage > nrtotallineages[i] - nrtotalqsattachments[i]; lineage--) {
-                    // for total lineages we have to have lineage - 1 since we did already count also the real nodes in
-                    gamma -= ((Math.log(lineage) + Math.log(lineage - 1)));
-                }
-            }
-        }
+// this part is needed in coalescent but not for BD models
+//        if (uniqueSampTimes.length > 1) {
+//            // add factor for the possible combinations of QS lineages with all the lineages presentx in tree at time i
+//            for (int i = 0; i < allTimes.length; i++) {
+//                // add lineage count for when there is a birth of new lineage through true internal node
+//                // This was not done above as we looped through each external node, so we had many possibilities to increase
+//                //      the lineage due to the internal node. We could have opted to increase the lineage count due to the
+//                //      internal node when the node's gamma contribution above was added, but it can happen that there is
+//                //      no QS lineage passing through the node and we would then never have increased the lineage count.
+//                for (Node node : tree.getInternalNodes()) {
+//                    if ((allTimes[i] == allTimes[0] || allTimes[i] != allTimes[i-1]) && node.getHeight() == allTimes[i]) {
+//                        for (int j = i + 1; j < allTimes.length; j++) {
+//                            nrtotallineages[j] += 1;
+//                        }
+//                    }
+//                }
+//                //
+//                for (int lineage = nrtotallineages[i]; lineage > nrtotallineages[i] - nrtotalqsattachments[i]; lineage--) {
+//                    // for total lineages we have to have lineage - 1 since we did already count also the real nodes in
+//                    gamma -= ((Math.log(lineage) + Math.log(lineage - 1)));
+//                }
+//            }
+//        }
 
         return gamma;
     }
