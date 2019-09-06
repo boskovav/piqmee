@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><beast beautitemplate='piqmee' beautistatus='' namespace="beast.core:beast.evolution.alignment:beast.evolution.tree.coalescent:beast.core.util:beast.evolution.nuc:beast.evolution.operators:beast.evolution.sitemodel:beast.evolution.substitutionmodel:beast.evolution.likelihood" required="BEAST v2.5.1" version="2.5">
+
+
+    <data id="haplotypes_p1_7023_7286_forBeast">
+                <sequence id="seq_days_1084_years_2.96986_frequency_0.27_Nreads_248" taxon="days_1084_years_2.96986_frequency_0.27_Nreads_248" totalcount="4" value="GAAGAAGACATAATAATCAGATCTGAAAATATCACAAACAATGCTAAAACCATAATAGTGCACCTTAAAGAACCTGTAGAAATCAATTGTACAAGACCCTCCAACAATACAATAGCAAGTGTAAGGATAGGACCAGGACAAGTATTCTATAAAACAGGAGACATAATAGGAGACATAAGAAAAGCATTTTGTGTAATTAATGGAACAAAATGGAATGAAACTTTAAAACAGGTAGCTGGAAAATT-AAGAAAGTACTT"/>
+                <sequence id="seq_days_1084_years_2.96986_frequency_0.2_Nreads_185" taxon="days_1084_years_2.96986_frequency_0.2_Nreads_185" totalcount="4" value="GAAGAAGACATAATAATCAGATCTGAAAATATCACAAACAATGCTAAAACCATAATAGTGCACCTTAAAGAACCTGTGGAAATCAATTGTACAAGACCCTCCAACAATACAATAGCAAGTGTAAGGATAGGACCAGGACAGGTATTCTATAAAACAGGAGACATAATAGGAGACATAAGAAGAGCATTTTGTGAAATTAATGAAACAAAATGGAATAAAACTTTAAGACAGGTAGCTGAAAAATT-AAGAAAGCACTT"/>
+                <sequence id="seq_days_1084_years_2.96986_frequency_0.51_Nreads_466" taxon="days_1084_years_2.96986_frequency_0.51_Nreads_466" totalcount="4" value="GAAGAAGACATAATAATCAGATCTGAAAATATCACAAACAATGCTAAAACCATAATAGTGCACCTTAAAGAACCTGTAGAAATCAATTGTACAAGACCCTCCAACAATACAATAGCAAGTGTAAGGATAGGACCGGGACAAGTATTCTATAAAACAGGAGACATAATAGGAGACATAAGAAGAGCATTTTGTGAAATTAATGGAACAAAATGGAATGAAACTTTAAAACAGGTAGCTGGAAAATT-AAGAAAGTACTT"/>
+                <sequence id="seq_days_122_years_0.334247_frequency_1_Nreads_1354" taxon="days_122_years_0.334247_frequency_1_Nreads_1354" totalcount="4" value="GAAGAAGACATAATAATCAGATCTGAAAATATCACAAACAATGCTAAAACCATAATAGTGCACCTTAAAGAACCTGTAGAAATCAATTGTACGAGACCCTCCAACAATACAATAGCAAGTGTAAGGATAGGACCAGGACAAGTATTCTATAAAACAGGAGACATAATAGGAGACATAAGAAGAGCATTTTGTGTAATTAATGGAACAAAATGGAATGAAACTTTAAAACAGGTAGCTGAAAAATT-AAGAGAGCACTT"/>
+                <sequence id="seq_days_1254_years_3.43562_frequency_0.01_Nreads_4" taxon="days_1254_years_3.43562_frequency_0.01_Nreads_4" totalcount="4" value="GAAGAAGGCATAATAATCAGATCTGAAGATATCACAAACAATGCTAAAGCCATAATAGTGCACCTTAAAGAACCTGTAGAAATCAATTGTACAAGACCCTCCAACAATACAATAGCAAGTGTAAGGATAGGACCAGGACAAGTATTCTATAAAACAGGAGACATAATAGGAGACATAAGAAAAGCATTTTGTGTAATTAATGAAACAAAATGGAATGAAACTTTAAAACAGGTAGCTGGAAAATT-AAGAAAGTACTT"/>
+                <sequence id="seq_days_1254_years_3.43562_frequency_0.19_Nreads_43" taxon="days_1254_years_3.43562_frequency_0.19_Nreads_43" totalcount="4" value="GAAGAAGACATAATAATCAGATCTGAAAATATCACAAACAATGCTAAAACCATAATAGTGCACCTTAAAGAACCTGTAGAAATCAATTGTACAAGACCCTCCAACAATACAATAGCAAGTGTAAGGATAGGACCAGGACAAGTATTCTATAAAACAGGAGACATAATAGGAGACATAAGAAGAGCATTTTGTGAAATTAATGAAACAAAATGGAATAAAACTTTAAGACAGGTAGCTGAAAAATT-AAAAAAGCACTT"/>
+                <sequence id="seq_days_1254_years_3.43562_frequency_0.37_Nreads_82" taxon="days_1254_years_3.43562_frequency_0.37_Nreads_82" totalcount="4" value="GAAGAAGACATAATAATCAGATCCGAAAACATC-----------------CATAATAGTGCACCTTAAAGAACCTGTAGAAATCAATTGTACAAGACCCTCCAACAATACAATAGCAAGTGTAAGGATAGGACCAGGACAAGTATTCTATAAAACAGGAGACATAATAGGAGACATAAGAAAAGCATTTTGTGTAATTAATGGAACAAAATGGAACGAAACTTTAAAACAGGTAGCTGAAAAATT-AAAAAAGTACTT"/>
+                <sequence id="seq_days_1254_years_3.43562_frequency_0.4_Nreads_89" taxon="days_1254_years_3.43562_frequency_0.4_Nreads_89" totalcount="4" value="GAAGAAGACATAATAATCAGATCTGAAAATATCACAAACAATGCTAAAACCATAATAGTGCACCTTAAGGAACCTGTAGAAATCAATTGTACAAGACCCTCCAACAATACAATAGCAAGTGTAAGGATAGGACCAGGACAAGTATTCTATAAAACAGGAGACATAATAGGAGACATAAGAAAAGCATTTTGTGAAATTAATGGAACAAAATGGAATGAAACTTTAGAACAGGTAGCTGAAAAATT-AAGAAAGCACTT"/>
+                <sequence id="seq_days_1282_years_3.51233_frequency_0.04_Nreads_13" taxon="days_1282_years_3.51233_frequency_0.04_Nreads_13" totalcount="4" value="GAAGAAGACATAATAATCAGATCTGAAAATATCACAAACAATGCTAAAACTATAATAGTGCACCTTAAGGAACCTGTAGAAATCAATTGTACAAGACCCTCCAACAATACAATAGCAAGTGTAAGGATAGGACCAGGACAAGTATTCTATAAAACAGGAGACATAATAGGAGACATAAGAAAAGCATTTTGTGAAATTAACGGAACAAAATGGAATGAAACTTTAGAACAGGTAGCTGAAAAATT-AAGAAAGCACTT"/>
+                <sequence id="seq_days_1282_years_3.51233_frequency_0.17_Nreads_56" taxon="days_1282_years_3.51233_frequency_0.17_Nreads_56" totalcount="4" value="GAAGAAGACATAATAATCAGATCTGAAAATATCACAAACAATGCTAAAACCATAATAGTGCACCTTAAAGAACCTGTAGAAATCAATTGTACAAGACCCTCCAACAATACAATAGCAAGTGTAAGGATAGGACCAGGACAAGTATTCTATAAAACAGGAGACATAATAGGAGACATAAGAAAAGCATTTTGTGTAATTAATGAAACAAAATGGAATAAAACTTTAGAACAGGTAGCTGAAAAATT-AAGAAAGCACTT"/>
+                <sequence id="seq_days_1282_years_3.51233_frequency_0.29_Nreads_94" taxon="days_1282_years_3.51233_frequency_0.29_Nreads_94" totalcount="4" value="GAAGAAGACATAATAATCAGATCTGAAAATATCACAAACAATGCTAAAACTATAATAGTGCACCTTAAGGAACCTGTAGAAATCAATTGTACAAGACCCTCCAACAATACAATAGCAAGTGTAAGGATAGGACCAGGACAAGTATTCTATAAAACAGGAGACATAATAGGAGACATAAGAAAAGCATTTTGTGAAATTAATGGAACAAAATGGAATGAAACTTTAGAACAGGTAGCTGAAAAATT-AAGAAAGCACTT"/>
+                <sequence id="seq_days_1282_years_3.51233_frequency_0.48_Nreads_151" taxon="days_1282_years_3.51233_frequency_0.48_Nreads_151" totalcount="4" value="GAAGAAGACATAATAATCAGATCTGAAAATATCACAAACAATGCTAAAACCATAATAGCGCACCTTAAAGAACCTGTAGAAATCAGTTGTACAAGACCCTCCAACAATACAATAGCAAGTGTAAGGATAGGACCAGGACAAGTATTCTATAAAACAGGAGACATAATAGGAGACATAAGAAAAGCATTTTGTGTAATTAATGGAACAAAATGGAATGAAACTTTAAAACAGGTAGCTGAAAAATT-AAAAAAGTACTT"/>
+                <sequence id="seq_days_1393_years_3.81644_frequency_0.02_Nreads_29" taxon="days_1393_years_3.81644_frequency_0.02_Nreads_29" totalcount="4" value="GAAGAAGACATAATAATCAGATCTGAAAATATCACAAACAATGCTAAAACCATAATAGTGCACCTTAAAGAACCTGTAGAAATCAGTTGTACAAGACCCTCCAACAATACAATAGCAAGTGTAAGGATAGGACCAGGACAAGTATTCTATAAAACAGGAGACATAATAGGAGACATAAGAAAAGCATTTTGTGAAATTAATGGAANAAAATGGAATGAAACTTTAAAACAGGTAGCTGAAAAATT-AAAAAGGTACTT"/>
+                <sequence id="seq_days_1393_years_3.81644_frequency_0.03_Nreads_44" taxon="days_1393_years_3.81644_frequency_0.03_Nreads_44" totalcount="4" value="GAAGAAGACATAATAATCAGATCTGAAAATATCACAAACAATGCTAAAACCATAATAGTGCACCTTAAAGAACCTGTAGAAATCAGTTGTACAAGACCCTCCAACAATACAATAGCGAGTGTAAGGATAGGACCAGGACAAGTATTCTATAAAACAGGAGACATAATAGGAGACATAAGAAAAGCATTTTGTGAAATTAATGGAACAAAATGGAATGAAACTTTAAAACAGGTAGCTGAAAAATT-AAAAAGGTACTT"/>
+                <sequence id="seq_days_1393_years_3.81644_frequency_0.04_Nreads_55" taxon="days_1393_years_3.81644_frequency_0.04_Nreads_55" totalcount="4" value="GAAGAAGACATAATAATCAGATCTGAAAATATCACAAACAATGCTAAAACCACAATAGTGCACCTTAAAGAACCTGTAGAAATCAGTTGTACAAGACCCTCCAACAATACAATAGCAAGTGTAAGGATAGGACCAGGACAAGTATTCTATAAAACAGGAGACATAATAGGAGACATAAGAAAAGCATTTTGTGAAATTAATGGAACAAAATGGAATGAAACTTTAAAACAGGTAGCTGAAAAATT-AAAAAGGTACTT"/>
+                <sequence id="seq_days_1393_years_3.81644_frequency_0.2_Nreads_261" taxon="days_1393_years_3.81644_frequency_0.2_Nreads_261" totalcount="4" value="GAAGAAGACATAATAATCAGATCTGAAAATATCACAAACAATGCTAAAACCATAATAGCGCACCTTAAAGAACCTGTAGAAATCAGTTGTACAAGACCCTCCAACAATACAATAGCAAGTGTAAGGATAGGACCAGGACAAGTATTCTATAAAACAGGAGACATAATAGGAGACATAAGAAAAGCATTTTGTGTAATTAATGGAACAAAATGGAATGAAACTTTAAAACAGGTAGCTGAAAAATT-AAAAAAGTACTT"/>
+                <sequence id="seq_days_1393_years_3.81644_frequency_0.69_Nreads_882" taxon="days_1393_years_3.81644_frequency_0.69_Nreads_882" totalcount="4" value="GAAGAAGACATAATAATCAGATCTGAAAATATCACAAACAATGCTAAAACCATAATAGTGCACCTTAAAGAACCTGTAGAAATCAGTTGTACAAGACCCTCCAACAATACAATAGCAAGTGTAAGGATAGGACCAGGACAAGTATTCTATAAAACAGGAGACATAATAGGAGACATAAGAAAAGCATTTTGTGAAATTAATGGAACAAAATGGAATGAAACTTTAAAACAGGTAGCTGAAAAATT-AAAAAGGTACTT"/>
+                <sequence id="seq_days_1861_years_5.09863_frequency_1_Nreads_188" taxon="days_1861_years_5.09863_frequency_1_Nreads_188" totalcount="4" value="GAAGAAGACATAATAATCAGATCTGAAAATATCACAAACAATGCTAGAACCATAATAGTGCACCTTAAAGAACCTGTAAAAATCAATTGTACAAGACCCTCCAACAATACAAGAGCAAGTGTAAGGATAGGACCAGGACAAGTATTCTATAAAACAGGAGACATAATAGGAGACATAAGAAGAGCATCTTGTGAAATTGATGGAACAGAATGGAATAAAACTTTAGGACAGGTAGCTGAAAAATT-AAGAAAGTACTT"/>
+                <sequence id="seq_days_2303_years_6.30959_frequency_1_Nreads_1076" taxon="days_2303_years_6.30959_frequency_1_Nreads_1076" totalcount="4" value="GAAGAAGACATAGTAATCAGATCTGAAAATATCACAAACAATGCTAGAACCATAATAGTGCACCTTAAAGAACCTGTAAGAATCAATTGTACAAGACCCTCCAACAATACAAGAACAAGTGTAAGGATAGGACCAGGACAAGTATTCTATAGAACAGGAGACATAACAGGAGACATAAGAAGAGCATCTTGTAAAATTGATGGAACAGAATGGAATAAAACTTTAGGACAGGTAGCTGAAAAATT-AAGAAAGTACTT"/>
+                <sequence id="seq_days_2578_years_7.06301_frequency_0.01_Nreads_4" taxon="days_2578_years_7.06301_frequency_0.01_Nreads_4" totalcount="4" value="GAAGAAGACATAATAATCAAATCTGAAAATATCACAAACAATGCTAGAACCATAATAGTGCACCTTAAAGAACCTGTAACAATCAATTGTACAAGACCCTCCAACAATACAAGAACAAGTGTAAGGATAGGACCAGGACAACTATTCTATAGAACAGGAGACATAACAGGAGACATAAGAAAAGCATCTTGTAAAATTGATGGAACAGAATGGAATAAAACTTTAGGACAGGTAGCTGAAAAATT-AAGAAAGTACTT"/>
+                <sequence id="seq_days_2578_years_7.06301_frequency_0.02_Nreads_6" taxon="days_2578_years_7.06301_frequency_0.02_Nreads_6" totalcount="4" value="GAAGAAGACATAATAATCAAATCTGAAAATATCACAAACAATGCTAGAACCATAATAGTGCACCTTAAAGAACCTGTAACAATCAATTGTACAAGACCCTCCAACAATACAAGAACAAGTGTAAGGATAGGACCAGGACAATTATTCTATAGAACAGGGGACATAACAGGAGACATAAGAAGAGCATTTTGTAAAATTAATGAAACAAAATGGAATAAAACTTTAGGACAGGTAGCTGAAAAATT-AAAAAGGTACTT"/>
+                <sequence id="seq_days_2578_years_7.06301_frequency_0.05_Nreads_14" taxon="days_2578_years_7.06301_frequency_0.05_Nreads_14" totalcount="4" value="GAAGAAGACATAATAATCAAATCTGAAAATATCACAAACAATGCTGGAACCATAATAGTGCACCTTAAAGAACCTGTAACAATCAATTGTACAAGACCCTCCAACAATACAAGAACAAGTGTAAGGATAGGACCAGGACAACTATTCTATAGAACAGGAGACATAACAGGAGACATAAGAAAAGCATCTTGTAAAATTGATGGAACAGAATGGAATAAAACTTTAGGACAGGTAGCTGAAAAATT-AAGAAAGTACTT"/>
+                <sequence id="seq_days_2578_years_7.06301_frequency_0.06_Nreads_16" taxon="days_2578_years_7.06301_frequency_0.06_Nreads_16" totalcount="4" value="GAAGAAGACATAATAATCAAATCTGAAAATATCACAAACAATGCTAGAACCATAATAGTGCACCTTAAAGAACCTGTAACAATCAATTGTACAAGACCCTCCAACAATACAAGAACAAGTGTAAGGATAGGACCAGGACAAATGTTCTATAGAACAGGAGACATAACAGGAGACATAAGAAGAGCATCTTGTAAAATTGATGGAACAGAATGGAATAAAACTTTAGGACAGGTAGCTGAAAAATT-AAGAAAGTACTT"/>
+                <sequence id="seq_days_2578_years_7.06301_frequency_0.06_Nreads_17" taxon="days_2578_years_7.06301_frequency_0.06_Nreads_17" totalcount="4" value="GAAGAAGACATAGTAATCAGATCTGAAAATATCACAAACAATGCTAGAACCATAATAGTGCACCTTAAAGAACCTGTAAGAATCAATTGTACAAGACCCTCCAACAATACAAGAACAAGTGTAAGGATAGGACCAGGACAACTATTCTATAGAACAGGAGACATAACAGGAGACATAAGAAAAGCATCTTGTAAAATTGATGGAACAGAATGGAATAAAACTTTAGGACAGGTAGCTGAAAAATT-AAGAAAGTACTT"/>
+                <sequence id="seq_days_2578_years_7.06301_frequency_0.07_Nreads_18" taxon="days_2578_years_7.06301_frequency_0.07_Nreads_18" totalcount="4" value="GAAGAAGACATAATAATCAAATCTGAAAATATCACAAACAATGCTAGAACCATAATAGTGCACCTTAAAGAACCTGTAACAATCAATTGTACAAGACCCTCCAACAATACAAGAACAAGTGTAAGGATAGGACCAGGACAATTATTCTATAGAACAGGGGACATAACAGGAGACATAAGAAGAGCATTTTGTAAAATTAATGAAACAAAATGGAATAAAACTTTAGGACAGGTAGCTGAAAAATT-AAAAAAGTACTT"/>
+                <sequence id="seq_days_2578_years_7.06301_frequency_0.09_Nreads_23" taxon="days_2578_years_7.06301_frequency_0.09_Nreads_23" totalcount="4" value="GAAGAAGACATAATAATCAAATCTGAAAATATCACAAACAATGCTAGAACCATAATAGTGCACCTTAAAGAACCTGTAACAATCAATTGTACAAGACCCTCCAACAATACAAGAACAAGTGTAAGGATAGGACCAGGACAATTATTCTATAGAACAGGGGACATAACAGGAGACATAAGAAGAGCATTTTGTAAAATTAATGAAACAAAATGGAATAAAACTTTAGGACAGGTAGCTGAAAAATTAAAAAAAGTACTT"/>
+                <sequence id="seq_days_2578_years_7.06301_frequency_0.14_Nreads_37" taxon="days_2578_years_7.06301_frequency_0.14_Nreads_37" totalcount="4" value="GAAGAAGACATAATAATCAGATCTGAAAATATCACAAACAATGCTAGAACCATAATAGTGCACCTTAAAGAACCTGTAGAAATCAATTGTACAAGACCCTCCAACAATACAAGAACAAGTGTAAGGATAGGACCAGGACAACTATTCTATAGAACAGGAGACATAACAGGAGACATAAGAAGAGCATCTTGTAAAATTAATGGAACAGAATGGAATAAAACTTTAGGACAGGTAGCTGAAAAATT-AAAAAAGTACTT"/>
+                <sequence id="seq_days_2578_years_7.06301_frequency_0.24_Nreads_60" taxon="days_2578_years_7.06301_frequency_0.24_Nreads_60" totalcount="4" value="GAAGAAGACATAATAATCAAATCTGAAAATATTACAAACAATGCTAGAACCATAATAGTGCACCTTAAAGAACCTGTAACAATCAATTGTACAAGACCCTCCAACAATACAAGAACAAGTGTAAGGATAGGACCAGGACAACTATTCTATAGAACAGGAGACATAACAGGAGACATAAGAAAAGCATCTTGTAAAATTGATGGAACAGAATGGAATAAAACTTTAGGACAGGTAGCTGAAAAATT-AAGAAAGTACTT"/>
+                <sequence id="seq_days_2578_years_7.06301_frequency_0.2_Nreads_50" taxon="days_2578_years_7.06301_frequency_0.2_Nreads_50" totalcount="4" value="GAAGAAGACATAATAATCAGATCTGAAAATATCACAAACAATGCTAGAACCATAATAGTGCACCTTAAAGAACCTGTAAGAATCAATTGCACAAGACCCTCCAACAATACAAGAACAAGTGTAAGGATAGGACCAGGACAATTATTCTATAGAACAGGAGACATAACAGGAGACATAAGAAGAGCATCTTGTAAAATTGATGGAACAGAATGGAATAAAACTTTAGGACAGGTAGCTGAAAAATT-AAAGAAGTACTT"/>
+                <sequence id="seq_days_2639_years_7.23014_frequency_0.04_Nreads_181" taxon="days_2639_years_7.23014_frequency_0.04_Nreads_181" totalcount="4" value="GAAGAAGACATAATAATCAAATCTGAAAATATCACAGACAATGCTAGAACCATAATAGTGCACCTTAAAGAACCTGTAGAAATCAATTGTACAAGACCCTCCAACAATACAAGAACAAGTGTAAGGATAGGACCAGGACAACTATTCTATAGAACAGGAGACATAACAGGAGACATAAGAAAAGCATCTTGTAAAATTGATGGAACAGAATGGAATAAAACTTTAGGACAGGTAGCTGAAAAATT-AAGAAAGTACTT"/>
+                <sequence id="seq_days_2639_years_7.23014_frequency_0.06_Nreads_253" taxon="days_2639_years_7.23014_frequency_0.06_Nreads_253" totalcount="4" value="GAAGAAGACATAGTAATCAGATCTGAAAATATCACAAACAATGCTAGAACCATAATAGTGCACCTTAAAGAACCTGTAAGAATCGATTGTACAAGACCCTCCAACAATACAAGAACAAGTGTAAGGATAGGACCAGGACAAATGTTCTATAGAACAGGGGACATAACAGGAGACATAAGAAGAGCATTTTGTAAAATTAATGGAACAAAATGGAATAAAACTTTAGGACAGGTAGCTGAAAAATT-AAAAAGGTACTT"/>
+                <sequence id="seq_days_2639_years_7.23014_frequency_0.06_Nreads_276" taxon="days_2639_years_7.23014_frequency_0.06_Nreads_276" totalcount="4" value="GAAGAAGACATAATAATCAAATCTGAAAATATCACAGACAATGCTAGAACCATAATAGTGCACCTTAAGGAACCTGTAGAAATCAATTGTACAAGACCCTCCAACAATACAAGAACAAGTGTAAGGATAGGACCAGGACAACTATTCTATAGAACAGGAGACATAACAGGAGACATAAGAAAAGCATCTTGTAAAATTGATGGAACAGAATGGAATAAAACTTTAGGACAGGTAGCTGAAAAATT-AAGAAAGTACTT"/>
+                <sequence id="seq_days_2639_years_7.23014_frequency_0.08_Nreads_356" taxon="days_2639_years_7.23014_frequency_0.08_Nreads_356" totalcount="4" value="GAAGAAGACATAGTAATCAGATCTGAAAATATCACAAACAATGCTAGAACCATAATAGTGCACCTTAAAGAACCTGTAGAAATCAATTGTATAAGACCCTCCAACAATACAAGAACAAGTGTAAGGATAGGACCAGGACAAATGTTCTATAGAACAGGGGACATAACAGGAGACATAAGAAGAGCATTTTGTAAAATTAATGGAACAAAATGGAATAAAACTTTAGGACAGGTAGCTGAAAAATT-AAAAAAGTACTT"/>
+                <sequence id="seq_days_2639_years_7.23014_frequency_0.14_Nreads_630" taxon="days_2639_years_7.23014_frequency_0.14_Nreads_630" totalcount="4" value="GAAGAAGACATAGTAATCAGATCTGAAAATATCACAAACAATGCTAGAACCATAATAGTGCACCTTAAAGAACCTGTAGAAATCAATTGTACAAGACCCTCCAACAATACAAGAACAAGTGTAAGGATAGGACCAGGACAAATGTTCTATAGAACAGGAGACATAACAGGAGACATAAGAAGAGCATCTTGTAAAATTAATGGAACAAAATGGAATAAAACTTTAGGACAGGTAGCTGAAAAATT-AAAAAAGTACTT"/>
+                <sequence id="seq_days_2639_years_7.23014_frequency_0.26_Nreads_1124" taxon="days_2639_years_7.23014_frequency_0.26_Nreads_1124" totalcount="4" value="GAAGAAGACATAGTAATCAGATCTGAAAATATCACAAACAATGCTAGAACCATAATAGTGCACCTTAAAGAACCTGTAAGAATCGATTGTACAAGACCCTCCAACAATACAAGAACAAGTGTAAGGATAGGACCAGGACAAATGTTCTATAGAACAGGGGACATAACAGGAGACATAAGAAGAGCATTTTGTAAAATTAATGGAACAAAATGGAATAAAACTTTAGGACAGGTAGCTGAAAAATT-AAAAAAGTACTT"/>
+                <sequence id="seq_days_2639_years_7.23014_frequency_0.3_Nreads_1218" taxon="days_2639_years_7.23014_frequency_0.3_Nreads_1218" totalcount="4" value="GAAGAAGACATAATAATCAAATCTGAAAATATCACAAACAATGCTAAAAACATAATAGTGCACCTTAAAGAACCTGTAACAATCAATTGTACAAGACCCTCCAACAATACAAGAACAAGTGTAAGGATAGGACCAGGACAATTATTCTATAGAACAGGAGACATAACAGGAGACATAAGAAGAGCATCTTGTAAAATTAATGGAACAGAATGGAATAAAACTTTAGGACAGGTAGCTGAAAAATT-AAGAAAACACTT"/>
+                <sequence id="seq_days_2996_years_8.20822_frequency_0.04_Nreads_32" taxon="days_2996_years_8.20822_frequency_0.04_Nreads_32" totalcount="4" value="GAAGAAGACATAGTAATCAGATCTGAAAATATCACAGACAATGCTAGAACCATAATAGTGCACCTTAAAGAACCTGTAGAAATCAATTGTACAAGACCCTCCAACAATACAAGAACAAGTGTAGGGATAGGACCAGGACAAATGTTCTATAGAACAGGGGACATAACAGGAGACATAAGAAGAGCATATTGTAACATTAGTAGAACAAAATGGAATAAAACTTTAGGACAGGTAGCTGAAAAATT-AAAAAAGTACTT"/>
+                <sequence id="seq_days_2996_years_8.20822_frequency_0.06_Nreads_45" taxon="days_2996_years_8.20822_frequency_0.06_Nreads_45" totalcount="4" value="GAAGAAGACATAATAATCAAATCTGAAAATATCACAGACAATGCTAGAACCATAATAGTGCACCTTAAAGAACCTGTAGAAATCAATTGTACAAGACCCTCCAACAATACAAGAACAAGTGTAGGGATAGGACCAGGACAAATGTTCTATAGAACAGGGGACATAACAGGAGACATAAGAAGAGCATATTGTAACATTAGTAGAACAAAATGGAATAAAACTTTAGGACAGGTAGCTGAAAAATT-AAAAAAGTACTT"/>
+                <sequence id="seq_days_2996_years_8.20822_frequency_0.11_Nreads_77" taxon="days_2996_years_8.20822_frequency_0.11_Nreads_77" totalcount="4" value="GAAGAAGACATAATAATCAGATCTGAAAATATCACAAACAATGCTAGAACCATAATAGTGCACCTTAAAGAACCTGTAGAAATCAATTGTACAAGACCCTCCAACAATACAAGAACAAGTGTAGGGATAGGACCAGGACAAATGTTCTATAGAACAGGGGACATAACAGGAGACATAAGAAGAGCATATTGTAACATTAGTGGAACAAAATGGAATAAAACTTTAGGACAGGTAGCTGAAAAATT-AAAAAAGTACTT"/>
+                <sequence id="seq_days_2996_years_8.20822_frequency_0.14_Nreads_93" taxon="days_2996_years_8.20822_frequency_0.14_Nreads_93" totalcount="4" value="GAAGAAGACATAATAATCAAATCTGAAAATATCACAGACAATGCTAGAACCATAGTAGTGCACCTTAAAGAACCTGTAGAAATCAATTGTACAAGACCCTCCAACAATACAAGAACAAGTGTAGGGATAGGACCAGGACAAATGTTCTATAGAACAGGGGACATAACAGGAGACATAAGAAGAGCATATTGTAACATTAGTAGAACAAAATGGAATAAAACTTTAGGACAGGTAGCTGAAAAATT-AAAAAAGTACTT"/>
+                <sequence id="seq_days_2996_years_8.20822_frequency_0.17_Nreads_115" taxon="days_2996_years_8.20822_frequency_0.17_Nreads_115" totalcount="4" value="GAAGAAGACATAATAATCAGATCTGAAAATATCACAAACAATGCTAGAACCATAATAGTGCACCTTAAAGAACCTGTAGAAATCAATTGTACAAGACCCTCCAACAATACAAGAACAAGTGTAGGGATAGGACCAGGACAAATGTTCTATAGAACAGGGGACATAACAGGAGACATAAGAAGAGCATATTGTAACATTAGTAGAACAAAATGGAATAAAACTTTAGGACAGGTAGCTGAAAAATT-AAAAAAGTACTT"/>
+                <sequence id="seq_days_2996_years_8.20822_frequency_0.1_Nreads_95" taxon="days_2996_years_8.20822_frequency_0.1_Nreads_95" totalcount="4" value="GAAGAAGACATAGTAATCAGATCTGAAAATATCACAGACAATGCTAGAACCATAATAGTGCACCTTAAAGAACCTGTAGAAATCAATTGTACAAGACCCTCCAACAATACAAGAAAAAGTGTAAGGATAGGACCAGGACAAATGTTCTATAGAACAGGGGACATAACAGGAGACATAAGAAGAGCATATTGTAACATTAGTAGAACAAAATGGAATAAAACTTTAGGACAGGTAGCTGAAAAATT-AAAAAAGTACTT"/>
+                <sequence id="seq_days_2996_years_8.20822_frequency_0.3_Nreads_206" taxon="days_2996_years_8.20822_frequency_0.3_Nreads_206" totalcount="4" value="GAAGAAGACATAGTAATCAGATCTGAAAATATCACAAACAATGCTAGAACCATAATAGTGCACCTTAAAGAACCTGTAGAAATCAATTGTACAAGACCCTCCAACAATACAAGAACAAGTGTAGGGATAGGACCAGGACAAATGTTCTATAGAACAGGGGACATAACAGGAGACATAAGAAGAGCATATTGTAACATTAGTAGAACAAAATGGAATAAAACTTTAGGACAGGTAGCTGAAAAATT-AAAAAAGTACTT"/>
+                <sequence id="seq_days_562_years_1.53973_frequency_0.02_Nreads_3" taxon="days_562_years_1.53973_frequency_0.02_Nreads_3" totalcount="4" value="GAAGAAGACATAATAATCAGATCTGAAAATATCACAAACAATGCTAAAACCATAATAGTGCACCTTAAAGAACCTGTAGAAATCAATTGTACAAGACCCTCCAACAATACAATAGCAAGTGTAAGGATAGGACCAGGACAAGTATTCTATAAAACAGGAGACATAATAGGAGACATAAGAAGAGCATTTTGTGTAATTAATGGAACAAAATGGAATGAAACTTTAAGACAGGTAGCTGAAAAATT-AAGAAAGCACTT"/>
+                <sequence id="seq_days_562_years_1.53973_frequency_0.02_Nreads_4" taxon="days_562_years_1.53973_frequency_0.02_Nreads_4" totalcount="4" value="GAAGAAGACATAATAATCAGATCTGAAAATATCACAAACAATGCTAAAACCATAATAGTGCACCTTAAAGAACCTGTAGAAATCAATTGTACAAGACCCTCCAACAATACAATAGCAAGTGTAAGGATAGGACCAGGACAAGTATTCTATAAAACAGGAGACATAATAGGAGACATAAGAAGAGCATTTTGTGTAATTAATGGAACAAAATGGAATGAAACTTTAAAACAGGTAGCTGAGAAATT-AAAAAAGCACTT"/>
+                <sequence id="seq_days_562_years_1.53973_frequency_0.03_Nreads_5" taxon="days_562_years_1.53973_frequency_0.03_Nreads_5" totalcount="4" value="GAAGAAGACATAATAATCAGATCTGAAAATATCACAAACAATGCTAAAACCATAATAGTGCACCTTAAAGAACCTGTAGAAATCAATTGTACAAGACCCTCCAACAATACAATAGCAAGTGTAAGGATAGGACCAGGACAAGTATTCTATAAAACAGGAGACATAATAGGAGACATAAGAAGAGCATTTTGTGTAATTAATGGAACAAAATGGAAAGAAACTTTAAAACAGGTAGCTGGAAAATT-AAGAAAGCACTT"/>
+                <sequence id="seq_days_562_years_1.53973_frequency_0.06_Nreads_8" taxon="days_562_years_1.53973_frequency_0.06_Nreads_8" totalcount="4" value="GAAGAAGACATAATAATCAGATCTGAAAATATCACAAACAATGCTAAAACCATAATAGTGCACCTTAAAGAACCTGTAGAAATCAATTGTACAAGACCCTCCAACAATACAATAGCAAGTGTAAGGATAGGACCAGGACAAGTATTCTATAAAACAGGAGACATAATAGGAGACATAAGAAGAGCATTTTGTGTAATTAATGGAACAAAATGGAGTGAAACTTTAAAACAGGTAGCTGAAAAATT-AAGAGAGCACTT"/>
+                <sequence id="seq_days_562_years_1.53973_frequency_0.07_Nreads_10" taxon="days_562_years_1.53973_frequency_0.07_Nreads_10" totalcount="4" value="GAAGAAGACATAATAATCAGATCTGAAAATATCACAAACAATGCTAAAACCATAATAGTGCACCTTAAAGAACCTGTAGAAATCAATTGTACAAGACCCTCCAACAATACAATAGCAAGTGTAAGGATAGGACCAGGACAAGTATTCTATAAAACAGGAGACATAATAGGAGACATAAGAAGAGCATTTTGTGTAATTAATGGAACAAAATGGAATGAAACTTTAAAACAGGTAGCTGGAAAATT-AAGAGAGCACTT"/>
+                <sequence id="seq_days_562_years_1.53973_frequency_0.08_Nreads_11" taxon="days_562_years_1.53973_frequency_0.08_Nreads_11" totalcount="4" value="GAAGAAGACATAATAATCAGATCTGAAAATATCACAAACAATGCTAAAACCATAATAGTGCACCTTAAAGAACCTGTAGAAATCAATTGTACAAGACCCTCCAACAATACAATAGCAAGTGTAAGGATAGGACCAGGACAAGTATTCTATAAAACAGGAGACATAATAGGAGACATAAAAAGAGCATTTTGTGTAATTAATGGAACAAAATGGAATGAAACTTTAAAACAGGTAGCTAAAAAATT-AAGAAAGCACTT"/>
+                <sequence id="seq_days_562_years_1.53973_frequency_0.09_Nreads_12" taxon="days_562_years_1.53973_frequency_0.09_Nreads_12" totalcount="4" value="GAAGAAGACATAATAATCAGATCTGAAAATATCACAAACAATGCTAAAACCATAATAGTGCACCTTAAAGAACCTGTAGAAATCAATTGTACAAGACCCTCCAACAATACAATAGCAAGTGTAAGGATAGGACCAGGACAAGTATTCTATAAAACAGGAGACATAATAGGAGACATAAGAAGAGCATTTTGTGTAATTAATGGAACAAAATGGGATGAAACGTTGAAACAGGTAGCTGAAAAATT-AAGAGAGCACTT"/>
+                <sequence id="seq_days_562_years_1.53973_frequency_0.17_Nreads_22" taxon="days_562_years_1.53973_frequency_0.17_Nreads_22" totalcount="4" value="GAAGAAGACATAATAATCAGATCTGAAAATATCACAAACAATGCTAAAACCATAATAGTGCACCTTAAAGAACCTGTAGAAATCAATTGTACAAGACCCTCCAACAATACAATAGCAAGTGTAAGGATAGGACCAGGACAAGTATTCTATAAAACAGGAGACATAATAGGAGACATAAGAAGAGCATTTTGTGTAATTAATGGAACAAAATGGAATGAAACTTTAGAACAGGTAGCTGAAAAATT-AAGAGAGCACTT"/>
+                <sequence id="seq_days_562_years_1.53973_frequency_0.1_Nreads_13" taxon="days_562_years_1.53973_frequency_0.1_Nreads_13" totalcount="4" value="GAAGAAGACATAATAATCAGATCTGAAAATATCACAAACAATGCTAAAACCATAATAGTGCACCTTAAAGAACCTGTAGAAATCAATTGTACAAGACCCTCCAACAATACAATAGCAAGTGTAAGGATAGGACCAGGACAAGTATTCTATAAAACAGGAGACATAATAGGAGACATAAGAAGAGCATTTTGTGTAATTAATGGAACAAAATGGAATGAAACTTTAAAACAGGTAGCTGAAAAATT-AAGAAAGCATTT"/>
+                <sequence id="seq_days_562_years_1.53973_frequency_0.31_Nreads_40" taxon="days_562_years_1.53973_frequency_0.31_Nreads_40" totalcount="4" value="GAAGAAGACATAATAATCAGATCTGAAAATATCACAAACAATGCTAAAACCATAATAGTGCACCTTAAAGAACCTGTAGAAATCAATTGTACAAGACCCTCCAACAATACAATAGCAAGTGTAAGGATAGGACCAGGACAAGTATTCTATAAAACAGGAGACATAATAGGAGACATAAGAAGAGCATTTTGTGTAATTAATGGAACAAAATGGAATGAAACTTTAAAACAGGTAGCTGAAAAATT-AAGAAAGCACTT"/>
+            </data>
+
+
+    
+
+
+    
+
+
+    
+<map name="Uniform" >beast.math.distributions.Uniform</map>
+<map name="Exponential" >beast.math.distributions.Exponential</map>
+<map name="LogNormal" >beast.math.distributions.LogNormalDistributionModel</map>
+<map name="Normal" >beast.math.distributions.Normal</map>
+<map name="Beta" >beast.math.distributions.Beta</map>
+<map name="Gamma" >beast.math.distributions.Gamma</map>
+<map name="LaplaceDistribution" >beast.math.distributions.LaplaceDistribution</map>
+<map name="prior" >beast.math.distributions.Prior</map>
+<map name="InverseGamma" >beast.math.distributions.InverseGamma</map>
+<map name="OneOnX" >beast.math.distributions.OneOnX</map>
+
+
+<run id="mcmc" spec="MCMC" chainLength="10000000">
+    <state id="state" storeEvery="5000">
+        <parameter id="clockRate.c:haplotypes_p1_7023_7286_forBeast" name="stateNode">1.0</parameter>
+        <parameter id="gammaShape.s:haplotypes_p1_7023_7286_forBeast" name="stateNode">1.0</parameter>
+        <stateNode id="Tree.t:haplotypes_p1_7023_7286_forBeast" spec="piqmee.tree.QuasiSpeciesClusterTree">
+            <data idref="haplotypes_p1_7023_7286_forBeast"/>
+            <trait id="haplotypeCounts.t:haplotypes_p1_7023_7286_forBeast" spec="beast.evolution.tree.TraitSet" traitname="qscounts" value="days_2639_years_7.23014_frequency_0.3_Nreads_1218=1218,days_2578_years_7.06301_frequency_0.06_Nreads_16=16,days_2578_years_7.06301_frequency_0.01_Nreads_4=4,days_2578_years_7.06301_frequency_0.07_Nreads_18=18,days_2578_years_7.06301_frequency_0.02_Nreads_6=6,days_2578_years_7.06301_frequency_0.09_Nreads_23=23,days_2578_years_7.06301_frequency_0.05_Nreads_14=14,days_2639_years_7.23014_frequency_0.04_Nreads_181=181,days_2996_years_8.20822_frequency_0.06_Nreads_45=45,days_2639_years_7.23014_frequency_0.06_Nreads_276=276,days_2996_years_8.20822_frequency_0.14_Nreads_93=93,days_2578_years_7.06301_frequency_0.24_Nreads_60=60,days_1254_years_3.43562_frequency_0.37_Nreads_82=82,days_1393_years_3.81644_frequency_0.04_Nreads_55=55,days_1282_years_3.51233_frequency_0.48_Nreads_151=151,days_1393_years_3.81644_frequency_0.2_Nreads_261=261,days_562_years_1.53973_frequency_0.08_Nreads_11=11,days_1282_years_3.51233_frequency_0.17_Nreads_56=56,days_1084_years_2.96986_frequency_0.27_Nreads_248=248,days_1254_years_3.43562_frequency_0.19_Nreads_43=43,days_562_years_1.53973_frequency_0.03_Nreads_5=5,days_562_years_1.53973_frequency_0.31_Nreads_40=40,days_562_years_1.53973_frequency_0.1_Nreads_13=13,days_562_years_1.53973_frequency_0.02_Nreads_4=4,days_562_years_1.53973_frequency_0.07_Nreads_10=10,days_562_years_1.53973_frequency_0.02_Nreads_3=3,days_562_years_1.53973_frequency_0.17_Nreads_22=22,days_562_years_1.53973_frequency_0.06_Nreads_8=8,days_562_years_1.53973_frequency_0.09_Nreads_12=12,days_1084_years_2.96986_frequency_0.51_Nreads_466=466,days_122_years_0.334247_frequency_1_Nreads_1354=1354,days_1393_years_3.81644_frequency_0.69_Nreads_882=882,days_1393_years_3.81644_frequency_0.02_Nreads_29=29,days_1393_years_3.81644_frequency_0.03_Nreads_44=44,days_1084_years_2.96986_frequency_0.2_Nreads_185=185,days_1254_years_3.43562_frequency_0.4_Nreads_89=89,days_1282_years_3.51233_frequency_0.04_Nreads_13=13,days_1282_years_3.51233_frequency_0.29_Nreads_94=94,days_1861_years_5.09863_frequency_1_Nreads_188=188,days_2578_years_7.06301_frequency_0.2_Nreads_50=50,days_2578_years_7.06301_frequency_0.14_Nreads_37=37,days_2996_years_8.20822_frequency_0.17_Nreads_115=115,days_2996_years_8.20822_frequency_0.11_Nreads_77=77,days_2578_years_7.06301_frequency_0.06_Nreads_17=17,days_2303_years_6.30959_frequency_1_Nreads_1076=1076,days_2639_years_7.23014_frequency_0.26_Nreads_1124=1124,days_2639_years_7.23014_frequency_0.06_Nreads_253=253,days_2639_years_7.23014_frequency_0.14_Nreads_630=630,days_2996_years_8.20822_frequency_0.3_Nreads_206=206,days_2639_years_7.23014_frequency_0.08_Nreads_356=356,days_2996_years_8.20822_frequency_0.1_Nreads_95=95,days_2996_years_8.20822_frequency_0.04_Nreads_32=32,days_1254_years_3.43562_frequency_0.01_Nreads_4=4">
+                <taxa id="taxonSet.haplotypes_p1_7023_7286_forBeast" spec="TaxonSet" alignment="@haplotypes_p1_7023_7286_forBeast"/>
+            </trait>
+            <trait id="dateTrait.t:haplotypes_p1_7023_7286_forBeast" spec="beast.evolution.tree.TraitSet" taxa="@taxonSet.haplotypes_p1_7023_7286_forBeast" traitname="date" value="days_2639_years_7.23014_frequency_0.3_Nreads_1218=7.23014,days_2578_years_7.06301_frequency_0.06_Nreads_16=7.06301,days_2578_years_7.06301_frequency_0.01_Nreads_4=7.06301,days_2578_years_7.06301_frequency_0.07_Nreads_18=7.06301,days_2578_years_7.06301_frequency_0.02_Nreads_6=7.06301,days_2578_years_7.06301_frequency_0.09_Nreads_23=7.06301,days_2578_years_7.06301_frequency_0.05_Nreads_14=7.06301,days_2639_years_7.23014_frequency_0.04_Nreads_181=7.23014,days_2996_years_8.20822_frequency_0.06_Nreads_45=8.20822,days_2639_years_7.23014_frequency_0.06_Nreads_276=7.23014,days_2996_years_8.20822_frequency_0.14_Nreads_93=8.20822,days_2578_years_7.06301_frequency_0.24_Nreads_60=7.06301,days_1254_years_3.43562_frequency_0.37_Nreads_82=3.43562,days_1393_years_3.81644_frequency_0.04_Nreads_55=3.81644,days_1282_years_3.51233_frequency_0.48_Nreads_151=3.51233,days_1393_years_3.81644_frequency_0.2_Nreads_261=3.81644,days_562_years_1.53973_frequency_0.08_Nreads_11=1.53973,days_1282_years_3.51233_frequency_0.17_Nreads_56=3.51233,days_1084_years_2.96986_frequency_0.27_Nreads_248=2.96986,days_1254_years_3.43562_frequency_0.19_Nreads_43=3.43562,days_562_years_1.53973_frequency_0.03_Nreads_5=1.53973,days_562_years_1.53973_frequency_0.31_Nreads_40=1.53973,days_562_years_1.53973_frequency_0.1_Nreads_13=1.53973,days_562_years_1.53973_frequency_0.02_Nreads_4=1.53973,days_562_years_1.53973_frequency_0.07_Nreads_10=1.53973,days_562_years_1.53973_frequency_0.02_Nreads_3=1.53973,days_562_years_1.53973_frequency_0.17_Nreads_22=1.53973,days_562_years_1.53973_frequency_0.06_Nreads_8=1.53973,days_562_years_1.53973_frequency_0.09_Nreads_12=1.53973,days_1084_years_2.96986_frequency_0.51_Nreads_466=2.96986,days_122_years_0.334247_frequency_1_Nreads_1354=0.334247,days_1393_years_3.81644_frequency_0.69_Nreads_882=3.81644,days_1393_years_3.81644_frequency_0.02_Nreads_29=3.81644,days_1393_years_3.81644_frequency_0.03_Nreads_44=3.81644,days_1084_years_2.96986_frequency_0.2_Nreads_185=2.96986,days_1254_years_3.43562_frequency_0.4_Nreads_89=3.43562,days_1282_years_3.51233_frequency_0.04_Nreads_13=3.51233,days_1282_years_3.51233_frequency_0.29_Nreads_94=3.51233,days_1861_years_5.09863_frequency_1_Nreads_188=5.09863,days_2578_years_7.06301_frequency_0.2_Nreads_50=7.06301,days_2578_years_7.06301_frequency_0.14_Nreads_37=7.06301,days_2996_years_8.20822_frequency_0.17_Nreads_115=8.20822,days_2996_years_8.20822_frequency_0.11_Nreads_77=8.20822,days_2578_years_7.06301_frequency_0.06_Nreads_17=7.06301,days_2303_years_6.30959_frequency_1_Nreads_1076=6.30959,days_2639_years_7.23014_frequency_0.26_Nreads_1124=7.23014,days_2639_years_7.23014_frequency_0.06_Nreads_253=7.23014,days_2639_years_7.23014_frequency_0.14_Nreads_630=7.23014,days_2996_years_8.20822_frequency_0.3_Nreads_206=8.20822,days_2639_years_7.23014_frequency_0.08_Nreads_356=7.23014,days_2996_years_8.20822_frequency_0.1_Nreads_95=8.20822,days_2996_years_8.20822_frequency_0.04_Nreads_32=8.20822,days_1254_years_3.43562_frequency_0.01_Nreads_4=3.43562"/>
+            <taxonset idref="taxonSet.haplotypes_p1_7023_7286_forBeast"/>
+        </stateNode>
+        <parameter id="originMultiRho.t:haplotypes_p1_7023_7286_forBeast" lower="0.0" name="stateNode" upper="Infinity">20.0</parameter>
+        <parameter id="rhoMultiRho.t:haplotypes_p1_7023_7286_forBeast" dimension="11" lower="0.0" name="stateNode" upper="1.0">0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1</parameter>
+        <parameter id="becomeUninfectiousRateMultiRho.t:haplotypes_p1_7023_7286_forBeast" lower="0.0" name="stateNode" upper="Infinity">124.0</parameter>
+        <parameter id="reproductiveNumberMultiRho.t:haplotypes_p1_7023_7286_forBeast" dimension="3" lower="0.0" name="stateNode" upper="Infinity">2.0</parameter>
+    </state>
+
+    <distribution id="posterior" spec="util.CompoundDistribution">
+        <distribution id="prior" spec="util.CompoundDistribution">
+            <distribution id="QSBirthDeathSkyMultiRho.t:haplotypes_p1_7023_7286_forBeast" spec="piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel" becomeUninfectiousRate="@becomeUninfectiousRateMultiRho.t:haplotypes_p1_7023_7286_forBeast" origin="@originMultiRho.t:haplotypes_p1_7023_7286_forBeast" reproductiveNumber="@reproductiveNumberMultiRho.t:haplotypes_p1_7023_7286_forBeast" rho="@rhoMultiRho.t:haplotypes_p1_7023_7286_forBeast" tree="@Tree.t:haplotypes_p1_7023_7286_forBeast">
+                <reverseTimeArrays id="BooleanParameter.0" spec="parameter.BooleanParameter" dimension="5">false false false true false</reverseTimeArrays>
+                <parameter id="rhoChangeTimes.t:haplotypes_p1_7023_7286_forBeast" dimension="2" lower="0.0" name="rhoSamplingTimes">
+                7.873973
+				6.66849
+				5.23836
+				4.7726
+				4.69589
+				4.39178
+				3.10959
+				1.89863
+				1.14521
+				0.97808
+				0</parameter>
+                <parameter id="samplingProportionMultiRho.t:haplotypes_p1_7023_7286_forBeast" name="samplingProportion">0.0</parameter>
+            </distribution>
+<!-- 
+            <prior id="becomeUninfectiousRatePriorMultiRho.t:haplotypes_p1_7023_7286_forBeast" name="distribution" x="@becomeUninfectiousRateMultiRho.t:haplotypes_p1_7023_7286_forBeast">
+                <LogNormal id="LogNormalDistributionModel.2" name="distr">
+                    <parameter id="RealParameter.9" estimate="false" name="M">0.0</parameter>
+                    <parameter id="RealParameter.10" estimate="false" name="S">1.0</parameter>
+                </LogNormal>
+            </prior>
+ -->
+            <prior id="ClockPrior.c:haplotypes_p1_7023_7286_forBeast" name="distribution" x="@clockRate.c:haplotypes_p1_7023_7286_forBeast">
+                <Uniform id="Uniform.0" name="distr" upper="Infinity"/>
+            </prior>
+            <prior id="GammaShapePrior.s:haplotypes_p1_7023_7286_forBeast" name="distribution" x="@gammaShape.s:haplotypes_p1_7023_7286_forBeast">
+                <Exponential id="Exponential.0" name="distr">
+                    <parameter id="RealParameter.0" lower="0.0" name="mean" upper="0.0">1.0</parameter>
+                </Exponential>
+            </prior>
+            <prior id="originPriorMultiRho.t:haplotypes_p1_7023_7286_forBeast" name="distribution" x="@originMultiRho.t:haplotypes_p1_7023_7286_forBeast">
+                <Uniform id="Uniform.3" name="distr" upper="Infinity"/>
+            </prior>
+            <prior id="reproductiveNumberPriorMultiRho.t:haplotypes_p1_7023_7286_forBeast" name="distribution" x="@reproductiveNumberMultiRho.t:haplotypes_p1_7023_7286_forBeast">
+                <LogNormal id="LogNormalDistributionModel.3" name="distr">
+                    <parameter id="RealParameter.11" estimate="false" name="M">0.0</parameter>
+                    <parameter id="RealParameter.12" estimate="false" name="S">1.0</parameter>
+                </LogNormal>
+            </prior>
+            <prior id="rhoPriorMultiRho.t:haplotypes_p1_7023_7286_forBeast" name="distribution" x="@rhoMultiRho.t:haplotypes_p1_7023_7286_forBeast">
+                <Beta id="Beta.1" name="distr">
+                    <parameter id="RealParameter.7" estimate="false" name="alpha">1.0</parameter>
+                    <parameter id="RealParameter.8" estimate="false" name="beta">1.0</parameter>
+                </Beta>
+            </prior>
+        </distribution>
+        <distribution id="likelihood" spec="util.CompoundDistribution">
+            <distribution id="treeLikelihood.haplotypes_p1_7023_7286_forBeast" spec="piqmee.likelihood.QuasiSpeciesTreeLikelihood" data="@haplotypes_p1_7023_7286_forBeast" tree="@Tree.t:haplotypes_p1_7023_7286_forBeast">
+                <siteModel id="SiteModel.s:haplotypes_p1_7023_7286_forBeast" spec="SiteModel" gammaCategoryCount="4" shape="@gammaShape.s:haplotypes_p1_7023_7286_forBeast">
+                    <parameter id="mutationRate.s:haplotypes_p1_7023_7286_forBeast" estimate="false" name="mutationRate">1.0</parameter>
+                    <parameter id="proportionInvariant.s:haplotypes_p1_7023_7286_forBeast" estimate="false" lower="0.0" name="proportionInvariant" upper="1.0">0.0</parameter>
+                    <substModel id="JC69.s:haplotypes_p1_7023_7286_forBeast" spec="JukesCantor"/>
+                </siteModel>
+                <branchRateModel id="StrictClock.c:haplotypes_p1_7023_7286_forBeast" spec="beast.evolution.branchratemodel.StrictClockModel" clock.rate="@clockRate.c:haplotypes_p1_7023_7286_forBeast"/>
+            </distribution>
+        </distribution>
+    </distribution>
+
+    <operator id="strictClockRateScaler.c:haplotypes_p1_7023_7286_forBeast" spec="ScaleOperator" parameter="@clockRate.c:haplotypes_p1_7023_7286_forBeast" scaleFactor="0.75" weight="3.0"/>
+
+    <operator id="strictClockUpDownOperator.c:haplotypes_p1_7023_7286_forBeast" spec="UpDownOperator" scaleFactor="0.75" weight="3.0">
+        <up idref="clockRate.c:haplotypes_p1_7023_7286_forBeast"/>
+        <down idref="Tree.t:haplotypes_p1_7023_7286_forBeast"/>
+    </operator>
+
+    <operator id="gammaShapeScaler.s:haplotypes_p1_7023_7286_forBeast" spec="ScaleOperator" parameter="@gammaShape.s:haplotypes_p1_7023_7286_forBeast" scaleFactor="0.5" weight="0.1"/>
+
+<!--     <operator id="becomeUninfectiousRateScalerMultiRho.t:haplotypes_p1_7023_7286_forBeast" spec="ScaleOperator" parameter="@becomeUninfectiousRateMultiRho.t:haplotypes_p1_7023_7286_forBeast" scaleFactor="0.75" weight="2.0"/> -->
+
+    <operator id="rhoScalerMultiRho.t:haplotypes_p1_7023_7286_forBeast" spec="ScaleOperator" parameter="@rhoMultiRho.t:haplotypes_p1_7023_7286_forBeast" scaleFactor="0.75" weight="1.0"/>
+
+    <operator id="reproductiveNumberScalerMultiRho.t:haplotypes_p1_7023_7286_forBeast" spec="ScaleOperator" parameter="@reproductiveNumberMultiRho.t:haplotypes_p1_7023_7286_forBeast" scaleFactor="0.75" weight="10.0"/>
+
+<!-- 
+    <operator id="updownBDMultiRho.t:haplotypes_p1_7023_7286_forBeast" spec="UpDownOperator" scaleFactor="0.75" weight="2.0">
+        <up idref="reproductiveNumberMultiRho.t:haplotypes_p1_7023_7286_forBeast"/>
+        <down idref="becomeUninfectiousRateMultiRho.t:haplotypes_p1_7023_7286_forBeast"/>
+    </operator>
+ -->
+
+    <operator id="origScalerMultiRho.t:haplotypes_p1_7023_7286_forBeast" spec="ScaleOperator" parameter="@originMultiRho.t:haplotypes_p1_7023_7286_forBeast" scaleFactor="0.75" weight="1.0"/>
+
+    <operator id="R0TreeUpDownOperatorMultiRho.c:haplotypes_p1_7023_7286_forBeast" spec="UpDownOperator" scaleFactor="0.75" weight="3.0">
+        <up idref="reproductiveNumberMultiRho.t:haplotypes_p1_7023_7286_forBeast"/>
+        <down idref="Tree.t:haplotypes_p1_7023_7286_forBeast"/>
+    </operator>
+
+    <operator id="piqmeeTreeScalerMultiRho.t:haplotypes_p1_7023_7286_forBeast" spec="piqmee.operators.QuasiSpeciesTreeScale" origin="@originMultiRho.t:haplotypes_p1_7023_7286_forBeast" quasiSpeciesTree="@Tree.t:haplotypes_p1_7023_7286_forBeast" scaleFactor="0.5" weight="3.0"/>
+
+    <operator id="piqmeeTreeRootScalerMultiRho.t:haplotypes_p1_7023_7286_forBeast" spec="piqmee.operators.QuasiSpeciesTreeScale" origin="@originMultiRho.t:haplotypes_p1_7023_7286_forBeast" quasiSpeciesTree="@Tree.t:haplotypes_p1_7023_7286_forBeast" rootOnly="true" scaleFactor="0.7" weight="3.0"/>
+
+    <operator id="piqmeeNodeUniformOperatorMultiRho.t:haplotypes_p1_7023_7286_forBeast" spec="piqmee.operators.QuasiSpeciesUniform" origin="@originMultiRho.t:haplotypes_p1_7023_7286_forBeast" quasiSpeciesTree="@Tree.t:haplotypes_p1_7023_7286_forBeast" weight="5.0"/>
+
+    <operator id="piqmeeHaploScalerMultiRho.t:haplotypes_p1_7023_7286_forBeast" spec="piqmee.operators.QuasiSpeciesHaplotypeScale" origin="@originMultiRho.t:haplotypes_p1_7023_7286_forBeast" quasiSpeciesTree="@Tree.t:haplotypes_p1_7023_7286_forBeast" weight="3.0"/>
+
+    <operator id="piqmeeHaploSequenceReAttachRandomMultiRho.t:haplotypes_p1_7023_7286_forBeast" spec="piqmee.operators.QuasiSpeciesSequenceAttachmentRandom" origin="@originMultiRho.t:haplotypes_p1_7023_7286_forBeast" quasiSpeciesTree="@Tree.t:haplotypes_p1_7023_7286_forBeast" weight="10.0"/>
+
+    <operator id="piqmeeHaploSequenceReAttachUniformMultiRho.t:haplotypes_p1_7023_7286_forBeast" spec="piqmee.operators.QuasiSpeciesSequenceAttachmentUniform" origin="@originMultiRho.t:haplotypes_p1_7023_7286_forBeast" quasiSpeciesTree="@Tree.t:haplotypes_p1_7023_7286_forBeast" weight="10.0"/>
+
+    <operator id="piqmeeHaploStartTimeReAttachUniformMultiRho.t:haplotypes_p1_7023_7286_forBeast" spec="piqmee.operators.QuasiSpeciesSequenceAttachmentUniform" firstAttachmentOnly="true" origin="@originMultiRho.t:haplotypes_p1_7023_7286_forBeast" quasiSpeciesTree="@Tree.t:haplotypes_p1_7023_7286_forBeast" weight="5.0"/>
+
+    <operator id="piqmeeNarrowMultiRho.t:haplotypes_p1_7023_7286_forBeast" spec="piqmee.operators.QuasiSpeciesSubtreeExchange" origin="@originMultiRho.t:haplotypes_p1_7023_7286_forBeast" quasiSpeciesTree="@Tree.t:haplotypes_p1_7023_7286_forBeast" weight="5.0"/>
+
+    <operator id="piqmeeWideMultiRho.t:haplotypes_p1_7023_7286_forBeast" spec="piqmee.operators.QuasiSpeciesSubtreeExchange" isNarrow="false" origin="@originMultiRho.t:haplotypes_p1_7023_7286_forBeast" quasiSpeciesTree="@Tree.t:haplotypes_p1_7023_7286_forBeast" weight="1.0"/>
+
+    <operator id="piqmeeWilsonBaldingMultiRho.t:haplotypes_p1_7023_7286_forBeast" spec="piqmee.operators.QuasiSpeciesWilsonBalding" alpha="0.2" origin="@originMultiRho.t:haplotypes_p1_7023_7286_forBeast" quasiSpeciesTree="@Tree.t:haplotypes_p1_7023_7286_forBeast" weight="0.5"/>
+
+    <operator id="piqmeeNarroweasyMultiRho.t:haplotypes_p1_7023_7286_forBeast" spec="piqmee.operators.QuasiSpeciesSubtreeExchangeEasy" origin="@originMultiRho.t:haplotypes_p1_7023_7286_forBeast" quasiSpeciesTree="@Tree.t:haplotypes_p1_7023_7286_forBeast" weight="10.0"/>
+
+    <operator id="piqmeeWideeasyMultiRho.t:haplotypes_p1_7023_7286_forBeast" spec="piqmee.operators.QuasiSpeciesSubtreeExchangeEasy" isNarrow="false" origin="@originMultiRho.t:haplotypes_p1_7023_7286_forBeast" quasiSpeciesTree="@Tree.t:haplotypes_p1_7023_7286_forBeast" weight="2.0"/>
+
+    <operator id="piqmeeWilsonBaldingeasyMultiRho.t:haplotypes_p1_7023_7286_forBeast" spec="piqmee.operators.QuasiSpeciesWilsonBaldingEasy" alpha="0.2" origin="@originMultiRho.t:haplotypes_p1_7023_7286_forBeast" quasiSpeciesTree="@Tree.t:haplotypes_p1_7023_7286_forBeast" weight="2.5"/>
+
+    <logger id="tracelog" fileName="$(filebase).$(tree).log" logEvery="1000" model="@posterior" sanitiseHeaders="true" sort="smart">
+        <log idref="posterior"/>
+        <log idref="likelihood"/>
+        <log idref="prior"/>
+        <log idref="treeLikelihood.haplotypes_p1_7023_7286_forBeast"/>
+        <log id="QSTreeHeight.t:haplotypes_p1_7023_7286_forBeast" spec="beast.evolution.tree.TreeHeightLogger" tree="@Tree.t:haplotypes_p1_7023_7286_forBeast"/>
+        <log id="TreeHeight.t:haplotypes_p1_7023_7286_forBeast" spec="piqmee.util.AbsoluteTreeHeight" quasiSpeciesTree="@Tree.t:haplotypes_p1_7023_7286_forBeast"/>
+        <log idref="clockRate.c:haplotypes_p1_7023_7286_forBeast"/>
+        <log idref="gammaShape.s:haplotypes_p1_7023_7286_forBeast"/>
+        <log idref="QSBirthDeathSkyMultiRho.t:haplotypes_p1_7023_7286_forBeast"/>
+        <log id="birthMultiRho.t:haplotypes_p1_7023_7286_forBeast" spec="beast.math.statistic.RPNcalculator" expression="reproductiveNumberMultiRho.t:haplotypes_p1_7023_7286_forBeast becomeUninfectiousRateMultiRho.t:haplotypes_p1_7023_7286_forBeast *">
+            <parameter idref="becomeUninfectiousRateMultiRho.t:haplotypes_p1_7023_7286_forBeast"/>
+            <parameter idref="reproductiveNumberMultiRho.t:haplotypes_p1_7023_7286_forBeast"/>
+        </log>
+        <log id="deathMultiRho.t:haplotypes_p1_7023_7286_forBeast" spec="beast.math.statistic.RPNcalculator" expression="becomeUninfectiousRateMultiRho.t:haplotypes_p1_7023_7286_forBeast 1 samplingProportionMultiRho.t:haplotypes_p1_7023_7286_forBeast - *">
+            <parameter idref="becomeUninfectiousRateMultiRho.t:haplotypes_p1_7023_7286_forBeast"/>
+            <parameter idref="samplingProportionMultiRho.t:haplotypes_p1_7023_7286_forBeast"/>
+        </log>
+        <log id="samplingMultiRho.t:haplotypes_p1_7023_7286_forBeast" spec="beast.math.statistic.RPNcalculator" expression="becomeUninfectiousRateMultiRho.t:haplotypes_p1_7023_7286_forBeast samplingProportionMultiRho.t:haplotypes_p1_7023_7286_forBeast *">
+            <parameter idref="becomeUninfectiousRateMultiRho.t:haplotypes_p1_7023_7286_forBeast"/>
+            <parameter idref="samplingProportionMultiRho.t:haplotypes_p1_7023_7286_forBeast"/>
+        </log>
+        <log idref="originMultiRho.t:haplotypes_p1_7023_7286_forBeast"/>
+        <log idref="rhoMultiRho.t:haplotypes_p1_7023_7286_forBeast"/>
+        <log idref="becomeUninfectiousRateMultiRho.t:haplotypes_p1_7023_7286_forBeast"/>
+        <log idref="reproductiveNumberMultiRho.t:haplotypes_p1_7023_7286_forBeast"/>
+    </logger>
+
+    <logger id="screenlog" logEvery="1000">
+        <log idref="posterior"/>
+        <log id="ESS.0" spec="util.ESS" arg="@posterior"/>
+        <log idref="likelihood"/>
+        <log idref="prior"/>
+    </logger>
+
+    <logger id="treelog.t:haplotypes_p1_7023_7286_forBeast" fileName="$(filebase).$(tree).trees" logEvery="1000" mode="tree">
+        <log id="TreeWithMetaDataLogger.t:haplotypes_p1_7023_7286_forBeast" spec="beast.evolution.tree.TreeWithMetaDataLogger" tree="@Tree.t:haplotypes_p1_7023_7286_forBeast"/>
+    </logger>
+
+</run>
+
+</beast>
