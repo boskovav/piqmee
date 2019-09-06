@@ -88,6 +88,8 @@
                            beast.core.Logger.model,
                            piqmee.tree.QuasiSpeciesTree.haplotypeCounts,
                            piqmee.tree.QuasiSpeciesClusterTree.haplotypeCounts,
+                           piqmee.tree.QuasiSpeciesTree.taxonset,
+                           piqmee.tree.QuasiSpeciesClusterTree.taxonset,
                            piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.intervalTimes,
                            piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.birthRate,
                            piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.deathRate,
@@ -143,7 +145,7 @@
 		<panel spec='BeautiPanelConfig' panelname="Initialization" tiptext="Initial state"
             path='state/stateNode'
             hasPartitions="none" icon='6.png.x' forceExpansion='TRUE_START_COLLAPSED'
-            isVisible='false'/>
+            isVisible='true'/>
 
 		<panel spec='BeautiPanelConfig' panelname="Priors" tiptext="Other priors"
             path='distribution/distribution[id="prior"]/distribution'
@@ -170,7 +172,7 @@
             <!-- Quasi-species tree -->
 
             <!--<plugin spec='piqmee.tree.QuasiSpeciesTree' id='Tree.t:$(n)' estimate='true' taxonset='@taxonSet.$(n)'>-->
-                <!--&lt;!&ndash;<haplotypeCounts id="counts" spec="beast.evolution.tree.TraitSet" traitname="qscounts" taxa='@taxonSet.$(n)'/>&ndash;&gt;-->
+                <!--<haplotypeCounts id="counts" spec="beast.evolution.tree.TraitSet" traitname="qscounts" taxa='@taxonSet.$(n)'/>-->
             <!--</plugin>-->
 
             <!--<plugin spec='piqmee.tree.QuasiSpeciesClusterTree' id='ClusterTree.t:$(n)' initial='@Tree.t:$(n)' data='@$(n)' trait='@dateTrait.t:$(n)' haplotypeCounts='@haplotypeCounts.t:$(n)' estimate='false'>-->

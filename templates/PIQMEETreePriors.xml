@@ -445,6 +445,7 @@
             <connect srcID='rhoPriorMultiRho.t:$(n)'                    targetID='prior' inputName='distribution' if='inposterior(QSBirthDeathSkyMultiRho.t:$(n)) and rhoMultiRho.t:$(n)/estimate=true'>prior on sampling proportion t:$(n)</connect>
             <connect srcID='becomeUninfectiousRatePriorMultiRho.t:$(n)' targetID='prior' inputName='distribution' if='inposterior(QSBirthDeathSkyMultiRho.t:$(n)) and becomeUninfectiousRateMultiRho.t:$(n)/estimate=true'>prior on becomeUninfectiousRate.t:$(n)</connect>
             <connect srcID='reproductiveNumberPriorMultiRho.t:$(n)'     targetID='prior' inputName='distribution' if='inposterior(QSBirthDeathSkyMultiRho.t:$(n)) and reproductiveNumberMultiRho.t:$(n)/estimate=true'>prior on reproductiveNumber.t:$(n)</connect>
+            <connect srcID='rhoChangeTimes.t:$(n)'                      targetID='state' inputName='stateNode' if='inposterior(QSBirthDeathSkyMultiRho.t:$(n)) and rhoMultiRho.t:$(n)/estimate=true'>change times of the sampling proportion t:$(n)</connect>
 
             <plate var='p' range='originMultiRho,rhoMultiRho,becomeUninfectiousRateMultiRho,reproductiveNumberMultiRho'>
                 <connect srcID='$(p).t:$(n)'            targetID='state' inputName='stateNode' if='inposterior(QSBirthDeathSkyMultiRho.t:$(n)) and $(p).t:$(n)/estimate=true'/>
