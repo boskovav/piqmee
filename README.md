@@ -1,4 +1,4 @@
-PIQMEE (phylodynamic inference of quasispecies molecular evolution and epidemiology)
+PIQMEE (Phylodynamic Inference of Quasispecies Molecular Evolution and Epidemiology)
 ======
 
 PIQMEE is a [BEAST 2](http://www.beast2.org) package allowing for fast
@@ -22,8 +22,12 @@ Work on this project is made possible by the support of the following institutio
 
 * [SIB Zurich](https://www.sib.swiss)
 
-* [European Research Council under the Seventh Framework Programme of the European Commission (PhyPD: grant agreement number 335529)]*
+* [University of Vienna](https://www.univie.ac.at)
 
-*[Swiss National Science Foundation (Early PostDoc.mobility: grant number P2EZP3_184543)]
+* European Research Council under the Seventh Framework Programme of the European Commission (PhyPD: grant agreement number 335529)
 
-[1]: Boskova and Stadler, PIQMEE model, Publication In Preparation
+* Swiss National Science foundation (Early PostDoc mobility grant P2EZP3_184543)
+
+Citation
+--------
+Boskova and Stadler, PIQMEE: Bayesian phylodynamic method for analysis of large datasets with duplicate sequences, Publication In Preparation
