@@ -548,7 +548,7 @@ public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
                 // fill the transition probability matrix with move probabilities
                 Arrays.fill(probabilities, 0);
                 for (int j = 0; j < nStates; j++) {
-                    probabilities[j * 5] = Math.exp(totalBranchTime * jointBranchRate * rates[j]);
+                    probabilities[j * (nStates + 1)] = Math.exp(totalBranchTime * jointBranchRate * rates[j]);
                 }
                 likelihoodCore.setNodeMatrix(nodeIndex, i, probabilities);
             }
@@ -572,7 +572,7 @@ public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
         }
         //Update the transition probability matrix(ices) for all other branches
         //if (!node.isRoot() && (update != Tree.IS_CLEAN || branchTime != m_StoredBranchLengths[nodeIndex])) {
-        else if (!node.isRoot() && ! node.isLeaf() && (update != Tree.IS_CLEAN || branchTime != branchLengths[nodeIndex])) {
+        if (!node.isRoot() && ! node.isLeaf() && (update != Tree.IS_CLEAN || branchTime != branchLengths[nodeIndex])) {
             branchLengths[nodeIndex] = branchTime;
             final Node parent = node.getParent();
             likelihoodCore.setNodeMatrixForUpdate(nodeIndex);
