@@ -118,6 +118,9 @@ public class QuasiSpeciesUCRelaxedClockModel extends BranchRateModel.Base {
 
     @Override
     public double getRateForBranch(Node node) {
+        //since root is defined in BEAST context as a node without a parent and
+        //  we have partial branches that do not have a parent, we have to distinguish
+        //  the root by 2 criteria -- does it have a parent? if no, what is the number of the node
         if (node.isRoot() && node.getNr() == (tree.getNodeCount()-1)) {
             // root has no rate
             return 1;
@@ -330,4 +333,14 @@ public class QuasiSpeciesUCRelaxedClockModel extends BranchRateModel.Base {
     private double scaleFactor = 1.0;
     private double storedScaleFactor = 1.0;
 
+    // this is for testing purposes only
+    // set categories
+    public void setCategories(int position, int category) {
+        categories.setValue(position,category);
+    }
+
+    // set categories
+    public int getCategories(int position) {
+        return categories.getValue(position);
+    }
 }
