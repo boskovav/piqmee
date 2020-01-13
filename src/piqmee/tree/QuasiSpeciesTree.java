@@ -1123,7 +1123,7 @@ public class QuasiSpeciesTree extends Tree {
         QuasiSpeciesNode returnNode = null;
         ArrayList haplotypesAtThisNode = new ArrayList();
         // fakeHaplo the haplotype number (in the qsTree); a node in the regular that is a sequence duplicate of a previously
-        //      seen haplotype is called "fakeHaplo" since all the nodes that attach to this brach should attach
+        //      seen haplotype is called "fakeHaplo" since all the nodes that attach to this branch should attach
         //      to the branch leading to the true tip
         int fakeHaplo = -1;
         // for leaf nodes check if the sequence has been seen at another node already
@@ -1343,7 +1343,8 @@ public class QuasiSpeciesTree extends Tree {
                     newInternalNode.addChild(nodeToPlace);
                     newInternalNode.setHeight(node.getHeight());
                     if (checkThisNode != null) {
-                        if (checkThisNode.getLeft().getNr() == checkThisNodeKid.getNr())
+                        if (checkThisNode.getLeft().getNr() == checkThisNodeKid.getNr()
+                                && checkThisNode.getLeft().getHeight() == checkThisNodeKid.getHeight())
                             checkThisNode.setLeft(newInternalNode);
                         else
                             checkThisNode.setRight(newInternalNode);
