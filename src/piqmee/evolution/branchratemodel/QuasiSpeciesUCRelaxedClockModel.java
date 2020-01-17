@@ -160,64 +160,56 @@ public class QuasiSpeciesUCRelaxedClockModel extends BranchRateModel.Base {
         if (!usingQuantiles) {
             for (int i = 0; i < tree.getNodeCount(); i++) {
                 QuasiSpeciesNode node = (QuasiSpeciesNode) tree.getNode(i);
-                QuasiSpeciesNode nodeBelow;
-                // the rates of tips
-                if (node.isLeaf()) {
-                    treeRate += getRawRateForCategory(node) * node.getTotalBranchLengths();
-                    treeTime += node.getTotalBranchLengths();
-                    if (node.getHaploAboveName() != -1) {
-                        toyNode.setNr(i+tree.getNodeCount());
-                        nodeBelow = node;
-                        treeRate += getRawRateForCategory(toyNode) *
-                                (nodeBelow.getParent().getHeight() - node.getAttachmentTimesList()[0]);
-                        treeTime += nodeBelow.getParent().getHeight() - node.getAttachmentTimesList()[0];
+                if (!node.isRoot()) {
+                    // the rates of tips
+                    if (node.isLeaf()) {
+                        treeRate += getRawRateForCategory(node) * node.getTotalBranchLengths();
+                        treeTime += node.getTotalBranchLengths();
                     }
-                }
-                // the rates of internal branches
-                else if (!node.isRoot()) {
-                    // if no haplo above internal node, it is completely counted
+                    // the rates of internal branches
+                    else {
+                        // if no haplo passing through internal node, it is completely counted
+                        if (node.getContinuingHaploName() == -1){
+                            treeRate += getRawRateForCategory(node) * node.getLength();
+                            treeTime += node.getLength();
+                        }
+                    }
+                    // add to rates + times for the partial branch from first split of haplo to next node
                     if (node.getHaploAboveName() != -1) {
                         int haploNr = node.getHaploAboveName();
-                        nodeBelow = node;
-                        node = (QuasiSpeciesNode) tree.getNode(haploNr);
-                        treeRate += getRawRateForCategory(nodeBelow) *
-                                (nodeBelow.getParent().getHeight() - node.getAttachmentTimesList()[0]);
-                        treeTime += nodeBelow.getParent().getHeight() - node.getAttachmentTimesList()[0];
-                    } else {
-                        treeRate += getRawRateForCategory(node) * node.getLength();
-                        treeTime += node.getLength();
+                        toyNode.setNr(haploNr+tree.getNodeCount());
+                        QuasiSpeciesNode nodeHaplo = (QuasiSpeciesNode) tree.getNode(haploNr);
+                        treeRate += getRawRateForCategory(toyNode) *
+                                (node.getParent().getHeight() - nodeHaplo.getAttachmentTimesList()[0]);
+                        treeTime += node.getParent().getHeight() - nodeHaplo.getAttachmentTimesList()[0];
                     }
-                }
-                // add to rates + times for the partial branch from first split of haplo to next node
-                if (node.getHaploAboveName() != -1) {
-
                 }
             }
         } else {
             for (int i = 0; i < tree.getNodeCount(); i++) {
                 QuasiSpeciesNode node = (QuasiSpeciesNode) tree.getNode(i);
-                QuasiSpeciesNode nodeBelow;
-                if (node.isLeaf()) {
-                    treeRate += getRawRateForQuantile(node) * node.getTotalBranchLengths();
-                    treeTime += node.getTotalBranchLengths();
-                    if (node.getHaploAboveName() != -1) {
-                        toyNode.setNr(i+tree.getNodeCount());
-                        nodeBelow = node;
-                        treeRate += getRawRateForQuantile(toyNode) *
-                                (nodeBelow.getParent().getHeight() - node.getAttachmentTimesList()[0]);
-                        treeTime += nodeBelow.getParent().getHeight() - node.getAttachmentTimesList()[0];
+                if (!node.isRoot()) {
+                    // the rates of tips
+                    if (node.isLeaf()) {
+                        treeRate += getRawRateForQuantile(node) * node.getTotalBranchLengths();
+                        treeTime += node.getTotalBranchLengths();
                     }
-                } else if (!node.isRoot()) {
+                    // the rates of internal branches
+                    else {
+                        // if no haplo passing through internal node, it is completely counted
+                        if (node.getContinuingHaploName() == -1) {
+                            treeRate += getRawRateForQuantile(node) * node.getLength();
+                            treeTime += node.getLength();
+                        }
+                    }
+                    // add to rates + times for the partial branch from first split of haplo to next node
                     if (node.getHaploAboveName() != -1) {
                         int haploNr = node.getHaploAboveName();
-                        nodeBelow = node;
-                        node = (QuasiSpeciesNode) tree.getNode(haploNr);
-                        treeRate += getRawRateForQuantile(nodeBelow) *
-                                (nodeBelow.getParent().getHeight() - node.getAttachmentTimesList()[0]);
-                        treeTime += nodeBelow.getParent().getHeight() - node.getAttachmentTimesList()[0];
-                    } else {
-                        treeRate += getRawRateForQuantile(node) * node.getLength();
-                        treeTime += node.getLength();
+                        toyNode.setNr(haploNr + tree.getNodeCount());
+                        QuasiSpeciesNode nodeHaplo = (QuasiSpeciesNode) tree.getNode(haploNr);
+                        treeRate += getRawRateForQuantile(toyNode) *
+                                (node.getParent().getHeight() - nodeHaplo.getAttachmentTimesList()[0]);
+                        treeTime += node.getParent().getHeight() - nodeHaplo.getAttachmentTimesList()[0];
                     }
                 }
             }

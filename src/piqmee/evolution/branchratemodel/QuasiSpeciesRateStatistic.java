@@ -147,8 +147,10 @@ public class QuasiSpeciesRateStatistic extends RateStatistic {
                         ratesForBranchLengths[l] = rate;
                         l++;
                     }
-                    // if above the tip, it has toyNode branchRate
-                    if (attachTimes[0] < child.getParent().getHeight()){
+                    // it always has toyNode branchRate
+                    // but check what length to count for the branch rate
+                    //  is haplo above tip count it here, if haplo above internal node count it below
+                    if (child.getHaploAboveName() != -1) {
                         toyNode.setNr(tree.getNodeCount()+child.getNr());
                         rate = branchRateModel.getRateForBranch(toyNode);
                         rates[k] = rate;
@@ -179,8 +181,10 @@ public class QuasiSpeciesRateStatistic extends RateStatistic {
                         l++;
                     }
                     // Case 2: it can be that a haplo starts above this node, in that case
-                    //          only the partial branch has the branch's rate
+                    //          count only the rate for the partial branch which has its own toyNode branchRate
                     else if (haploAboveChild != -1) {
+                        toyNode.setNr(tree.getNodeCount()+haploAboveChild);
+                        rate = branchRateModel.getRateForBranch(toyNode);
                         rates[k] = rate;
                         k++;
                         // and one of the haplo's branches was split in two
@@ -190,8 +194,9 @@ public class QuasiSpeciesRateStatistic extends RateStatistic {
                         ratesForBranchLengths[l] = rate;
                         l++;
                     }
-                    // Case 3: it can be that a haplo passes this branch, in that case the rate is the same as for the
-                    //          corresponding tip branch rate
+                    // Case 3: it can be that a haplo passes this branch, in that case
+                    //         one of the haplo's branches was split in two and the rate
+                    //         is the same as for the corresponding tip branch rate
                     else {
                         rates[k] = branchRateModel.getRateForBranch(tree.getNode(haploContChild));
                     }

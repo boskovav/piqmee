@@ -522,19 +522,35 @@ public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
         //    tip node to hold the probability of no change in the QS sequence for the whole duration of the QS
         //  For the relaxed clock model, this also means we need to create a new "branch rate category" for when haplo
         //    starts just above the tip by splitting the rate for the branch before and after the the haplo start
-        double partBranchTime = 0;
-        double partBranchRate = 0;
-        if (node.getHaploAboveName() != -1) {
-            if (node.isLeaf()){
-                toyNode.setNr(nodeCount+node.getNr());
+
+        // Update the transition probability for the partial branches (internal node to QS start)
+        if (node.getHaploAboveName() != -1){
+            int haploNr = node.getHaploAboveName();
+            double firstBranchingTime = ((QuasiSpeciesNode) Tree.getNode(haploNr)).getAttachmentTimesList()[0];
+            toyNode.setNr(nodeCount+haploNr);
+            double partBranchRate = 0.0;
+            double partBranchTime = 0.0;
+            if (node.isRoot()){
+                partBranchRate = 1;
+                partBranchTime = (node.getLength() - (firstBranchingTime - node.getHeight())) * partBranchRate;
+            } else {
                 partBranchRate = branchRateModel.getRateForBranch(toyNode);
-                partBranchTime = (node.getLength() - (((QuasiSpeciesNode)
-                        Tree.getNode(node.getHaploAboveName())).getAttachmentTimesList()[0] - node.getHeight())) * partBranchRate;
+                partBranchTime = (node.getLength() - (firstBranchingTime - node.getHeight())) * partBranchRate;
             }
-            else {
-                partBranchRate = branchRate;
-                partBranchTime = (node.getLength() - (((QuasiSpeciesNode)
-                        Tree.getNode(node.getHaploAboveName())).getAttachmentTimesList()[0] - node.getHeight())) * partBranchRate;
+            if (update != Tree.IS_CLEAN || partBranchTime != branchLengths[nodeCount + haploNr]) {
+                branchLengths[nodeCount + haploNr] = partBranchTime;
+                final Node parent = node.getParent();
+                likelihoodCore.setNodeMatrixForUpdate(nodeCount + haploNr);
+                for (int i = 0; i < siteModel.getCategoryCount(); i++) {
+                    final double jointBranchRate = siteModel.getRateForCategory(i, toyNode) * partBranchRate;
+                    if (parent != null)
+                        substitutionModel.getTransitionProbabilities(null, parent.getHeight(), firstBranchingTime, jointBranchRate, probabilities);
+                    else
+//                    substitutionModel.getTransitionProbabilities(null, originHeight, firstBranchingTime, jointBranchRate, probabilities);
+                        substitutionModel.getTransitionProbabilities(null, firstBranchingTime, firstBranchingTime, jointBranchRate, probabilities);
+                    likelihoodCore.setNodeMatrix(nodeCount + haploNr, i, probabilities);
+                }
+                update |= Tree.IS_DIRTY;
             }
         }
         // First update the transition probability matrix(ices) for this branch
@@ -554,25 +570,9 @@ public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
             }
             update |= Tree.IS_DIRTY;
         }
-        // Update the transition probability for the partial branches (internal node to QS start)
-        if (node.getHaploAboveName() != -1 && (update != Tree.IS_CLEAN || partBranchTime != branchLengths[nodeCount + node.getHaploAboveName()])) {
-            branchLengths[nodeCount + node.getHaploAboveName()] = partBranchTime;
-            final Node parent = node.getParent();
-            likelihoodCore.setNodeMatrixForUpdate(nodeCount + node.getHaploAboveName());
-            for (int i = 0; i < siteModel.getCategoryCount(); i++) {
-                final double jointBranchRate = siteModel.getRateForCategory(i, node) * partBranchRate;
-                if (parent != null)
-                    substitutionModel.getTransitionProbabilities(null, parent.getHeight(), ((QuasiSpeciesNode) Tree.getNode(node.getHaploAboveName())).getAttachmentTimesList()[0], jointBranchRate, probabilities);
-                else
-//                    substitutionModel.getTransitionProbabilities(null, originHeight, ((QuasiSpeciesNode) Tree.getNode(node.getHaploAboveName())).getAttachmentTimesList()[0], jointBranchRate, probabilities);
-                    substitutionModel.getTransitionProbabilities(null, ((QuasiSpeciesNode) Tree.getNode(node.getHaploAboveName())).getAttachmentTimesList()[0], ((QuasiSpeciesNode) Tree.getNode(node.getHaploAboveName())).getAttachmentTimesList()[0], jointBranchRate, probabilities);
-                likelihoodCore.setNodeMatrix(nodeCount + node.getHaploAboveName(), i, probabilities);
-            }
-            update |= Tree.IS_DIRTY;
-        }
         //Update the transition probability matrix(ices) for all other branches
         //if (!node.isRoot() && (update != Tree.IS_CLEAN || branchTime != m_StoredBranchLengths[nodeIndex])) {
-        if (!node.isRoot() && ! node.isLeaf() && (update != Tree.IS_CLEAN || branchTime != branchLengths[nodeIndex])) {
+        else if (!node.isRoot() && (update != Tree.IS_CLEAN || branchTime != branchLengths[nodeIndex])) {
             branchLengths[nodeIndex] = branchTime;
             final Node parent = node.getParent();
             likelihoodCore.setNodeMatrixForUpdate(nodeIndex);

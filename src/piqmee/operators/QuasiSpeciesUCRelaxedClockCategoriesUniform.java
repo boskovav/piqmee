@@ -41,10 +41,8 @@ public class QuasiSpeciesUCRelaxedClockCategoriesUniform extends Operator {
         int leafCount = qsTree.getLeafNodeCount();
         int intNodeCount = qsTree.getInternalNodeCount();
         int nodeCount = leafCount + intNodeCount;
-        while ((index >= nodeCount && ((QuasiSpeciesNode)qsTree.getNode(index-nodeCount)).getHaploAboveName() == -1)
-                || (index < leafCount && ((QuasiSpeciesNode)qsTree.getNode(index)).getAttachmentTimesList().length < 2)
-                || (index >= leafCount && index < nodeCount && ((QuasiSpeciesNode)qsTree.getNode(index)).getContinuingHaploName() != -1 &&
-                ((QuasiSpeciesNode)qsTree.getNode(index)).getHaploAboveName() == -1 ))
+        while ( (index < leafCount && ((QuasiSpeciesNode)qsTree.getNode(index)).getAttachmentTimesList().length < 2)
+                || (index >= leafCount && index < nodeCount && ((QuasiSpeciesNode)qsTree.getNode(index)).getContinuingHaploName() != -1))
             index = Randomizer.nextInt(parameter.getDimension());
 
         int newValue = Randomizer.nextInt(upperIndex - lowerIndex + 1) + lowerIndex; // from 0 to n-1, n must > 0,
