@@ -302,7 +302,7 @@ public class QuasiSpeciesTreeLikelihoodTests {
         //
         // internal nodes: 7(parent of t3,t4)=0; 8(parent of t5,t6)=0, 9(parent of 7,8 === partial branch above A)=2,
         //                 10(parent of t0,t1)=2, 11(parent of 10,t2)=2, 12 (root of the tree)=0
-        // average for subtree of haplotype A == 2.5*0+4*0=0 === so first catefory of 3 --- so category 0
+        // average for subtree of haplotype A == 2.5*0+4*0=0 === so first category of 3 --- so category 0
         //                                       here 2.5 is the branch length of branch 7+8 and 4 is the branch length of 3+4+5+6
         int[] categories = {0,0,0,0,2,2,0,2,2,0,2};
         for (int i=0; i<11; i++) {
@@ -483,4 +483,116 @@ public class QuasiSpeciesTreeLikelihoodTests {
         // PIQMEE has a way lower likelihood value, while CLASSIC has just a slightly lower value
     }
 
+    /**
+     * test at the median likelihood value for the CLASSIC model
+     */
+    @Test
+    public void testJC69AndRelaxedClockLikelihoodMedianforCLASSIC() throws Exception {
+        // Set up JC69 model: uniform freqs, kappa = 1, 0 gamma categories
+        QuasiSpeciesTree tree = QuasiSpeciesTestCase.setTreeFromFullNewick("(((t3:1.,t4:1.):2.0,(t5:1.5,t6:0.5):0.5):1.0,((t0:1.5,t1:0.5):1.,t2:0.5):1.5);", new String[] {"C", "G", "T", "A", "A", "A", "A"});
+        Tree treeNormal = new TreeParser("(((t3:1.,t4:1.):2.0,(t5:1.5,t6:0.5):0.5):1.0,((t0:1.5,t1:0.5):1.,t2:0.5):1.5);",false);
+
+        Alignment data = QuasiSpeciesTestCase.getAlignment(new String[] {"C", "G", "T", "A", "A", "A", "A"});
+        Alignment dataNormal = QuasiSpeciesTestCase.getAlignment(new String[] {"C", "G", "T", "A", "A", "A", "A"});
+
+        JukesCantor JC = new JukesCantor();
+        JC.initAndValidate();
+
+        SiteModel siteModel1 = new SiteModel();
+        siteModel1.initByName("mutationRate", "1.0", "gammaCategoryCount", "4", "shape", "0.5612565047930533", "substModel", JC);
+
+        SiteModel siteModel2 = new SiteModel();
+        siteModel2.initByName("mutationRate", "1.0", "gammaCategoryCount", "4", "shape", "0.7755492449693009", "substModel", JC);
+
+
+        LogNormalDistributionModel uldistr1 = new LogNormalDistributionModel();
+        uldistr1.initByName("M","1.0","S","0.8806322765682721","meanInRealSpace",true);
+
+        LogNormalDistributionModel uldistr2 = new LogNormalDistributionModel();
+        uldistr2.initByName("M","1.0","S","2.9324292919674435","meanInRealSpace",true);
+
+        UCRelaxedClockModel branchModelNormal1 = new UCRelaxedClockModel();
+        branchModelNormal1.initByName("distr",uldistr1,"clock.rate","7.835061389720933","rateCategories","13","numberOfDiscreteRates","3","tree",treeNormal);
+        UCRelaxedClockModel branchModelNormal2 = new UCRelaxedClockModel();
+        branchModelNormal2.initByName("distr",uldistr2,"clock.rate","9.349074968454529","rateCategories","13","numberOfDiscreteRates","3","tree",treeNormal);
+        // likelihood value -9.1312
+        // Sample	posterior	likelihood	prior	BDTreelikelihood	TreeHeight	ucldMean	ucldStdev	rate.mean	rate.variance	rate.coefficientOfVariation	categoryForBranchNr1	categoryForBranchNr2	categoryForBranchNr3	categoryForBranchNr4	categoryForBranchNr5	categoryForBranchNr6	categoryForBranchNr7	categoryForBranchNr8	categoryForBranchNr9	categoryForBranchNr10	categoryForBranchNr11	categoryForBranchNr12	categoryForBranchNr13	gammaShape	origin	reproductiveNumber	becomeUninfectiousRate	samplingProportion	rho	birth	growth-rate	birthRho	death	sampling
+        // 117380000	-1090.188086168279	-9.131287623950689	-1081.0567985443283	-1045.2636184640642	4.0	7.835061389720933	0.8806322765682721	5.320670415838548	11.620493928657105	0.5932991089843568	1	0	2	1	0	1	1	2	1	0	1	1	0	0.5612565047930533	1000.0	2.0	1.0	1.0E-4	1.0	2.0	1.0	2.0	0.9999	1.0E-4
+        // 431800000	-1090.4023084330631	-9.13121714855862	-1081.2710912845046	-1045.2636184640642	4.0	9.349074968454529	2.9324292919674435	0.7553291837896942	1.054574266563593	1.3224439761724611	2	2	0	2	0	1	1	2	1	1	1	0	0	0.7755492449693009	1000.0	2.0	1.0	1.0E-4	1.0	2.0	1.0	2.0	0.9999	1.0E-4
+        //from log file categories for branches are 1	0	2	1	0	1	1	2	1	0	1	1	0 (step 117380000)
+        //                                      and 2	2	0	2	0	1	1	2	1	1	1	0	0 (step 431800000)
+        // branches are t0,t1,t2,t3,t4,t5,t6, 7(parent t0,t1),8(parent 7,t2), 9(parent t3,t4), 10(parent t5,t6), 11(parent 9,10), 12 root
+        //
+        // order of branches in our read in tree is different, so we need to shuffle the rates
+        // order of branches here is:
+        //              t0,t1,t2,t3,t4,t5,t6, 7(parent t3,t4),8(parent t5,t6), 9(parent 7,8), 10(parent t0,t1), 11(parent 10,t2), 12 root
+        //
+        // thus new order of categories is          1,0,2,1,0,1,1,0,1,1,2,1,0  &   2,2,0,2,0,1,1,1,1,0,2,1,0
+        int[] categoriesNormal1   = {1,0,2,1,0,1,1,0,1,1,2,1,0};
+        int[] categoriesNormal2   = {2,2,0,2,0,1,1,1,1,0,2,1,0};
+        for (int i=0; i<12; i++) {
+            branchModelNormal1.setCategories(i,categoriesNormal1[i]);
+            branchModelNormal2.setCategories(i,categoriesNormal2[i]);
+        }
+
+        QuasiSpeciesUCRelaxedClockModel branchModel1 = new QuasiSpeciesUCRelaxedClockModel();
+        branchModel1.initByName("distr",uldistr1,"clock.rate","9.6561609453625","rateCategories","11","numberOfDiscreteRates","3","tree",tree);
+        QuasiSpeciesUCRelaxedClockModel branchModel2 = new QuasiSpeciesUCRelaxedClockModel();
+        branchModel2.initByName("distr",uldistr2,"clock.rate","9.6561609453625","rateCategories","11","numberOfDiscreteRates","3","tree",tree);
+        // search through PIQMEE lig file for likelihood values -9.1312 gives zero hits
+        //      for value -9.131 gives 4 hits
+        //  2	2	2	0	0	0	0	0	1	0	1
+        //  2	0	1	1	1	2	2	1	2	1	0
+        //  1	1	0	1	1	2	0	0	2	1	2
+        //  1	2	0	0	2	1	2	0	1	2	1
+        //
+        // from the CLASSIC model above we have for the first set: 1,0,2,1,0,1,1,0,1,1,2,1,0
+        // tips: t0=1,t1=0,t2=2,t3=1,t4=0,t5=1,t6=1  - so for piqmee tip t3=1*1 t4=1*0 t5=1.5*1 t6=0.5*1
+        //
+        // internal nodes: 7(parent of t3,t4)=0; 8(parent of t5,t6)=1, 9(parent of 7,8 === partial branch above A)=1,
+        //                 10(parent of t0,t1)=2, 11(parent of 10,t2)=1, 12 (root of the tree)=0 but is irrelevant
+        // average for subtree of haplotype A == 2.5*0 + 1*1 + 1*0 + 1.5*1 + 0.5*1 = 0.46 === so first category of 3 --- so category 0
+        //                                       here 2.5 is the branch length of branch 7+8 and 4 is the branch length of 3+4+5+6
+        int[] categories1 = {0,0,0,0,2,1,0,1,0,2,1};
+        // from the CLASSIC model above we have for the first set: 2,2,0,2,0,1,1,1,1,0,2,1,0
+        // tips: t0=2,t1=2,t2=0,t3=2,t4=0,t5=1,t6=1  - so for piqmee tip t3=1*2 t4=1*0 t5=1.5*1 t6=0.5*1
+        //
+        // internal nodes: 7(parent of t3,t4)=1; 8(parent of t5,t6)=1, 9(parent of 7,8 === partial branch above A)=0,
+        //                 10(parent of t0,t1)=2, 11(parent of 10,t2)=1, 12 (root of the tree)=0 but is irrelevant
+        // average for subtree of haplotype A == 2.5*1 + 1*2 + 1*0 + 1.5*1 + 0.5*1 = 1 === so second category of 3 --- so category 1
+        //                                       here 2.5 is the branch length of branch 7+8 and 4 is the branch length of 3+4+5+6
+        int[] categories2 = {0,0,0,1,2,1,0,2,2,0,0};
+        for (int i=0; i<11; i++) {
+            branchModel1.setCategories(i,categories1[i]);
+            branchModel2.setCategories(i,categories2[i]);
+        }
+
+        // QS likelihood
+        QuasiSpeciesTreeLikelihood likelihood1 = newQSTreeLikelihood();
+        likelihood1.initByName("data", data, "tree", tree, "siteModel", siteModel1, "branchRateModel", branchModel1);
+        double logQSP1 = 0;
+        logQSP1 = likelihood1.calculateLogP();
+        QuasiSpeciesTreeLikelihood likelihood2 = newQSTreeLikelihood();
+        likelihood2.initByName("data", data, "tree", tree, "siteModel", siteModel2, "branchRateModel", branchModel2);
+        double logQSP2 = 0;
+        logQSP2 = likelihood2.calculateLogP();
+
+        // normal likelihood
+        TreeLikelihood likelihoodNormal1 = newTreeLikelihood();
+        likelihoodNormal1.initByName("data", dataNormal, "tree", treeNormal, "siteModel", siteModel1, "branchRateModel", branchModelNormal1);
+        double logP1 = 0;
+        logP1 = likelihoodNormal1.calculateLogP();
+        TreeLikelihood likelihoodNormal2 = newTreeLikelihood();
+        likelihoodNormal2.initByName("data", dataNormal, "tree", treeNormal, "siteModel", siteModel2, "branchRateModel", branchModelNormal2);
+        double logP2 = 0;
+        logP2 = likelihoodNormal2.calculateLogP();
+
+        // compare the two
+        assertEquals(logP1, -9.131287623950689, BEASTTestCase.PRECISION);
+        assertEquals(logP2, -9.13121714855862, BEASTTestCase.PRECISION);
+        assertEquals(logQSP1, -9.071017893578265, BEASTTestCase.PRECISION);
+        assertEquals(logQSP2, -8.409375927260333, BEASTTestCase.PRECISION);
+        assertTrue(logP1 < logQSP1);
+        assertTrue(logP2 < logQSP2);
+    }
 }
