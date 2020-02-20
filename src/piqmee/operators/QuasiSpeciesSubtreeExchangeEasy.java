@@ -119,29 +119,6 @@ public class QuasiSpeciesSubtreeExchangeEasy extends QuasiSpeciesTreeOperator{
             logHastingsRatio -= Math.log(numberofnodesback);
         }
 
-//        if (! isNarrowInput.get()){
-//            int numberofnodesforwardwideback = 0;
-//            for (int i = 0; i < qsTree.getNodeCount(); i++){
-//                for (int j = i + 1; j < qsTree.getNodeCount(); j++) {
-//                    srcNode = qsTree.getNode(i);
-//                    destNode = qsTree.getNode(j);
-//                    if (isaValidNodePairForWide(srcNode, destNode)) {
-//                        numberofnodesforwardwideback += 1;
-//                    }
-//                    srcNode = qsTree.getNode(j);
-//                    destNode = qsTree.getNode(i);
-//                    if (isaValidNodePairForWide(srcNode, destNode)) {
-//                        numberofnodesforwardwideback += 1;
-//                    }
-//                }
-//            }
-//            if (numberofnodesforwardwideback != numberofnodesforwardwide){
-//                System.out.println("QuasiSpeciesSubtreeExchangeEasy: wide : number of possible forth and back moves is not the same");
-//                System.out.println(numberofnodesforwardwide);
-//                System.out.println(numberofnodesforwardwide);
-//            }
-//        }
-
         // RETURN log(HASTINGS RATIO)
         return logHastingsRatio;
     }
