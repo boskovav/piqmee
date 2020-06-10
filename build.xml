@@ -117,7 +117,7 @@
         <echo>Downloading dependencies...</echo>
 
         <echo>BDSKY:</echo>
-        <get src="https://github.com/BEAST2-Dev/bdsky/releases/download/1.4.0/BDSKY.addon.1.4.0.zip"
+        <get src="https://github.com/BEAST2-Dev/bdsky/releases/download/v1.4.3/BDSKY.addon.v1.4.3.zip"
              dest="${build-lib}/BDSKY.zip"/>
         <mkdir dir="${build-lib}/BDSKY"/>
         <unzip src="${build-lib}/BDSKY.zip" dest="${build-lib}/BDSKY"/>
