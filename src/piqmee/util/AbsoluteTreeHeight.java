@@ -18,7 +18,7 @@ public class AbsoluteTreeHeight extends CalculationNode implements Function, Log
             "Quasi-species tree whose attachment times should be logged.",
             Input.Validate.REQUIRED);
 
-    private QuasiSpeciesTree qsTree;
+    protected QuasiSpeciesTree qsTree;
 
     public AbsoluteTreeHeight() { };
 

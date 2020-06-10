@@ -12,18 +12,18 @@ import java.util.Arrays;
 @Description("A node in a quasi-species phylogenetic tree.")
 public class QuasiSpeciesNode extends Node {
 
-    private int haploAboveName = -1;
-    private int continuingHaploName = -1;
+    protected int haploAboveName = -1;
+    protected int continuingHaploName = -1;
 //    private int startBranchCounts = 1;
 
     // attachment times are sorted from the biggest to the smallest
     private double[] attachmentTimesList;
     // tip times are sorted from the most recent to the most into the past
     // NOTICE: the real tip in the tree has the value of tipTimesList[0]
-    private double[] tipTimesList;
+    protected double[] tipTimesList;
     // same order as tipTimesList count in tipTimesCountList[0] includes the real tip
-    private int[] tipTimesCountList;
-    private int parentHaplo = -1;
+    protected int[] tipTimesCountList;
+    protected int parentHaplo = -1;
 
     @Override
     public void initAndValidate(){

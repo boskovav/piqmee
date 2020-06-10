@@ -29,8 +29,8 @@ public class QuasiSpeciesTree extends Tree {
            // Input.Validate.REQUIRED);
 
     protected TraitSet haplotypeCountsSet;
-    private Map<String,Integer> haplotypeCounts;
-    private String qsLabel = "qscounts";
+    protected Map<String,Integer> haplotypeCounts;
+    protected String qsLabel = "qscounts";
 
     public QuasiSpeciesTree() { }
 
@@ -303,7 +303,7 @@ public class QuasiSpeciesTree extends Tree {
      * @param node node for which the haplo count is to be set
      * @param value new haplotype count
      */
-    private void setHaploCounts(Node node, int value){
+    protected void setHaploCounts(Node node, int value){
         haplotypeCounts.put(node.getID(), value);
     }
 
@@ -313,7 +313,7 @@ public class QuasiSpeciesTree extends Tree {
      * @param haploCounts new set of haplotype counts
      * @param tree a tree whose nodes are the be used for assignment
      */
-    private void setHaploCounts(TraitSet haploCounts, Tree tree){
+    protected void setHaploCounts(TraitSet haploCounts, Tree tree){
         for (Node node : tree.getExternalNodes()) {
 //            if (((QuasiSpeciesNode) node).getAttachmentTimesList().length != (int) haploCounts.getValue(node.getID()))
 //                throw new RuntimeException("QuasiSpeciesTree class: The new to be set haploCount is not " +
@@ -326,7 +326,7 @@ public class QuasiSpeciesTree extends Tree {
      * Clears the number of haplotype counts for each haplo
      *
      */
-    private void clearHaploCounts(Tree tree){
+    protected void clearHaploCounts(Tree tree){
         for (Node node : tree.getExternalNodes()) {
             haplotypeCounts.remove(node.getID());
         }
@@ -363,7 +363,7 @@ public class QuasiSpeciesTree extends Tree {
      *         output) Array holding for each haplotype = node (#this.getExternalNodes()) the haplotype
      *         it arises from, held in array at position determined by node.getNr()
      */
-    private void fillParentHaplo(){
+    protected void fillParentHaplo(){
         // set all the parent haplotype to -1
         clearParentHaploNames();
         clearContinuingHaploNames();
@@ -761,7 +761,7 @@ public class QuasiSpeciesTree extends Tree {
      *
      * @return Flattened tree.
      */
-    private Tree getFlattenedHaploTree() {
+    protected Tree getFlattenedHaploTree() {
         // Create new tree to modify.  Note that copy() doesn't
         // initialise the node array lists, so initArrays() must
         // be called manually.
@@ -789,7 +789,7 @@ public class QuasiSpeciesTree extends Tree {
      *
      * @param flatHaploTree
      */
-    private void initFromFlatHaploTree(Tree flatHaploTree) {
+    protected void initFromFlatHaploTree(Tree flatHaploTree) {
 
         // Create quasispecies tree
         QuasiSpeciesNode[] quasiSpeciesNodes = new QuasiSpeciesNode[flatHaploTree.getNodeCount()];
@@ -1378,7 +1378,7 @@ public class QuasiSpeciesTree extends Tree {
      * Helper method used by processNextNodeOfFullNewickTree to
      * expand the tipTimes and tipTimesCount arrays by one
      */
-    private void addNewTimesAndCountEntry(QuasiSpeciesNode seenNode, double[] tipTimesListTmp,
+    protected void addNewTimesAndCountEntry(QuasiSpeciesNode seenNode, double[] tipTimesListTmp,
                                           int[] tipTimesCountListTmp, double newHeight, int newCount) {
         // expand the TipTimesList and add a new value
         double[] tipTimesTempArray = tipTimesListTmp;
@@ -1395,7 +1395,7 @@ public class QuasiSpeciesTree extends Tree {
     }
 
     /**
-     * Helper method used by initFromFullTree/initFromUniqueHaploTree to
+     * Helper method used by initFromFullTree/initFromUniqueHaploTree/initFromFlatHaploTree to
      * assign to each node in the tree continuingHaplo and haploAboveName.
      */
     private void assignContinuingHaploAndHaploAbove() {
@@ -1421,7 +1421,7 @@ public class QuasiSpeciesTree extends Tree {
      * @param tree
      * @return
      */
-    private double[][] getSequenceDistances(Alignment data, Tree tree) {
+    protected double[][] getSequenceDistances(Alignment data, Tree tree) {
         // Get the distances for the sequences:
         Distance distance = new DifferenceCount();
         ((Distance.Base) distance).setPatterns(data);
@@ -1447,7 +1447,7 @@ public class QuasiSpeciesTree extends Tree {
      * @param nextNr
      * @return
      */
-    private int numberInternalNodes(Node node, int nextNr) {
+    protected int numberInternalNodes(Node node, int nextNr) {
         if (node.isLeaf())
             return nextNr;
 
