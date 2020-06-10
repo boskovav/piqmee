@@ -1,4 +1,4 @@
-<addon name='PIQMEE' version='0.0.3'>
+<addon name='PIQMEE' version='1.0.0'>
     <depends on='BDSKY' atleast='1.4.3'/>
-    <depends on='beast2' atleast='2.5.1'/>
+    <depends on='beast2' atleast='2.5.0'/>
 </addon>
