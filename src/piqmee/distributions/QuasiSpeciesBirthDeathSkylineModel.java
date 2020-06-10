@@ -23,8 +23,10 @@ import java.util.stream.IntStream;
  */
 @Description("Model for calculating birth-death likelihood for quasispecies (ultrametric) trees ")
 
-@Citation(value = "Boskova, V., Stadler, T. (2019) \n" +
-        "PIQMEE: Bayesian phylodynamic method for analysis of large datasets with duplicate sequences")
+@Citation(value = "Boskova, V., Stadler, T. (2020) \n" +
+        "PIQMEE: Bayesian phylodynamic method for analysis of large datasets with duplicate sequences.\n" +
+        "Molecular Biology and Evolution msaa136.",
+        year = 2020, firstAuthorSurname = "Boskova", DOI="10.1093/molbev/msaa136")
 public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel{
 
     // Empty constructor as required:
