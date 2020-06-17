@@ -30,4 +30,4 @@ Work on this project is made possible by the support of the following institutio
 
 Citation
 --------
-Boskova and Stadler, PIQMEE: Bayesian phylodynamic method for analysis of large datasets with duplicate sequences, Publication In Preparation
+Veronika Boskova, Tanja Stadler, PIQMEE: Bayesian phylodynamic method for analysis of large datasets with duplicate sequences, Molecular Biology and Evolution, msaa136, https://doi.org/10.1093/molbev/msaa136
