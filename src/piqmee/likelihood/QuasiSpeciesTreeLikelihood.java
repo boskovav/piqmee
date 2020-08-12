@@ -739,8 +739,10 @@ public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
         Alignment fullData = data.get();
         int tipCount = leafs.size();
         ArrayList sequences = new ArrayList(tipCount);
+        // since taxonSet is not always ordered according to the sequences, we need to reorder the alignment
+        Alignment fullsortedAlignment = new Alignment(fullData.sequenceInput.get(),fullData.dataTypeInput.get());
         for (int i = 0; i < tipCount; i++){
-            sequences.add(leafs.get(i).getNr(),fullData.sequenceInput.get().get(fullData.getTaxonIndex(leafs.get(i).getID())));
+            sequences.add(leafs.get(i).getNr(),fullsortedAlignment.sequenceInput.get().get(fullsortedAlignment.getTaxonIndex(leafs.get(i).getID())));
         }
 
         Alignment subsetData = new Alignment(sequences, fullData.dataTypeInput.get());
