@@ -4,6 +4,8 @@ import beast.core.*;
 import beast.evolution.alignment.Alignment;
 import beast.evolution.tree.TraitSet;
 import beast.util.ClusterTree;
+import beast.util.ClusterTree.*;
+import java.util.*;
 
 import java.util.List;
 
@@ -20,6 +22,8 @@ public class QuasiSpeciesClusterTree extends QuasiSpeciesTree implements StateNo
     public Input<Boolean> collapseIdenticalSequencesInput = new Input<>("collapseIdenticalSequences",
             "Should nodes that have identical sequences be collapsed to one haplotype? " +
                     "Default true.", true);
+    final public Input<Type> clusterTypeInput = new Input<>("clusterType", "type of clustering algorithm used for generating initial beast.tree. " +
+            "Should be one of " + Arrays.toString(Type.values()) + " (default " + Type.average + ")", Type.average, Type.values());
 
     public QuasiSpeciesClusterTree() {
     }
@@ -33,7 +37,7 @@ public class QuasiSpeciesClusterTree extends QuasiSpeciesTree implements StateNo
         ClusterTree inputTree = new ClusterTree();
         inputTree.setDateTrait(timeTraitSet);
         inputTree.initByName(
-                "clusterType", "upgma",
+                "clusterType", clusterTypeInput.get(),
                 "taxa", dataInput.get());
 
         if (haplotypeCountsSet != null && !haplotypeCountIsAll1(haplotypeCountsSet))
