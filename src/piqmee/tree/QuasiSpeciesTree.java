@@ -24,6 +24,9 @@ import java.util.regex.Pattern;
 
 public class QuasiSpeciesTree extends Tree {
 
+    final public Input<Alignment> dataInput = new Input<>("data",
+            "Alignment data used for calculating distances for clustering",
+            Input.Validate.REQUIRED);
     public Input<TraitSet> haplotypeCountsInput =
             new Input<TraitSet>("haplotypeCounts","Count of sequences for each haplotype (including the one representative of each haplotype in the tree input)");//,
            // Input.Validate.REQUIRED);
@@ -140,6 +143,13 @@ public class QuasiSpeciesTree extends Tree {
         if (haplotypeCountsInput.get() != null) {
             haplotypeCountsSet = haplotypeCountsInput.get();
             qsLabel = haplotypeCountsSet.getTraitName();
+        } else if (m_initial.get() != null && ((QuasiSpeciesTree)m_initial.get()).haplotypeCountsInput.get() != null) {
+            haplotypeCountsInput = ((QuasiSpeciesTree) m_initial.get()).haplotypeCountsInput;
+            haplotypeCountsSet = ((QuasiSpeciesTree)m_initial.get()).haplotypeCountsInput.get();
+            qsLabel = haplotypeCountsSet.getTraitName();
+        } else if (m_initial.get() != null && ((QuasiSpeciesTree)m_initial.get()).haplotypeCountsSet != null) {
+            haplotypeCountsSet = ((QuasiSpeciesTree)m_initial.get()).haplotypeCountsSet;
+            qsLabel = haplotypeCountsSet.getTraitName();
         }
 
         if (haplotypeCountsSet == null) {
@@ -156,9 +166,9 @@ public class QuasiSpeciesTree extends Tree {
                 try {
                     dummyTraitSet.initByName("traitname", "qscounts", "taxa", getTaxonset(), "value", sb.toString());
                     if (getID() == null)
-                        dummyTraitSet.setID("haplotypeCountsTraitSetInput.t:dummy");
+                        dummyTraitSet.setID("haplotypeCounts.t:dummy");
                     else
-                    dummyTraitSet.setID("haplotypeCountsTraitSetInput.t:" + BeautiDoc.parsePartition(getID()));
+                    dummyTraitSet.setID("haplotypeCounts.t:" + BeautiDoc.parsePartition(getID()));
                     setHaplotypeCountsTrait(dummyTraitSet);
                 } catch (Exception ex) {
                     System.out.println("Error setting default haplotype count trait.");

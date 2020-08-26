@@ -45,20 +45,6 @@
 	                       beast.core.MCMC.state,
 	                       beast.core.MCMC.distribution,
 	                       beast.core.MCMC.init,
-	                       beast.evolution.tree.Tree,
-	                       beast.evolution.tree.Tree.trait,
-                           beast.evolution.tree.Tree.taxa,
-                           beast.evolution.tree.Tree.taxonset,
-                           beast.util.TreeParser.initial,
-                           beast.util.TreeParser.taxa,
-                           beast.util.TreeParser.taxonset,
-                           beast.util.TreeParser.trait,
-                           beast.util.TreeParser.estimate,
-                           beast.util.ClusterTree.initial,
-                           beast.util.ClusterTree.taxa,
-                           beast.util.ClusterTree.taxonset,
-                           beast.util.ClusterTree.trait,
-                           beast.util.ClusterTree.estimate,
                            beast.evolution.substitutionmodel.WAG.rates,
                            beast.evolution.substitutionmodel.WAG.frequencies,
                            beast.evolution.substitutionmodel.JTT.rates,
@@ -86,10 +72,39 @@
                            beast.evolution.operators.ScaleOperator.indicator,
                            beast.core.Operator.weight,
                            beast.core.Logger.model,
-                           piqmee.tree.QuasiSpeciesTree.haplotypeCounts,
-                           piqmee.tree.QuasiSpeciesClusterTree.haplotypeCounts,
+                           piqmee.tree.QuasiSpeciesTree,
+	                       piqmee.tree.QuasiSpeciesTree.trait,
+                           piqmee.tree.QuasiSpeciesTree.taxa,
                            piqmee.tree.QuasiSpeciesTree.taxonset,
+                           piqmee.tree.QuasiSpeciesTree.nodetype,
+                           piqmee.tree.QuasiSpeciesTree.haplotypeCounts,
+                           piqmee.tree.QuasiSpeciesTree.data,
+                           piqmee.tree.QuasiSpeciesTree.estimate,
+                           piqmee.tree.QuasiSpeciesClusterTree.initial,
+                           piqmee.tree.QuasiSpeciesClusterTree.trait,
+                           piqmee.tree.QuasiSpeciesClusterTree.taxa,
                            piqmee.tree.QuasiSpeciesClusterTree.taxonset,
+                           piqmee.tree.QuasiSpeciesClusterTree.nodetype,
+                           piqmee.tree.QuasiSpeciesClusterTree.haplotypeCounts,
+                           piqmee.tree.QuasiSpeciesClusterTree.data,
+                           piqmee.tree.QuasiSpeciesClusterTree.estimate,
+	                       piqmee.tree.QuasiSpeciesClusterTree.distance,
+                           piqmee.tree.QuasiSpeciesRandomTree.initial,
+                           piqmee.tree.QuasiSpeciesRandomTree.trait,
+	                       piqmee.tree.QuasiSpeciesRandomTree.taxa,
+	                       piqmee.tree.QuasiSpeciesRandomTree.taxonset,
+	                       piqmee.tree.QuasiSpeciesRandomTree.nodetype,
+                           piqmee.tree.QuasiSpeciesRandomTree.haplotypeCounts,
+                           piqmee.tree.QuasiSpeciesRandomTree.data,
+	                       piqmee.tree.QuasiSpeciesRandomTree.estimate,
+	                       piqmee.tree.QuasiSpeciesTreeFromFullNewick.initial,
+                           piqmee.tree.QuasiSpeciesTreeFromFullNewick.trait,
+	                       piqmee.tree.QuasiSpeciesTreeFromFullNewick.taxa,
+	                       piqmee.tree.QuasiSpeciesTreeFromFullNewick.taxonset,
+	                       piqmee.tree.QuasiSpeciesTreeFromFullNewick.nodetype,
+                           piqmee.tree.QuasiSpeciesTreeFromFullNewick.haplotypeCounts,
+                           piqmee.tree.QuasiSpeciesTreeFromFullNewick.data,
+                           piqmee.tree.QuasiSpeciesTreeFromFullNewick.estimate,
                            piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.intervalTimes,
                            piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.birthRate,
                            piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.deathRate,
@@ -117,7 +132,29 @@
                            piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.netDiversification,
                            piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.conditionOnRhoSampling,
 	                       piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.taxon,
-	                       piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.SAtaxon'>
+	                       piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.SAtaxon,
+                           piqmee.operators.QuasiSpeciesHaplotypeScale.quasiSpeciesTree,
+                           piqmee.operators.QuasiSpeciesHaplotypeScale.origin,
+                           piqmee.operators.QuasiSpeciesHaplotypeSwap.quasiSpeciesTree,
+                           piqmee.operators.QuasiSpeciesHaplotypeSwap.origin,
+                           piqmee.operators.QuasiSpeciesSequenceAttachmentRandom.quasiSpeciesTree,
+                           piqmee.operators.QuasiSpeciesSequenceAttachmentRandom.origin,
+                           piqmee.operators.QuasiSpeciesSequenceAttachmentUniform.quasiSpeciesTree,
+                           piqmee.operators.QuasiSpeciesSequenceAttachmentUniform.origin,
+                           piqmee.operators.QuasiSpeciesSubtreeExchange.quasiSpeciesTree,
+                           piqmee.operators.QuasiSpeciesSubtreeExchange.origin,
+                           piqmee.operators.QuasiSpeciesSubtreeExchangeEasy.quasiSpeciesTree,
+                           piqmee.operators.QuasiSpeciesSubtreeExchangeEasy.origin,
+                           piqmee.operators.QuasiSpeciesTreeScale.quasiSpeciesTree,
+                           piqmee.operators.QuasiSpeciesTreeScale.origin,
+                           piqmee.operators.QuasiSpeciesUCRelaxedClockCategoriesUniform.quasiSpeciesTree,
+                           piqmee.operators.QuasiSpeciesUCRelaxedClockCategoriesUniform.origin,
+                           piqmee.operators.QuasiSpeciesUniform.quasiSpeciesTree,
+                           piqmee.operators.QuasiSpeciesUniform.origin,
+                           piqmee.operators.QuasiSpeciesWilsonBalding.quasiSpeciesTree,
+                           piqmee.operators.QuasiSpeciesWilsonBalding.origin,
+                           piqmee.operators.QuasiSpeciesWilsonBaldingEasy.quasiSpeciesTree,
+                           piqmee.operators.QuasiSpeciesWilsonBaldingEasy.origin'>
 
         <panel spec='BeautiPanelConfig' panelname="Partitions" tiptext="Data Partitions"
             path='distribution/distribution[id="likelihood"]/distribution/data'
@@ -147,6 +184,11 @@
             hasPartitions="none" icon='6.png.x' forceExpansion='TRUE_START_COLLAPSED'
             isVisible='true'/>
 
+        <panel spec='BeautiPanelConfig' panelname="Starting tree" tiptext="Starting tree"
+            path='init'
+            hasPartitions="none" icon='6.png.x' forceExpansion='TRUE'
+            isVisible='false'/>
+
 		<panel spec='BeautiPanelConfig' panelname="Priors" tiptext="Other priors"
             path='distribution/distribution[id="prior"]/distribution'
             hasPartitions="none" icon='7.png.x' forceExpansion='TRUE_START_COLLAPSED'
@@ -171,12 +213,15 @@
 
             <!-- Quasi-species tree -->
 
-            <!--<plugin spec='piqmee.tree.QuasiSpeciesTree' id='Tree.t:$(n)' estimate='true' taxonset='@taxonSet.$(n)'>-->
-                <!--<haplotypeCounts id="counts" spec="beast.evolution.tree.TraitSet" traitname="qscounts" taxa='@taxonSet.$(n)'/>-->
-            <!--</plugin>-->
+            <plugin spec='piqmee.tree.QuasiSpeciesTree' id='Tree.t:$(n)' data='@$(n)' estimate='true' taxonset='@taxonSet.$(n)'/>
 
-            <!--<plugin spec='piqmee.tree.QuasiSpeciesClusterTree' id='ClusterTree.t:$(n)' initial='@Tree.t:$(n)' data='@$(n)' trait='@dateTrait.t:$(n)' haplotypeCounts='@haplotypeCounts.t:$(n)' estimate='false'>-->
-            <plugin spec='piqmee.tree.QuasiSpeciesClusterTree' id='Tree.t:$(n)' data='@$(n)' estimate='true' taxonset='@taxonSet.$(n)'/>
+            <plugin spec='piqmee.tree.QuasiSpeciesRandomTree' id='RandomTree.t:$(n)' data='@$(n)' initial='@Tree.t:$(n)' estimate='false' taxonset='@taxonSet.$(n)'>
+                    <populationModel id='ConstantPopulation0.t:$(n)' spec='ConstantPopulation'>
+            		    <popSize id='randomPopSize.t:$(n)' spec='parameter.RealParameter' value='1'/>
+	                </populationModel>
+            </plugin>
+
+<!--            <plugin spec='piqmee.tree.QuasiSpeciesClusterTree' id='Tree.t:$(n)' data='@$(n)' estimate='true' taxonset='@taxonSet.$(n)'/>-->
 
             <!-- Tree likelihood -->
 
@@ -319,7 +364,8 @@
 ]]>
 
             <!-- CONNECT: tree and likelihood -->
-            <!--<connect srcID='ClusterTree.t:$(n)'     targetID='mcmc'         inputName='init'          if='isInitializing'/>-->
+            <connect srcID='RandomTree.t:$(n)'      targetID='mcmc'         inputName='init'          if='isInitializing'/>
+            <connect method="beast.app.beauti.StateNodeInitialiserListInputEditor.customConnector"/>
             <connect srcID='Tree.t:$(n)'            targetID='state'        inputName='stateNode'     if='inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'/>
             <connect srcID='treeLikelihood.$(n)'    targetID='likelihood'   inputName='distribution'  if="isInitializing"/>
             <connect method="beast.app.beauti.SiteModelInputEditor.customConnector"/>
@@ -374,9 +420,9 @@
             <connect srcID='piqmeeNarrow.t:$(n)'                        targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Narrow exchange performs local rearrangement of tree t:$(n)</connect>
             <connect srcID='piqmeeWide.t:$(n)'                          targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Wide exchange performs global rearrangement of tree t:$(n)</connect>
             <connect srcID='piqmeeWilsonBalding.t:$(n)'                 targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Performs Wilson-Balding global rearrangement of tree t:$(n)</connect>
-            <connect srcID='piqmeeNarroweasy.t:$(n)'                    targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>NarrowEasy exchange performs local rearrangement of tree t:$(n) without distrurbing the haplotype/sequence type attachment times</connect>
-            <connect srcID='piqmeeWideeasy.t:$(n)'                      targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>WideEasy exchange performs global rearrangement of tree t:$(n) without distrurbing the haplotype/sequence type attachment times</connect>
-            <connect srcID='piqmeeWilsonBaldingeasy.t:$(n)'             targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Performs Wilson-Balding global rearrangement of tree t:$(n) without distrurbing the haplotype/sequence type attachment times</connect>
+            <connect srcID='piqmeeNarroweasy.t:$(n)'                    targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>NarrowEasy exchange performs local rearrangement of tree t:$(n) without disturbing the haplotype/sequence type attachment times</connect>
+            <connect srcID='piqmeeWideeasy.t:$(n)'                      targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>WideEasy exchange performs global rearrangement of tree t:$(n) without disturbing the haplotype/sequence type attachment times</connect>
+            <connect srcID='piqmeeWilsonBaldingeasy.t:$(n)'             targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Performs Wilson-Balding global rearrangement of tree t:$(n) without disturbing the haplotype/sequence type attachment times</connect>
 
             <!-- CONNECT: Logs -->
             <!-- Tree prior logs -->
@@ -402,6 +448,7 @@
 
 		<mergepoint id='substModelTemplates'/>
 		<mergepoint id='piqmeeClockModelTemplates'/>
+        <mergepoint id='piqmeeTreeInitializationTemplates'/>
         <mergepoint id='parametricDistributions'/>
 		<mergepoint id='piqmeeTreePriorTemplates'/>
 

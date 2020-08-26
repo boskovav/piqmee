@@ -14,9 +14,6 @@ import java.util.List;
 @Description("Class to initialize a QuasiSpeciesTree from the full tree in newick tree format")
 public class QuasiSpeciesTreeFromFullNewick extends QuasiSpeciesTree implements StateNodeInitialiser{
 
-    final public Input<Alignment> dataInput = new Input<>("data",
-            "Alignment data used for calculating distances for clustering",
-            Input.Validate.REQUIRED);
     public Input<String> newickStringInput = new Input<>("newick",
             "Tree in Newick format.", Input.Validate.REQUIRED);
     public Input<Boolean> adjustTipHeightsInput = new Input<>("adjustTipHeights",
@@ -28,9 +25,21 @@ public class QuasiSpeciesTreeFromFullNewick extends QuasiSpeciesTree implements 
     public QuasiSpeciesTreeFromFullNewick() {
     }
 
+    @Override
     public void initAndValidate() {
         super.initAndValidate();
 
+        // make sure to use date and haploCount traits
+        if (m_initial.get() != null)
+            processTraits(m_initial.get().m_traitList.get());
+        else
+            processTraits(m_traitList.get());
+
+        // Ensure tree is compatible with traits.
+        if (hasDateTrait())
+            adjustTreeNodeHeights(root);
+
+        // initialize the tree
         TreeParser inputTree = new TreeParser();
         if (this.getDateTrait()!=null) {
             TraitSet times = this.getDateTrait();
@@ -47,7 +56,9 @@ public class QuasiSpeciesTreeFromFullNewick extends QuasiSpeciesTree implements 
         // When specifying the input tree with full newick tree, we do not allow for duplicate counts input on the top.
         if (haplotypeCountsSet != null && !haplotypeCountIsAll1(haplotypeCountsSet)){
             throw new RuntimeException("The haplotypeCounts input contains other entries than 1, so it looks the tree is " +
-                    "the unique sequence tree. This is not the proper class to initiate such tree. Use QuasiSpeciesTreeFromNewick.");
+                    "a tree on unique sequences only? Such input is not currently allowed. Please, contact developers for help." +
+                    "Alternatively, initiate your tree using a Cluster Tree or Random Tree option.");
+                    //This is not the proper class to initiate such tree. Use QuasiSpeciesTreeFromNewick.");
         }
 
         initFromFullTree(inputTree,dataInput.get(),collapseIdenticalSequencesInput.get());
@@ -65,6 +76,8 @@ public class QuasiSpeciesTreeFromFullNewick extends QuasiSpeciesTree implements 
 
     @Override
     public void getInitialisedStateNodes(List<StateNode> stateNodes) {
-        stateNodes.add(this);
+        if (m_initial.get() != null) {
+            stateNodes.add(m_initial.get());
+        }
     }
 }

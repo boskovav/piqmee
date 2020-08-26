@@ -16,21 +16,30 @@ import java.util.List;
 @Description("Class to initialize a QuasiSpeciesTree from the alignment only")
 public class QuasiSpeciesClusterTree extends QuasiSpeciesTree implements StateNodeInitialiser{
 
-    final public Input<Alignment> dataInput = new Input<>("data",
-            "Alignment data used for calculating distances for clustering",
-            Input.Validate.REQUIRED);
+    final public Input<Type> clusterTypeInput = new Input<>("clusterType", "type of clustering algorithm used for generating initial beast.tree. " +
+            "Should be one of " + Arrays.toString(Type.values()) + " (default " + Type.average + ")", Type.average, Type.values());
     public Input<Boolean> collapseIdenticalSequencesInput = new Input<>("collapseIdenticalSequences",
             "Should nodes that have identical sequences be collapsed to one haplotype? " +
                     "Default true.", true);
-    final public Input<Type> clusterTypeInput = new Input<>("clusterType", "type of clustering algorithm used for generating initial beast.tree. " +
-            "Should be one of " + Arrays.toString(Type.values()) + " (default " + Type.average + ")", Type.average, Type.values());
 
     public QuasiSpeciesClusterTree() {
     }
 
+    @Override
     public void initAndValidate() {
         super.initAndValidate();
 
+        // make sure to use date and haploCount traits
+        if (m_initial.get() != null)
+            processTraits(m_initial.get().m_traitList.get());
+        else
+            processTraits(m_traitList.get());
+
+        // Ensure tree is compatible with traits.
+        if (hasDateTrait())
+            adjustTreeNodeHeights(root);
+
+        // initialize the tree
         if (dataInput.get() == null)
             throw new RuntimeException("The data input needs to be specified");
 
@@ -57,7 +66,9 @@ public class QuasiSpeciesClusterTree extends QuasiSpeciesTree implements StateNo
 
     @Override
     public void getInitialisedStateNodes(List<StateNode> stateNodes) {
-        stateNodes.add(this);
+        if (m_initial.get() != null) {
+            stateNodes.add(m_initial.get());
+        }
     }
 
 }

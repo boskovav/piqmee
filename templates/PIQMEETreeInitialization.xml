@@ -1,0 +1,34 @@
+<beast version='2.0'
+       namespace='beast.app.beauti:beast.core:beast.evolution.branchratemodel:beast.evolution.speciation:beast.evolution.tree.coalescent:beast.core.util:beast.evolution.nuc:beast.evolution.operators:beast.evolution.sitemodel:beast.evolution.substitutionmodel:beast.evolution.likelihood:beast.evolution:beast.math.distributions'>
+
+    <!-- Tree initialisation -->
+    <mergewith point='piqmeeTreeInitializationTemplates'>
+
+        <!-- Random tree -->
+        <subtemplate id='RandomTree' class='piqmee.tree.QuasiSpeciesRandomTree' mainid='RandomTree.t:$(n)'>
+            <![CDATA[
+                <tree spec='piqmee.tree.QuasiSpeciesRandomTree' id='RandomTree.t:$(n)' data='@$(n)' initial='@Tree.t:$(n)' estimate='false' taxonset='@taxonSet.$(n)'>
+                    <populationModel id='ConstantPopulation0.t:$(n)' spec='ConstantPopulation'>
+            		    <popSize id='randomPopSize.t:$(n)' spec='parameter.RealParameter' value='1'/>
+	                </populationModel>
+                </tree>
+            ]]>
+        </subtemplate>
+
+        <!-- Cluster tree (defaults to UPGMA) -->
+        <subtemplate id='ClusterTree' class='piqmee.tree.QuasiSpeciesClusterTree' mainid='ClusterTree.t:$(n)'>
+            <![CDATA[
+                <tree spec='piqmee.tree.QuasiSpeciesClusterTree' id='ClusterTree.t:$(n)' data='@$(n)' initial='@Tree.t:$(n)' estimate='false' taxonset='@taxonSet.$(n)'/>
+            ]]>
+        </subtemplate>
+
+        <!-- Newick tree -->
+        <subtemplate id='NewickTree' class='piqmee.tree.QuasiSpeciesTreeFromFullNewick' mainid='NewickTree.t:$(n)'>
+            <![CDATA[
+                <tree spec='piqmee.tree.QuasiSpeciesTreeFromFullNewick' id='NewickTree.t:$(n)' data='@$(n)' initial='@Tree.t:$(n)' estimate='false' taxonset='@taxonSet.$(n)' newick=""/>
+            ]]>
+        </subtemplate>
+
+    </mergewith>
+
+</beast>

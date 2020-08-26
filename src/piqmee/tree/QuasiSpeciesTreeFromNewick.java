@@ -15,9 +15,6 @@ import java.util.List;
 @Description("Class to initialize a QuasiSpeciesTree from newick tree format with quasispecies count trait set")
 public class QuasiSpeciesTreeFromNewick extends QuasiSpeciesTree implements StateNodeInitialiser {
 
-    final public Input<Alignment> dataInput = new Input<>("data",
-            "Alignment data used for calculating distances for clustering",
-            Input.Validate.REQUIRED);
     public Input<String> newickStringInput = new Input<>("newick",
             "Tree in Newick format.", Validate.REQUIRED);
     public Input<Boolean> adjustTipHeightsInput = new Input<>("adjustTipHeights",
@@ -33,6 +30,17 @@ public class QuasiSpeciesTreeFromNewick extends QuasiSpeciesTree implements Stat
     public void initAndValidate(){
         super.initAndValidate();
 
+        // make sure to use date and haploCount traits
+        if (m_initial.get() != null)
+            processTraits(m_initial.get().m_traitList.get());
+        else
+            processTraits(m_traitList.get());
+
+        // Ensure tree is compatible with traits.
+        if (hasDateTrait())
+            adjustTreeNodeHeights(root);
+
+        // initialize the tree
         TreeParser inputTree = new TreeParser();
         if (this.getDateTrait()!=null) {
             TraitSet times = this.getDateTrait();
@@ -66,7 +74,9 @@ public class QuasiSpeciesTreeFromNewick extends QuasiSpeciesTree implements Stat
 
     @Override
     public void getInitialisedStateNodes(List<StateNode> stateNodes) {
-        stateNodes.add(this);
+        if (m_initial.get() != null) {
+            stateNodes.add(m_initial.get());
+        }
     }
 
 }
