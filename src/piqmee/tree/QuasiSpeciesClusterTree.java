@@ -2,12 +2,10 @@ package piqmee.tree;
 
 import beast.core.*;
 import beast.evolution.alignment.Alignment;
-import beast.evolution.tree.TraitSet;
 import beast.util.ClusterTree;
 import beast.util.ClusterTree.*;
-import java.util.*;
 
-import java.util.List;
+import java.util.*;
 
 /**
  * @author Veronika Boskova created on 09/03/2017.
@@ -40,19 +38,22 @@ public class QuasiSpeciesClusterTree extends QuasiSpeciesTree implements StateNo
             adjustTreeNodeHeights(root);
 
         // initialize the tree
-        if (dataInput.get() == null)
+        // get the input alignment
+        Alignment data = dataInput.get();
+        if (data == null)
             throw new RuntimeException("The data input needs to be specified");
 
         ClusterTree inputTree = new ClusterTree();
         inputTree.setDateTrait(timeTraitSet);
         inputTree.initByName(
                 "clusterType", clusterTypeInput.get(),
-                "taxa", dataInput.get());
+                "taxa", data);
 
+        // initialize the quasispecies tree - and collapse identical sequences, if necessary
         if (haplotypeCountsSet != null && !haplotypeCountIsAll1(haplotypeCountsSet))
-            initFromUniqueHaploTree(inputTree, dataInput.get(),collapseIdenticalSequencesInput.get(),haplotypeCountsSet);
+            initFromUniqueHaploTree(inputTree, data, collapseIdenticalSequencesInput.get(), haplotypeCountsSet);
         else
-            initFromFullTree(inputTree, dataInput.get(),collapseIdenticalSequencesInput.get());
+            initFromFullTree(inputTree, data, collapseIdenticalSequencesInput.get());
 
         initStateNodes();
     }

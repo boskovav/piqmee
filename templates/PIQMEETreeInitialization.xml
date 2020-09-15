@@ -23,9 +23,9 @@
         </subtemplate>
 
         <!-- Newick tree -->
-        <subtemplate id='NewickTree' class='piqmee.tree.QuasiSpeciesTreeFromFullNewick' mainid='NewickTree.t:$(n)'>
+        <subtemplate id='NewickTree' class='piqmee.tree.QuasiSpeciesTreeFromNewick' mainid='NewickTree.t:$(n)'>
             <![CDATA[
-                <tree spec='piqmee.tree.QuasiSpeciesTreeFromFullNewick' id='NewickTree.t:$(n)' data='@$(n)' initial='@Tree.t:$(n)' estimate='false' taxonset='@taxonSet.$(n)' newick=""/>
+                <tree spec='piqmee.tree.QuasiSpeciesTreeFromNewick' id='NewickTree.t:$(n)' data='@$(n)' initial='@Tree.t:$(n)' estimate='false' taxonset='@taxonSet.$(n)' newick=""/>
             ]]>
         </subtemplate>
 

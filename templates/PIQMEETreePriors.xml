@@ -114,10 +114,6 @@
     <operator id='piqmeeWideeasy.t:$(n)' spec='piqmee.operators.QuasiSpeciesSubtreeExchangeEasy' isNarrow='false' weight="2.0" origin="@origin.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
     <operator id='piqmeeWilsonBaldingeasy.t:$(n)' spec='piqmee.operators.QuasiSpeciesWilsonBaldingEasy' alpha="0.2" weight="2.5" origin="@origin.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
 
-    <operator id="R0TreeUpDownOperator.c:$(n)" spec="UpDownOperator" scaleFactor="0.75" weight="3.0">
-        <up idref="reproductiveNumber.t:$(n)"/>
-        <down idref="Tree.t:$(n)"/>
-    </operator>
 ]]>
             <connect srcID='Tree.t:$(n)'            targetID='state'        inputName='stateNode'     if='inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'/>
 
@@ -136,8 +132,6 @@
             <connect srcID='reproductiveNumberScaler.t:$(n)'        targetID='mcmc' inputName='operator'     if='inposterior(QSBirthDeathSkySerial.t:$(n)) and reproductiveNumber.t:$(n)/estimate=true'/>
             <connect srcID='updownBD.t:$(n)'                        targetID='mcmc' inputName='operator'     if='inposterior(QSBirthDeathSkySerial.t:$(n)) and reproductiveNumber.t:$(n)/estimate=true and becomeUninfectiousRate.t:$(n)/estimate=true'/>
             <connect srcID='origScaler.t:$(n)'                      targetID='mcmc' inputName='operator'     if='inposterior(QSBirthDeathSkySerial.t:$(n)) and origin.t:$(n)/estimate=true'/>
-
-            <connect srcID='R0TreeUpDownOperator.c:$(n)'            targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and inlikelihood(Tree.t:$(n)) and Tree.t:$(n)/estimate=true and reproductiveNumber.t:$(n)/estimate=true'></connect>
 
             <connect srcID='piqmeeTreeScaler.t:$(n)'                    targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Scales all internal nodes for tree t:$(n)</connect>
             <connect srcID='piqmeeTreeRootScaler.t:$(n)'                targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkySerial.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Scales root node for tree t:$(n)</connect>
@@ -273,10 +267,6 @@
     <operator id='piqmeeWideeasyContemp.t:$(n)' spec='piqmee.operators.QuasiSpeciesSubtreeExchangeEasy' isNarrow='false' weight="2.0" origin="@originContemp.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
     <operator id='piqmeeWilsonBaldingeasyContemp.t:$(n)' spec='piqmee.operators.QuasiSpeciesWilsonBaldingEasy' alpha="0.2" weight="2.5" origin="@originContemp.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
 
-    <operator id="R0TreeUpDownOperatorContemp.c:$(n)" spec="UpDownOperator" scaleFactor="0.75" weight="3.0">
-        <up idref="reproductiveNumberContemp.t:$(n)"/>
-        <down idref="Tree.t:$(n)"/>
-    </operator>
 ]]>
             <connect srcID='Tree.t:$(n)'            targetID='state'        inputName='stateNode'     if='inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'/>
 
@@ -295,8 +285,6 @@
             <connect srcID='reproductiveNumberScalerContemp.t:$(n)'        targetID='mcmc' inputName='operator'     if='inposterior(QSBirthDeathSkyContemporary.t:$(n)) and reproductiveNumberContemp.t:$(n)/estimate=true'/>
             <connect srcID='updownBDContemp.t:$(n)'                        targetID='mcmc' inputName='operator'     if='inposterior(QSBirthDeathSkyContemporary.t:$(n)) and reproductiveNumberContemp.t:$(n)/estimate=true and becomeUninfectiousRateContemp.t:$(n)/estimate=true'/>
             <connect srcID='origScalerContemp.t:$(n)'                      targetID='mcmc' inputName='operator'     if='inposterior(QSBirthDeathSkyContemporary.t:$(n)) and originContemp.t:$(n)/estimate=true'/>
-
-            <connect srcID='R0TreeUpDownOperatorContemp.c:$(n)'            targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkyContemporary.t:$(n)) and inlikelihood(Tree.t:$(n)) and Tree.t:$(n)/estimate=true and reproductiveNumber.t:$(n)/estimate=true'></connect>
 
             <connect srcID='piqmeeTreeScalerContemp.t:$(n)'                    targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkyContemporary.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Scales all internal nodes for tree t:$(n)</connect>
             <connect srcID='piqmeeTreeRootScalerContemp.t:$(n)'                targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkyContemporary.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Scales root node for tree t:$(n)</connect>
@@ -432,10 +420,6 @@
     <operator id='piqmeeWideeasyMultiRho.t:$(n)' spec='piqmee.operators.QuasiSpeciesSubtreeExchangeEasy' isNarrow='false' weight="2.0" origin="@originMultiRho.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
     <operator id='piqmeeWilsonBaldingeasyMultiRho.t:$(n)' spec='piqmee.operators.QuasiSpeciesWilsonBaldingEasy' alpha="0.2" weight="2.5" origin="@originMultiRho.t:$(n)" quasiSpeciesTree="@Tree.t:$(n)"/>
 
-    <operator id="R0TreeUpDownOperatorMultiRho.c:$(n)" spec="UpDownOperator" scaleFactor="0.75" weight="3.0">
-        <up idref="reproductiveNumberMultiRho.t:$(n)"/>
-        <down idref="Tree.t:$(n)"/>
-    </operator>
 ]]>
 
             <connect srcID='Tree.t:$(n)'            targetID='state'        inputName='stateNode'     if='inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'/>
@@ -456,8 +440,6 @@
             <connect srcID='reproductiveNumberScalerMultiRho.t:$(n)'        targetID='mcmc' inputName='operator'     if='inposterior(QSBirthDeathSkyMultiRho.t:$(n)) and reproductiveNumberMultiRho.t:$(n)/estimate=true'/>
             <connect srcID='updownBDMultiRho.t:$(n)'                        targetID='mcmc' inputName='operator'     if='inposterior(QSBirthDeathSkyMultiRho.t:$(n)) and reproductiveNumberMultiRho.t:$(n)/estimate=true and becomeUninfectiousRateMultiRho.t:$(n)/estimate=true'/>
             <connect srcID='origScalerMultiRho.t:$(n)'                      targetID='mcmc' inputName='operator'     if='inposterior(QSBirthDeathSkyMultiRho.t:$(n)) and originMultiRho.t:$(n)/estimate=true'/>
-
-            <connect srcID='R0TreeUpDownOperatorMultiRho.c:$(n)'            targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkyMultiRho.t:$(n)) and inlikelihood(Tree.t:$(n)) and Tree.t:$(n)/estimate=true and reproductiveNumber.t:$(n)/estimate=true'></connect>
 
             <connect srcID='piqmeeTreeScalerMultiRho.t:$(n)'                    targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkyMultiRho.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Scales all internal nodes for tree t:$(n)</connect>
             <connect srcID='piqmeeTreeRootScalerMultiRho.t:$(n)'                targetID='mcmc' inputName='operator' if='inposterior(QSBirthDeathSkyMultiRho.t:$(n)) and inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>Scales root node for tree t:$(n)</connect>

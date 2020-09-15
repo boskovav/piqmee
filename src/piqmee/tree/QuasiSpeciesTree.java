@@ -1,9 +1,7 @@
 package piqmee.tree;
 
 import beast.app.beauti.BeautiDoc;
-import beast.core.Input;
-import beast.core.StateNode;
-import beast.core.StateNodeInitialiser;
+import beast.core.*;
 import beast.evolution.alignment.Alignment;
 import beast.evolution.alignment.distance.Distance;
 import beast.evolution.tree.Node;
@@ -11,6 +9,7 @@ import beast.evolution.tree.TraitSet;
 import beast.evolution.tree.Tree;
 import beast.util.TreeParser;
 import piqmee.distance.DifferenceCount;
+import beast.evolution.likelihood.GenericTreeLikelihood;
 
 import java.io.PrintStream;
 import java.util.*;
@@ -114,6 +113,8 @@ public class QuasiSpeciesTree extends Tree {
         if (hasDateTrait())
             adjustTreeNodeHeights(root);
 
+        if (dataInput.get() == null)
+            throw new RuntimeException("The data input needs to be specified");
     }
 
     /*
@@ -947,7 +948,40 @@ public class QuasiSpeciesTree extends Tree {
 
         // In unique haplo tree, there can still be duplicate sequences, if found at different points in time
         // Get the distances for the sequences:
-        double[][] distanceMatrix = getSequenceDistances(data, uniqueHaploTree);
+        int taxaSize = data.getTaxonCount();
+        double[][] distanceMatrix = new double[taxaSize][taxaSize];
+        double[][] distanceMatrixSum = new double[taxaSize][taxaSize];
+        double[][] distanceMatrixTmp;
+        // 1) check if there are multiple alignments linked with this tree -- such that unique sequences correctly identified
+        Set<BEASTInterface> outputset;
+        if (m_initial.get() != null)
+            outputset = m_initial.get().getOutputs();
+        else
+            outputset = this.getOutputs();
+        for (BEASTInterface o : outputset) {
+            if (o instanceof GenericTreeLikelihood) {
+                GenericTreeLikelihood likelihood = (GenericTreeLikelihood) o;
+                Alignment odata = likelihood.dataInput.get();
+                if (odata.getTaxaNames() == null){
+                    Alignment odatatmp = new Alignment(odata.sequenceInput.get(), odata.dataTypeInput.get());
+                    odata = odatatmp;
+                }
+                // 2) make a distance matrix for each such alignment
+                distanceMatrixTmp = getSequenceDistances(odata, uniqueHaploTree);
+                // 3) add this distance to distances from other alignments
+                for (int i = 0; i < taxaSize - 1; i++) {
+                    for (int j = i + 1; j < taxaSize; j++) {
+                        distanceMatrixSum[i][j] = distanceMatrix[i][j] + distanceMatrixTmp[i][j];
+                        distanceMatrixSum[j][i] = distanceMatrixSum[i][j];
+                    }
+                }
+                // 4)copy sum of distances to distanceMatrix
+                System.arraycopy(distanceMatrixSum, 0, distanceMatrix, 0, distanceMatrix.length);
+            }
+        }
+        // 5) it could be, especially in a test case, that the tree is not linked with any output - check for this
+        if (outputset.size() == 0)
+            distanceMatrix = getSequenceDistances(data, uniqueHaploTree);
 
         // Build new quasi-species tree:
         ArrayList haplotypesSeen = new ArrayList<>();
@@ -1039,7 +1073,40 @@ public class QuasiSpeciesTree extends Tree {
     public void initFromFullTree(Tree fullTree, Alignment data, boolean collapseIdentical){
 
         // Get the distances for the sequences:
-        double[][] distanceMatrix = getSequenceDistances(data, fullTree);
+        int taxaSize = data.getTaxonCount();
+        double[][] distanceMatrix = new double[taxaSize][taxaSize];
+        double[][] distanceMatrixSum = new double[taxaSize][taxaSize];
+        double[][] distanceMatrixTmp;
+        // 1) check if there are multiple alignments linked with this tree -- such that unique sequences correctly identified
+        Set<BEASTInterface> outputset;
+        if (m_initial.get() != null)
+            outputset = m_initial.get().getOutputs();
+        else
+            outputset = this.getOutputs();
+        for (BEASTInterface o : outputset) {
+            if (o instanceof GenericTreeLikelihood) {
+                GenericTreeLikelihood likelihood = (GenericTreeLikelihood) o;
+                Alignment odata = likelihood.dataInput.get();
+                if (odata.getTaxaNames() == null){
+                    Alignment odatatmp = new Alignment(odata.sequenceInput.get(), odata.dataTypeInput.get());
+                    odata = odatatmp;
+                }
+                // 2) make a distance matrix for each such alignment
+                distanceMatrixTmp = getSequenceDistances(odata, fullTree);
+                // 3) add this distance to distances from other alignments
+                for (int i = 0; i < taxaSize - 1; i++) {
+                    for (int j = i + 1; j < taxaSize; j++) {
+                        distanceMatrixSum[i][j] = distanceMatrix[i][j] + distanceMatrixTmp[i][j];
+                        distanceMatrixSum[j][i] = distanceMatrixSum[i][j];
+                    }
+                }
+                // 4)copy sum of distances to distanceMatrix
+                System.arraycopy(distanceMatrixSum, 0, distanceMatrix, 0, distanceMatrix.length);
+            }
+        }
+        // 5) it could be, especially in a test case, that the tree is not linked with any output - check for this
+        if (outputset.size() == 0)
+            distanceMatrix = getSequenceDistances(data, fullTree);
 
         // Build new quasi-species tree:
         ArrayList haplotypesSeen = new ArrayList<>();
@@ -1149,10 +1216,9 @@ public class QuasiSpeciesTree extends Tree {
                         // if not, rewrite the info on the uniqueHaploTree tip
                         if ( (node.getHeight() - seenNode.getHeight()) < -1e-10) {
                             seenNode.setHeight(node.getHeight());
-                            seenNode.setID(String.valueOf(node.getID()));
                         }
                         // to robustly always pick the same node as the unique haplo node even after restart from state file
-                        else if (!Pattern.compile("^t").matcher(seenNode.getID()).find() && Pattern.compile("^t").matcher(node.getID()).find()) {
+                        if (!Pattern.compile("^t").matcher(seenNode.getID()).find() && Pattern.compile("^t").matcher(node.getID()).find()) {
                             seenNode.setID(String.valueOf(node.getID()));
                         }
                         // if the tips do not start with t - then keep always the tip with smallest number
@@ -1168,11 +1234,10 @@ public class QuasiSpeciesTree extends Tree {
                             for (int j = 0; j < tipTimesListTmp.length; j++) {
                                 // check if the tips with the same sequence that have been seen had also the current node's sampling time
                                 if (tipTimesListTmp[j] == node.getHeight()) {
-                                    throw new IllegalArgumentException("There are at least two tips with the same "
-                                            + "sequence and same sampling time. If you want to input tree with all "
-                                            + "sequences as tips, please use class piqmee.tree.QuasiSpeciesTreeFromFullNewick; "
-                                            + "otherwise please remove duplicates and use haplotypeCounts traitset "
-                                            + "to annotate the duplicate counts");
+                                    throw new IllegalArgumentException(
+                                            "There are at least two tips with the same sequence and same sampling time." +
+                                            " Please, either input a tree with all sequences as tips, or remove duplicates" +
+                                            " and use haplotypeCounts traitset to annotate the duplicate counts.");
                                 }
                             }
                             // if with different time, add to tip times and counts

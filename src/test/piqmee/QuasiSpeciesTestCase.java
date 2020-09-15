@@ -5,7 +5,6 @@ import beast.evolution.alignment.Sequence;
 import beast.evolution.alignment.TaxonSet;
 import beast.evolution.tree.TraitSet;
 import piqmee.tree.QuasiSpeciesTree;
-import piqmee.tree.QuasiSpeciesTreeFromFullNewick;
 import piqmee.tree.QuasiSpeciesTreeFromNewick;
 
 import java.util.ArrayList;
@@ -45,7 +44,7 @@ public class QuasiSpeciesTestCase {
         Alignment alignment = new Alignment(seqList, "nucleotide");
         TaxonSet taxonSet = new TaxonSet(alignment);
 
-        QuasiSpeciesTree tree = new QuasiSpeciesTreeFromFullNewick();
+        QuasiSpeciesTree tree = new QuasiSpeciesTreeFromNewick();
 
         tree.setInputValue("newick", inputTree);
         tree.setInputValue("adjustTipHeights", "false");

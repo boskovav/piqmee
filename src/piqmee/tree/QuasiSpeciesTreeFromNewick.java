@@ -1,22 +1,20 @@
 package piqmee.tree;
 
 import beast.core.*;
-import beast.core.Input.Validate;
 import beast.evolution.alignment.Alignment;
-import beast.evolution.tree.TraitSet;
 import beast.util.TreeParser;
 
-import java.util.List;
+import java.util.*;
 
 /**
  * @author Veronika Boskova created on 16/06/2015.
  */
 
-@Description("Class to initialize a QuasiSpeciesTree from newick tree format with quasispecies count trait set")
+@Description("Class to initialize a QuasiSpeciesTree from newick tree format")
 public class QuasiSpeciesTreeFromNewick extends QuasiSpeciesTree implements StateNodeInitialiser {
 
     public Input<String> newickStringInput = new Input<>("newick",
-            "Tree in Newick format.", Validate.REQUIRED);
+            "Tree in Newick format.", Input.Validate.REQUIRED);
     public Input<Boolean> adjustTipHeightsInput = new Input<>("adjustTipHeights",
             "Adjust tip heights in tree? Default true.", true);
     public Input<Boolean> collapseIdenticalSequencesInput = new Input<>("collapseIdenticalSequences",
@@ -41,26 +39,24 @@ public class QuasiSpeciesTreeFromNewick extends QuasiSpeciesTree implements Stat
             adjustTreeNodeHeights(root);
 
         // initialize the tree
-        TreeParser inputTree = new TreeParser();
-        if (this.getDateTrait()!=null) {
-            TraitSet times = this.getDateTrait();
-            inputTree.initByName("IsLabelledNewick", true, "adjustTipHeights", adjustTipHeightsInput.get(), "newick", newickStringInput.get(), "trait", times);
-        }
-        else {
-            inputTree.initByName("IsLabelledNewick", true, "adjustTipHeights", adjustTipHeightsInput.get(), "newick", newickStringInput.get());
-
-        }
-
-        if (dataInput.get() == null)
+        // get the input alignment
+        Alignment data = dataInput.get();
+        if (data == null)
             throw new RuntimeException("The data input needs to be specified");
 
-        // When specifying the input tree with newick tree, duplicate counts input NEEDS to be specified
-        if (haplotypeCountsSet == null || haplotypeCountIsAll1(haplotypeCountsSet)){
-            throw new RuntimeException("The haplotypeCounts input was not specified. " +
-                    "This is not the proper class to initiate such tree. Use QuasiSpeciesTreeFromFullNewick.");
-        }
+        // read in the user input tree
+        TreeParser inputTree = new TreeParser();
+        inputTree.setDateTrait(timeTraitSet);
+        inputTree.initByName(
+                "IsLabelledNewick", true,
+                "adjustTipHeights", adjustTipHeightsInput.get(),
+                "newick", newickStringInput.get());
 
-        initFromUniqueHaploTree(inputTree, dataInput.get(),collapseIdenticalSequencesInput.get(),haplotypeCountsSet);
+        // initialize the quasispecies tree - and collapse identical sequences, if necessary
+        if (haplotypeCountsSet != null && !haplotypeCountIsAll1(haplotypeCountsSet))
+            initFromUniqueHaploTree(inputTree, data, collapseIdenticalSequencesInput.get(), haplotypeCountsSet);
+        else
+            initFromFullTree(inputTree, data, collapseIdenticalSequencesInput.get());
 
         initStateNodes();
     }

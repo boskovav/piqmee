@@ -4,13 +4,10 @@ import beast.core.*;
 import beast.evolution.alignment.Alignment;
 import beast.evolution.alignment.Taxon;
 import beast.evolution.alignment.TaxonSet;
-import beast.evolution.tree.TraitSet;
+import beast.evolution.likelihood.GenericTreeLikelihood;
 import beast.evolution.tree.coalescent.PopulationFunction;
 import beast.math.distributions.MRCAPrior;
-import beast.util.ClusterTree;
 import beast.evolution.tree.RandomTree;
-import beast.evolution.tree.Node;
-import beast.util.HeapSort;
 
 import java.util.*;
 
@@ -52,21 +49,48 @@ public class QuasiSpeciesRandomTree extends QuasiSpeciesTree implements StateNod
             adjustTreeNodeHeights(root);
 
         // initialize the tree
+        // get the input alignment
         Alignment data = dataInput.get();
-
         if (data == null)
             throw new RuntimeException("The data input needs to be specified");
 
-        // specify monophyletic clusters from distance matrix
-        List<MRCAPrior> monophyleticGroups = new ArrayList();
         // create a toy tree for calculation of distances
         RandomTree toyRandomTree = new RandomTree();
         toyRandomTree.setDateTrait(timeTraitSet);
         toyRandomTree.initByName(
                 "taxa", data,
                 "populationModel", populationFunctionInput.get());
-        // calculate distances - take into account that there can be several partitions in the data
-        double[][] distanceMatrix = getSequenceDistances(data, toyRandomTree);
+
+        // get monophyletic constraints necessary to cluster identical sequences
+        // specify monophyletic clusters from distance matrix
+        List<MRCAPrior> monophyleticGroups = new ArrayList();
+        // Get the distances for the sequences:
+        int taxaSize = data.getTaxonCount();
+        double[][] distanceMatrix = new double[taxaSize][taxaSize];
+        double[][] distanceMatrixSum = new double[taxaSize][taxaSize];
+        double[][] distanceMatrixTmp;
+        // 1) check if there are multiple alignments linked with this tree -- such that unique sequences correctly identified
+        for (BEASTInterface o : m_initial.get().getOutputs()) {
+            if (o instanceof GenericTreeLikelihood) {
+                GenericTreeLikelihood likelihood = (GenericTreeLikelihood) o;
+                Alignment odata = likelihood.dataInput.get();
+                if (odata.getTaxaNames() == null){
+                    Alignment odatatmp = new Alignment(odata.sequenceInput.get(), odata.dataTypeInput.get());
+                    odata = odatatmp;
+                }
+                // 2) make a distance matrix for each such alignment
+                distanceMatrixTmp = getSequenceDistances(odata, toyRandomTree);
+                // 3) add this distance to distances from other alignments
+                for (int i = 0; i < taxaSize - 1; i++) {
+                    for (int j = i + 1; j < taxaSize; j++) {
+                        distanceMatrixSum[i][j] = distanceMatrix[i][j] + distanceMatrixTmp[i][j];
+                        distanceMatrixSum[j][i] = distanceMatrixSum[i][j];
+                    }
+                }
+                // 4)copy sum of distances to distanceMatrix
+                System.arraycopy(distanceMatrixSum, 0, distanceMatrix, 0, distanceMatrix.length);
+            }
+        }
         // specify monophyletic constraints
         for (int i = 0; i < distanceMatrix.length; i++){
             List<Taxon> identical = new ArrayList<>();
@@ -97,16 +121,16 @@ public class QuasiSpeciesRandomTree extends QuasiSpeciesTree implements StateNod
         RandomTree inputTree = new RandomTree();
         inputTree.setDateTrait(timeTraitSet);
         inputTree.initByName(
-                "taxa", dataInput.get(),
+                "taxa", data,
                 "populationModel", populationFunctionInput.get(),
                 "constraint", monophyleticGroups,
                 "rootHeight", rootHeightInput.get());
 
         // initialize the quasispecies tree - and collapse identical sequences, if necessary
         if (haplotypeCountsSet != null && !haplotypeCountIsAll1(haplotypeCountsSet))
-            initFromUniqueHaploTree(inputTree, dataInput.get(),collapseIdenticalSequencesInput.get(),haplotypeCountsSet);
+            initFromUniqueHaploTree(inputTree, data, collapseIdenticalSequencesInput.get(), haplotypeCountsSet);
         else
-            initFromFullTree(inputTree, dataInput.get(),collapseIdenticalSequencesInput.get());
+            initFromFullTree(inputTree, data, collapseIdenticalSequencesInput.get());
 
         initStateNodes();
     }
