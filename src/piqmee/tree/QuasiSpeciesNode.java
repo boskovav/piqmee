@@ -10,20 +10,17 @@ import java.util.Arrays;
  */
 
 @Description("A node in a quasi-species phylogenetic tree.")
-public class QuasiSpeciesNode extends Node {
-
-    protected int haploAboveName = -1;
-    protected int continuingHaploName = -1;
-//    private int startBranchCounts = 1;
+public class QuasiSpeciesNode extends QuasiSpeciesNodeBaseClass {
 
     // attachment times are sorted from the biggest to the smallest
-    private double[] attachmentTimesList;
-    // tip times are sorted from the most recent to the most into the past
-    // NOTICE: the real tip in the tree has the value of tipTimesList[0]
-    protected double[] tipTimesList;
-    // same order as tipTimesList count in tipTimesCountList[0] includes the real tip
-    protected int[] tipTimesCountList;
-    protected int parentHaplo = -1;
+    protected double[] attachmentTimesList;
+
+    public QuasiSpeciesNode() {}
+
+    public QuasiSpeciesNode(final String id) {
+        setID(id);
+        initAndValidate();
+    }
 
     @Override
     public void initAndValidate(){
@@ -31,65 +28,11 @@ public class QuasiSpeciesNode extends Node {
         super.initAndValidate();
 
         if (isLeaf()) setContinuingHaploName(this.getNr());
-//        if (attachmentTimesList.length > 1){
-//
-//        }
 
     }
-    //
-    //    public QuasiSpeciesNode() {
-    //        super.initAndValidate();
-    //    }
-    //
 
-    /**
-     * Obtain the quasi-species type/name, if any, starting on the branch above this node.
-     *
-     * @return quasi-species name
-     */
-    public int getHaploAboveName() {
-        return this.haploAboveName;
-    }
 
-    /**
-     * Sets the quasi-species starting on the branch above this node
-     *
-     * @param haploName New quasi-species name
-     */
-    public void setHaploAboveName(int haploName) {
-        startEditing();
-        this.makeDirty(QuasiSpeciesTree.IS_FILTHY);
-        this.haploAboveName = haploName;
-    }
-
-    /**
-     * Obtain the quasi-species type/name, of a haplotype that started earlier and continues on below this (internal) node.
-     * Only non null (non -1) if this haplo arose at some previous node (so haploAboveName is non-null (non -1))
-     *
-     * @return quasi-species name
-     */
-    public int getContinuingHaploName() {
-        return this.continuingHaploName;
-    }
-
-    /**
-     * Sets the quasi-species haplotype as a continuing haplotype below this node
-     *
-     * @param haploName New quasi-species name
-     */
-    public void setContinuingHaploName(int haploName) {
-        startEditing();
-        this.makeDirty(QuasiSpeciesTree.IS_FILTHY);
-        this.continuingHaploName = haploName;
-    }
-
-    /**
-     * Obtain the number of "branches" this node can attach to in the QS tree
-     *
-     * @return start branch count
-     */
-//    public int getStartBranchCounts() {return this.startBranchCounts;}
-
+    //TODO this method should be removed ... this is an obsolete piece of code ...
     /**
      * Sets the number of branches the node can be attached to
      *
@@ -102,155 +45,18 @@ public class QuasiSpeciesNode extends Node {
     }
 
     /**
-     * Set quasi-species tree for a copied node
+     * ********************************************
+     * Methods implementing the quasispecies node *
+     **********************************************
      */
-    public void setqsTree(QuasiSpeciesTree tree) {
-        startEditing();
-        this.m_tree = tree;
-    }
+
+    //
 
     /**
-     * **************************
-     * Methods ported from Node *
-     ***************************
+     * *******************************************
+     * Methods implementing the quasispecies tip *
+     *********************************************
      */
-
-    /**
-     * @return (deep) copy of node
-     */
-    @Override
-    public Node copy() {
-        QuasiSpeciesNode node = new QuasiSpeciesNode();
-        node.height = height;
-        node.labelNr = labelNr;
-        node.metaDataString = metaDataString;
-        node.setParent(null);
-        node.ID = ID;
-
-        node.haploAboveName = haploAboveName;
-        node.continuingHaploName = continuingHaploName;
-//        node.startBranchCounts = startBranchCounts;
-
-        if (attachmentTimesList != null) {
-            node.attachmentTimesList = new double[attachmentTimesList.length];
-            System.arraycopy(attachmentTimesList,0,node.attachmentTimesList,0,attachmentTimesList.length);
-        }
-        if (tipTimesList != null) {
-            node.tipTimesList = new double[tipTimesList.length];
-            System.arraycopy(tipTimesList,0,node.tipTimesList,0,tipTimesList.length);
-            node.tipTimesCountList = new int[tipTimesCountList.length];
-            System.arraycopy(tipTimesCountList,0,node.tipTimesCountList,0,tipTimesCountList.length);
-        }
-
-        if (getLeft()!=null) {
-            node.setLeft(((QuasiSpeciesNode)getLeft()).copy());
-            node.getLeft().setParent(node);
-            if (getRight()!=null) {
-                node.setRight(((QuasiSpeciesNode)getRight()).copy());
-                node.getRight().setParent(node);
-            }
-        }
-        return node;
-    }
-
-    /**
-     * assign values from a tree in array representation *
-     * @param nodes
-     * @param node
-     */
-    @Override
-    public void assignFrom(Node[] nodes, Node node) {
-        height = node.getHeight();
-        labelNr = node.getNr();
-        metaDataString = node.metaDataString;
-        setParent(null);
-        ID = node.getID();
-
-        QuasiSpeciesNode qsNode = (QuasiSpeciesNode)node;
-        haploAboveName = qsNode.haploAboveName;
-        continuingHaploName = qsNode.continuingHaploName;
-//        startBranchCounts = qsNode.startBranchCounts;
-        if (qsNode.attachmentTimesList != null) {
-            attachmentTimesList = new double[qsNode.attachmentTimesList.length];
-            System.arraycopy(qsNode.attachmentTimesList,0,attachmentTimesList,0,qsNode.attachmentTimesList.length);
-        }
-        if (qsNode.tipTimesList != null) {
-            tipTimesList = new double[qsNode.tipTimesList.length];
-            System.arraycopy(qsNode.tipTimesList,0,tipTimesList,0,qsNode.tipTimesList.length);
-            tipTimesCountList = new int[qsNode.tipTimesCountList.length];
-            System.arraycopy(qsNode.tipTimesCountList,0,tipTimesCountList,0,qsNode.tipTimesCountList.length);
-        }
-        parentHaplo = qsNode.parentHaplo;
-
-        if (node.getLeft()!=null) {
-            setLeft(nodes[node.getLeft().getNr()]);
-            ((QuasiSpeciesNode) getLeft()).assignFrom(nodes, node.getLeft());
-            getLeft().setParent(this);
-            if (node.getRight()!=null) {
-                setRight(nodes[node.getRight().getNr()]);
-                ((QuasiSpeciesNode) getRight()).assignFrom(nodes, node.getRight());
-                getRight().setParent(this);
-            }
-        }
-    }
-
-
-    /**
-     * scale height of this node and all its descendants
-     *
-     * @param scale scale factor
-     */
-//    @Override
-    public int scale(final double scale) {
-        startEditing();
-        this.makeDirty(QuasiSpeciesTree.IS_DIRTY);
-        // Scale internal node heights
-        if (!isLeaf() && !isFake()) {
-            height *= scale;
-        }
-        if (!isLeaf()) {
-            ((QuasiSpeciesNode) getLeft()).scale(scale);
-            if (getRight() != null) {
-                ((QuasiSpeciesNode) getRight()).scale(scale);
-            }
-            if (height < getLeft().getHeight() || height < getRight().getHeight()) {
-                throw new IllegalArgumentException("Scale gives negative branch length");
-            }
-        }
-        // Scale haplotype attachment times
-        else {
-            double[] tempqstimes = this.getAttachmentTimesList().clone();
-            for (int i = 1; i < tempqstimes.length; i++) {
-                tempqstimes[i] = tempqstimes[i] * scale;
-            }
-            if (tempqstimes.length > 1)
-                tempqstimes[0] = tempqstimes[1];
-            else
-                tempqstimes[0] = this.getHeight();
-            this.setAttachmentTimesList(tempqstimes);
-            // Reject invalid tree scalings:
-            if (scale < 1.0 & tempqstimes.length > 1) {
-                // get also tip times to help define valid scalings
-                double[] temptiptimes = this.getTipTimesList();
-                int[] temptiptimescount = this.getTipTimesCountList();
-                if (tempqstimes[tempqstimes.length-1] <= this.getHeight())
-                    throw new IllegalArgumentException("Scale gives negative branch length");
-                // check also if branching times corresponding to samples through time are also above the respective time
-                int currentPosition = tempqstimes.length - 1 - (temptiptimescount[0] - 1);
-                for (int i = 1; i < temptiptimes.length; i++) {
-                    if (tempqstimes[currentPosition] <= temptiptimes[i])
-                        throw new IllegalArgumentException("Scale gives zero/negative branch length");
-                    currentPosition -= temptiptimescount[i];
-                }
-            }
-        }
-        return 0;
-    }
-
-    /////////////////////////////////////////////////
-    //  Methods implementing the quasispecies tip  //
-    /////////////////////////////////////////////////
-
 
     /**
      * Method to count for a given sequence ihaploseq the possible number of attachment
@@ -303,19 +109,6 @@ public class QuasiSpeciesNode extends Node {
             }
         }
         return abcount;
-    }
-
-    /**
-     * Obtain the total number of haplotype duplicates from the tip counts
-     *
-     * @return the total number of haplotype duplicates
-     */
-    public int getHaplotypeCountsFromTips() {
-        int totalHaploCount = 0;
-        for (int i = 0; i < tipTimesCountList.length; i++){
-            totalHaploCount += tipTimesCountList[i];
-        }
-        return totalHaploCount;
     }
 
     /**
@@ -457,22 +250,140 @@ public class QuasiSpeciesNode extends Node {
     }
 
     /**
-     * Obtain the number of "branches" this node can attach to in the QS tree
-     *
-     * @return parent haplo of haplotype associated with this tip
+     * **************************
+     * Methods ported from Node *
+     ***************************
      */
-    public int getParentHaplo() {
-        return this.parentHaplo;
+
+    /**
+     * @return (deep) copy of node
+     */
+    @Override
+    public Node copy() {
+        QuasiSpeciesNode node = new QuasiSpeciesNode();
+        node.height = height;
+        node.labelNr = labelNr;
+        node.metaDataString = metaDataString;
+        node.setParent(null);
+        node.ID = ID;
+
+        node.haploAboveName = haploAboveName;
+        node.continuingHaploName = continuingHaploName;
+//        node.startBranchCounts = startBranchCounts;
+
+        if (attachmentTimesList != null) {
+            node.attachmentTimesList = new double[attachmentTimesList.length];
+            System.arraycopy(attachmentTimesList,0,node.attachmentTimesList,0,attachmentTimesList.length);
+        }
+        if (tipTimesList != null) {
+            node.tipTimesList = new double[tipTimesList.length];
+            System.arraycopy(tipTimesList,0,node.tipTimesList,0,tipTimesList.length);
+            node.tipTimesCountList = new int[tipTimesCountList.length];
+            System.arraycopy(tipTimesCountList,0,node.tipTimesCountList,0,tipTimesCountList.length);
+        }
+
+        if (getLeft()!=null) {
+            node.setLeft(((QuasiSpeciesNode)getLeft()).copy());
+            node.getLeft().setParent(node);
+            if (getRight()!=null) {
+                node.setRight(((QuasiSpeciesNode)getRight()).copy());
+                node.getRight().setParent(node);
+            }
+        }
+        return node;
     }
 
     /**
-     * Sets the number of branches the node can be attached to
-     *
-     * @param newParentHaplo New parent haplotype of the haplotype associated with this tip
+     * assign values from a tree in array representation *
+     * @param nodes
+     * @param node
      */
-    public void setParentHaplo(int newParentHaplo) {
-        startEditing();
-        this.makeDirty(QuasiSpeciesTree.IS_FILTHY);
-        this.parentHaplo = newParentHaplo;
+    @Override
+    public void assignFrom(Node[] nodes, Node node) {
+        height = node.getHeight();
+        labelNr = node.getNr();
+        metaDataString = node.metaDataString;
+        setParent(null);
+        ID = node.getID();
+
+        QuasiSpeciesNode qsNode = (QuasiSpeciesNode)node;
+        haploAboveName = qsNode.haploAboveName;
+        continuingHaploName = qsNode.continuingHaploName;
+//        startBranchCounts = qsNode.startBranchCounts;
+        if (qsNode.attachmentTimesList != null) {
+            attachmentTimesList = new double[qsNode.attachmentTimesList.length];
+            System.arraycopy(qsNode.attachmentTimesList,0,attachmentTimesList,0,qsNode.attachmentTimesList.length);
+        }
+        if (qsNode.tipTimesList != null) {
+            tipTimesList = new double[qsNode.tipTimesList.length];
+            System.arraycopy(qsNode.tipTimesList,0,tipTimesList,0,qsNode.tipTimesList.length);
+            tipTimesCountList = new int[qsNode.tipTimesCountList.length];
+            System.arraycopy(qsNode.tipTimesCountList,0,tipTimesCountList,0,qsNode.tipTimesCountList.length);
+        }
+        parentHaplo = qsNode.parentHaplo;
+
+        if (node.getLeft()!=null) {
+            setLeft(nodes[node.getLeft().getNr()]);
+            ((QuasiSpeciesNode) getLeft()).assignFrom(nodes, node.getLeft());
+            getLeft().setParent(this);
+            if (node.getRight()!=null) {
+                setRight(nodes[node.getRight().getNr()]);
+                ((QuasiSpeciesNode) getRight()).assignFrom(nodes, node.getRight());
+                getRight().setParent(this);
+            }
+        }
     }
+
+    /**
+     * scale height of this node and all its descendants
+     *
+     * @param scale scale factor
+     */
+    @Override
+    public int scale(final double scale) {
+        startEditing();
+        this.makeDirty(QuasiSpeciesTree.IS_DIRTY);
+        // Scale internal node heights
+        if (!isLeaf() && !isFake()) {
+            height *= scale;
+        }
+        if (!isLeaf()) {
+            ((QuasiSpeciesNode) getLeft()).scale(scale);
+            if (getRight() != null) {
+                ((QuasiSpeciesNode) getRight()).scale(scale);
+            }
+            if (height < getLeft().getHeight() || height < getRight().getHeight()) {
+                throw new IllegalArgumentException("Scale gives negative branch length");
+            }
+        }
+        // Scale haplotype attachment times
+        else {
+            double[] tempqstimes = this.getAttachmentTimesList().clone();
+            for (int i = 1; i < tempqstimes.length; i++) {
+                tempqstimes[i] = tempqstimes[i] * scale;
+            }
+            if (tempqstimes.length > 1)
+                tempqstimes[0] = tempqstimes[1];
+            else
+                tempqstimes[0] = this.getHeight();
+            this.setAttachmentTimesList(tempqstimes);
+            // Reject invalid tree scalings:
+            if (scale < 1.0 & tempqstimes.length > 1) {
+                // get also tip times to help define valid scalings
+                double[] temptiptimes = this.getTipTimesList();
+                int[] temptiptimescount = this.getTipTimesCountList();
+                if (tempqstimes[tempqstimes.length-1] <= this.getHeight())
+                    throw new IllegalArgumentException("Scale gives negative branch length");
+                // check also if branching times corresponding to samples through time are also above the respective time
+                int currentPosition = tempqstimes.length - 1 - (temptiptimescount[0] - 1);
+                for (int i = 1; i < temptiptimes.length; i++) {
+                    if (tempqstimes[currentPosition] <= temptiptimes[i])
+                        throw new IllegalArgumentException("Scale gives zero/negative branch length");
+                    currentPosition -= temptiptimescount[i];
+                }
+            }
+        }
+        return 0;
+    }
+
 }
