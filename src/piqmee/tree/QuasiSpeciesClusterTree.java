@@ -2,6 +2,7 @@ package piqmee.tree;
 
 import beast.core.*;
 import beast.evolution.alignment.Alignment;
+import beast.evolution.alignment.FilteredAlignment;
 import beast.util.ClusterTree;
 import beast.util.ClusterTree.*;
 
@@ -40,6 +41,9 @@ public class QuasiSpeciesClusterTree extends QuasiSpeciesTree implements StateNo
         // initialize the tree
         // get the input alignment
         Alignment data = dataInput.get();
+        if (data instanceof FilteredAlignment) {
+            data = ((FilteredAlignment) data).alignmentInput.get();
+        }
         if (data == null)
             throw new RuntimeException("The data input needs to be specified");
 

@@ -2,6 +2,7 @@ package piqmee.tree;
 
 import beast.core.*;
 import beast.evolution.alignment.Alignment;
+import beast.evolution.alignment.FilteredAlignment;
 import beast.evolution.alignment.Taxon;
 import beast.evolution.alignment.TaxonSet;
 import beast.evolution.likelihood.GenericTreeLikelihood;
@@ -51,6 +52,9 @@ public class QuasiSpeciesRandomTree extends QuasiSpeciesTree implements StateNod
         // initialize the tree
         // get the input alignment
         Alignment data = dataInput.get();
+        if (data instanceof FilteredAlignment) {
+            data = ((FilteredAlignment) data).alignmentInput.get();
+        }
         if (data == null)
             throw new RuntimeException("The data input needs to be specified");
 
@@ -74,6 +78,9 @@ public class QuasiSpeciesRandomTree extends QuasiSpeciesTree implements StateNod
             if (o instanceof GenericTreeLikelihood) {
                 GenericTreeLikelihood likelihood = (GenericTreeLikelihood) o;
                 Alignment odata = likelihood.dataInput.get();
+                if (odata instanceof FilteredAlignment) {
+                    odata = ((FilteredAlignment) odata).alignmentInput.get();
+                }
                 if (odata.getTaxaNames() == null){
                     Alignment odatatmp = new Alignment(odata.sequenceInput.get(), odata.dataTypeInput.get());
                     odata = odatatmp;

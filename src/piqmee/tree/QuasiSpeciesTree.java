@@ -3,6 +3,7 @@ package piqmee.tree;
 import beast.app.beauti.BeautiDoc;
 import beast.core.*;
 import beast.evolution.alignment.Alignment;
+import beast.evolution.alignment.FilteredAlignment;
 import beast.evolution.alignment.distance.Distance;
 import beast.evolution.tree.Node;
 import beast.evolution.tree.TraitSet;
@@ -962,6 +963,9 @@ public class QuasiSpeciesTree extends Tree {
             if (o instanceof GenericTreeLikelihood) {
                 GenericTreeLikelihood likelihood = (GenericTreeLikelihood) o;
                 Alignment odata = likelihood.dataInput.get();
+                if (odata instanceof FilteredAlignment) {
+                    odata = ((FilteredAlignment) odata).alignmentInput.get();
+                }
                 if (odata.getTaxaNames() == null){
                     Alignment odatatmp = new Alignment(odata.sequenceInput.get(), odata.dataTypeInput.get());
                     odata = odatatmp;
@@ -1087,6 +1091,9 @@ public class QuasiSpeciesTree extends Tree {
             if (o instanceof GenericTreeLikelihood) {
                 GenericTreeLikelihood likelihood = (GenericTreeLikelihood) o;
                 Alignment odata = likelihood.dataInput.get();
+                if (odata instanceof FilteredAlignment) {
+                    odata = ((FilteredAlignment) odata).alignmentInput.get();
+                }
                 if (odata.getTaxaNames() == null){
                     Alignment odatatmp = new Alignment(odata.sequenceInput.get(), odata.dataTypeInput.get());
                     odata = odatatmp;

@@ -4,11 +4,10 @@ import beast.core.Description;
 import beast.core.Input;
 import beast.core.State;
 import beast.core.util.Log;
-import beast.core.parameter.RealParameter;
 import beast.evolution.alignment.Alignment;
+import beast.evolution.alignment.FilteredAlignment;
 import beast.evolution.branchratemodel.BranchRateModel;
 import beast.evolution.branchratemodel.StrictClockModel;
-import beast.evolution.branchratemodel.UCRelaxedClockModel;
 import beast.evolution.substitutionmodel.EigenDecomposition;
 import beast.evolution.tree.Node;
 import beast.evolution.tree.TreeInterface;
@@ -630,7 +629,7 @@ public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
                     //else
                         ((QuasiSpeciesBeerLikelihoodCore) likelihoodCore).calculateQSPartials(childNum1, childNum2, nodeIndex, child1QS, child2QS, child1parentQS, nodeCount);
                 } else {
-                    throw new RuntimeException("Error TreeLikelihood 201: Site categories not supported");
+                    throw new RuntimeException("Error TreeLikelihood 632: Site categories not supported");
                     //m_pLikelihoodCore->calculatePartials(childNum1, childNum2, nodeNum, siteCategories);
                 }
 
@@ -739,13 +738,44 @@ public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
         Alignment fullData = data.get();
         int tipCount = leafs.size();
         ArrayList sequences = new ArrayList(tipCount);
+
+        Alignment subsetData;
         // since taxonSet is not always ordered according to the sequences, we need to reorder the alignment
-        Alignment fullsortedAlignment = new Alignment(fullData.sequenceInput.get(),fullData.dataTypeInput.get());
-        for (int i = 0; i < tipCount; i++){
-            sequences.add(leafs.get(i).getNr(),fullsortedAlignment.sequenceInput.get().get(fullsortedAlignment.getTaxonIndex(leafs.get(i).getID())));
+        // this filtered alignment part is just for beauti to not throw its toys
+        if (fullData.sequenceInput.get().size() == 0 && fullData instanceof FilteredAlignment) {
+            // sort the alignment
+            Alignment fullsortedAlignment =
+                    new Alignment(((FilteredAlignment) fullData).alignmentInput.get().sequenceInput.get(), fullData.dataTypeInput.get());
+            // select sequences for subset
+            for (int i = 0; i < tipCount; i++){
+                sequences.add(leafs.get(i).getNr(),fullsortedAlignment.sequenceInput.get().get(fullsortedAlignment.getTaxonIndex(leafs.get(i).getID())));
+            }
+            // make a new filtered alignment with this subset
+            Alignment toyAlignment = new Alignment(sequences, fullData.dataTypeInput.get());
+            FilteredAlignment subsetDataFiltered = new FilteredAlignment();
+            if (((FilteredAlignment) fullData).constantSiteWeightsInput.get() != null) {
+                subsetDataFiltered.initByName(
+                        "data",        toyAlignment,
+                        "filter",               ((FilteredAlignment) fullData).filterInput.get(),
+                        "constantSiteWeights",  ((FilteredAlignment) fullData).constantSiteWeightsInput.get());
+            } else {
+                subsetDataFiltered.initByName(
+                        "data",        toyAlignment,
+                        "filter",               ((FilteredAlignment) fullData).filterInput.get());
+            }
+            // set subsetData to this new Filtered alignment
+            subsetData = subsetDataFiltered;
+        } else {
+            // sort the alignment
+            Alignment fullsortedAlignment = new Alignment(fullData.sequenceInput.get(), fullData.dataTypeInput.get());
+            // select sequences for subset
+            for (int i = 0; i < tipCount; i++){
+                sequences.add(leafs.get(i).getNr(),fullsortedAlignment.sequenceInput.get().get(fullsortedAlignment.getTaxonIndex(leafs.get(i).getID())));
+            }
+            // make a new alignment with this subset
+            subsetData = new Alignment(sequences, fullData.dataTypeInput.get());
         }
 
-        Alignment subsetData = new Alignment(sequences, fullData.dataTypeInput.get());
         return subsetData;
     }
 }
