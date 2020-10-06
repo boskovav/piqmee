@@ -2,7 +2,6 @@ package piqmee.distributions;
 
 import beast.core.Citation;
 import beast.core.Description;
-import beast.core.util.Log;
 import beast.evolution.speciation.BirthDeathSkylineModel;
 
 import beast.evolution.tree.Node;
@@ -21,7 +20,7 @@ import java.util.stream.IntStream;
  *         maths: Tanja Stadler and Veronika Boskova
  *
  */
-@Description("Model for calculating birth-death likelihood for quasispecies (ultrametric) trees ")
+@Description("Model for calculating birth-death likelihood for quasispecies trees ")
 
 @Citation(value = "Boskova, V., Stadler, T. (2020) \n" +
         "PIQMEE: Bayesian phylodynamic method for analysis of large datasets with duplicate sequences.\n" +
