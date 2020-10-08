@@ -1,9 +1,9 @@
 package piqmee.distributions;
 
+
 import beast.core.Citation;
 import beast.core.Description;
 import beast.evolution.speciation.BirthDeathSkylineModel;
-
 import beast.evolution.tree.Node;
 import beast.evolution.tree.TreeInterface;
 import piqmee.tree.QuasiSpeciesNode;
@@ -26,13 +26,15 @@ import java.util.stream.IntStream;
         "PIQMEE: Bayesian phylodynamic method for analysis of large datasets with duplicate sequences.\n" +
         "Molecular Biology and Evolution msaa136.",
         year = 2020, firstAuthorSurname = "Boskova", DOI="10.1093/molbev/msaa136")
-public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel{
+public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel {
 
     // Empty constructor as required:
     public QuasiSpeciesBirthDeathSkylineModel() { };
 
     ArrayList isRhoTip;
     double[] uniqueSampTimes;
+    
+    double [] log;
 
     @Override
     public void initAndValidate() {
@@ -46,6 +48,14 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel{
             isRhoTip.add(i,isRhoTipArray);
         }
 
+        // TODO: do we know at this stage the maximum number of lineages, and thus
+        // the maximum size of the array? If so, fastlog() does not need to check
+        // array size        
+        log = new double[treeInput.get().getNodeCount()];
+        for (int i = 0; i < log.length; i++) {
+        	log[i] = Math.log(i);
+        }
+        
         uniqueSampTimes = getArrayOfUniqueSamplingTimes(treeInput.get());
 
         if(SAModel || r!=null)
@@ -133,6 +143,13 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel{
         return uniqueTimesArray;
     }
 
+    // temp memory
+    double[] INT = new double[0];
+    double[] allTimes = new double[0];
+    int[] nrqsattachments = new int[0];
+    int[] nrqslineages = new int[0];
+
+    
     /**
      * Get number of full topologies the QS tree represents
      *
@@ -153,7 +170,9 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel{
         // times arrays
         int nrTips = tree.getLeafNodeCount();
         int nrINTnodes = tree.getInternalNodeCount();
-        double[] INT = new double[nrINTnodes];
+        if (INT.length != nrINTnodes) {
+        	INT = new double[nrINTnodes];
+        }
         // fill time arrays
         for (int i = nrTips; i < nrTips+nrINTnodes; i++){
             // internal node, add its height to INT
@@ -162,21 +181,25 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel{
 
         // make array of sort indexes for INT --- for checking later if the node belonging to this height has QS passing through
         int[] indexes = IntStream.range(0, INT.length).boxed()
-                .sorted((i, j) -> ((Double)INT[i]).compareTo(INT[j])).mapToInt(ele -> ele).toArray();
+                .sorted((i, j) -> ((Double)(-INT[i])).compareTo(-INT[j])).mapToInt(ele -> ele).toArray();
         // get in descending order
-        invertArray(indexes);
+        // invertArray(indexes);
 
         // sort time arrays in descending order
         sortListDescending(INT);
-        double[] allTimes = new double[uniqueSampTimes.length + INT.length];
+        if (allTimes.length != uniqueSampTimes.length + INT.length) {
+        	allTimes = new double[uniqueSampTimes.length + INT.length];
+        }
         System.arraycopy(uniqueSampTimes,0, allTimes,0, uniqueSampTimes.length);
         System.arraycopy(INT, 0, allTimes, uniqueSampTimes.length, INT.length);
         sortListDescending(allTimes);
 
         // arrays to store number of bifurcations / total number of lineages of QS and total number of all lineages
         // QS
-        int[] nrqsattachments = new int[allTimes.length];
-        int[] nrqslineages = new int[allTimes.length];
+        if (nrqsattachments.length != allTimes.length) {
+        	nrqsattachments = new int[allTimes.length];
+        	nrqslineages = new int[allTimes.length];
+        }
         // total
 //        int[] nrtotalqsattachments = new int[allTimes.length];
 //        int[] nrtotallineages = new int[allTimes.length];
@@ -221,7 +244,8 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel{
                                 && tree.getNode(indexes[intp] + nrTips).getHeight() == allTimes[i]
                                 && ((QuasiSpeciesNode) tree.getNode(indexes[intp] + nrTips)).getContinuingHaploName() == node.getNr()) {
                             // if it does, add contribution to the gamma factor for possible attachment branches
-                            gamma += Math.log(nrqslineages[i] + 1);
+                            // gamma += Math.log(nrqslineages[i] + 1);
+                            gamma += fastlog(nrqslineages[i] + 1);
                         }
                     }
                 }
@@ -234,7 +258,8 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel{
                     for (int lineage = nrqslineages[i]; lineage > nrqslineages[i] - nrqsattachments[i]; lineage--) {
                         // for qs lineages we have to have lineage + 1 since we did not count that at first split,
                         //  we created 2 lineages instead of just one, as at all later splits
-                        gamma += Math.log(lineage) + Math.log(lineage + 1);
+                        // gamma += Math.log(lineage) + Math.log(lineage + 1);
+                        gamma += fastlog(lineage) + fastlog(lineage + 1);
                     }
                 }
             }
@@ -271,7 +296,19 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel{
         return gamma;
     }
 
-    /**
+    private double fastlog(int x) {
+		if (x > log.length) {
+	        double [] tmp = new double[x + 128];
+	        System.arraycopy(log, 0, tmp, 0, log.length);
+	        for (int i = log.length; i < tmp.length; i++) {
+	        	tmp[i] = Math.log(i);
+	        }
+	        log = tmp;
+		}
+		return log[x];
+	}
+
+	/**
      * Adds the number of qs duplicates to the count of tips at each of the contemporaneous sampling times ("rho" sampling time)
      * @return negative infinity if tips are found at a time when rho is zero, zero otherwise.
      */
