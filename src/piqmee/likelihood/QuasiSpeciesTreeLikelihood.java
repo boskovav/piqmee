@@ -137,11 +137,11 @@ public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
         storedBranchLengths = new double[nodeCount+leafNodeCount];
 
         int patterns = alignment.getPatternCount();
-//        if (nStates == 4) {
-//            likelihoodCore = new BeerLikelihoodCore4();
-//        } else {
+        if (nStates == 4) {
+            likelihoodCore = new QuasiSpeciesBeerLikelihoodCore4(nStates);
+        } else {
             likelihoodCore = new QuasiSpeciesBeerLikelihoodCore(nStates);
-//        }
+        }
 
         String className = getClass().getSimpleName();
 
