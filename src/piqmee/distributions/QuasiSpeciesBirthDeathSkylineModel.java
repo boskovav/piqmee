@@ -3,7 +3,6 @@ package piqmee.distributions;
 
 import beast.core.Citation;
 import beast.core.Description;
-import beast.evolution.speciation.BirthDeathSkylineModel;
 import beast.evolution.tree.Node;
 import beast.evolution.tree.TreeInterface;
 import piqmee.tree.QuasiSpeciesNode;
