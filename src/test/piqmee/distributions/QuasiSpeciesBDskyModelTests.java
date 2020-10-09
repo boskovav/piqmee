@@ -3,10 +3,11 @@ package test.piqmee.distributions;
 import static org.junit.Assert.assertEquals;
 import beast.core.Description;
 import beast.core.parameter.RealParameter;
-import beast.evolution.speciation.BirthDeathSkylineModel;
 import beast.evolution.tree.Tree;
 import beast.util.TreeParser;
 import org.junit.Test;
+
+import piqmee.distributions.BirthDeathSkylineModel;
 import piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel;
 import piqmee.tree.QuasiSpeciesTree;
 import test.piqmee.QuasiSpeciesTestCase;
