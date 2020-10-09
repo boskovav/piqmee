@@ -502,64 +502,95 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel {
             return Double.NEGATIVE_INFINITY;
         }
 
-        // number of lineages at each time ti
-        int[] n = new int[totalIntervals];
 
         int index = 0;
         if (times[index] < 0.)
             index = index(0.);
 
-        double x0 = 0.;
+        logP = getFirstFactorForOrigin(index);
+        if (Double.isInfinite(logP))
+            return logP;
+
+        if (printTempResults) System.out.println("first factor for origin = " + logP);
+
+
+        processFirstNonQSProductTerm(tree, nTips);
+        if (Double.isInfinite(logP))
+            return logP;
+
+        processFirstProductTerm(tree, qsTree);
+        if (Double.isInfinite(logP))
+            return logP;
+
+        processMiddleTerm(tree, qsTree, nTips);
+        if (Double.isInfinite(logP))
+            return logP;
+
+        processLastTerm(tree, qsTree, nTips);
+        if (Double.isInfinite(logP))
+            return logP;
+
+
+        // factor for all possible QS trees
+        logP += logNumberOfQSTrees(tree);
+        if (Double.isInfinite(logP))
+            return logP;
+
+//        if (SAModel) {
+//            int internalNodeCount = tree.getLeafNodeCount() - ((Tree)tree).getDirectAncestorNodeCount()- 1;
+//            logP +=  Math.log(2)*internalNodeCount;
+//        }
+
+        return logP;
+    }
+
+	private double getFirstFactorForOrigin(int index) {
         double temp = 0.;
 
         switch (conditionOn) {
             case NONE:
-                temp = log_q(index, times[index], x0);
+                temp = log_q(index, times[index], 0.);
                 break;
             case SURVIVAL:
-                temp = p0(index, times[index], x0);
+                temp = p0(index, times[index], 0.);
                 if (temp == 1)
                     return Double.NEGATIVE_INFINITY;
                 if (conditionOnRootInput.get()) {
-                    temp = log_q(index, times[index], x0) - 2 * Math.log(1 - temp) - Math.log(birth[index]);
+                    temp = log_q(index, times[index], 0.) - 2 * Math.log(1 - temp) - Math.log(birth[index]);
                 } else {
-                    temp = log_q(index, times[index], x0) - Math.log(1 - temp);
+                    temp = log_q(index, times[index], 0.) - Math.log(1 - temp);
                 }
                 break;
             case RHO_SAMPLING:
-                temp = p0hat(index, times[index], x0);
+                temp = p0hat(index, times[index], 0.);
                 if (temp == 1)
                     return Double.NEGATIVE_INFINITY;
                 if (conditionOnRootInput.get()) {
-                    temp = log_q(index, times[index], x0) - 2 * Math.log(1 - temp);
+                    temp = log_q(index, times[index], 0.) - 2 * Math.log(1 - temp);
                 } else {
-                    temp = log_q(index, times[index], x0) - Math.log(1 - temp);
+                    temp = log_q(index, times[index], 0.) - Math.log(1 - temp);
                 }
                 break;
             default:
                 break;
         }
+        return temp;
+	}
 
-        logP = temp;
-        if (Double.isInfinite(logP))
-            return logP;
-
-        if (printTempResults) System.out.println("first factor for origin = " + temp);
-
-
+	private void processFirstNonQSProductTerm(TreeInterface tree, int nTips) {
         // first product term in f[T] over all non-QS transmission times (for the tips sampled through time and at times of parameter change)
         // to start with, get array containing possible number of branches the true node can start from
         for (int i = 0; i < tree.getInternalNodeCount(); i++) {
             QuasiSpeciesNode node = (QuasiSpeciesNode) tree.getNode(nTips + i);
             double x = times[totalIntervals - 1] - node.getHeight();
-            index = index(x);
+            final int index = index(x);
             if (!node.isFake()) {
-                temp = Math.log(birth[index]) + log_q(index, times[index], x);
+                double temp = Math.log(birth[index]) + log_q(index, times[index], x);
                 logP += temp;
                 if (printTempResults) System.out.println("1st pwd" +
                         " = " + temp + "; interval = " + i);
                 if (Double.isInfinite(logP))
-                    return logP;
+                    return ;
                 // term for the Quasi-Species tree likelihood calculation counting possible start branches (gamma)
                 //int gamma = node.getStartBranchCounts();
                 //logP += Math.log(gamma);
@@ -567,9 +598,13 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel {
                 if (printTempResults) System.out.println("1st pwd" +
                         " = " + temp + "; QS start branches = " + node.getID());
                 if (Double.isInfinite(logP))
-                    return logP;
+                    return ;
             }
         }
+	}
+
+
+	private void processFirstProductTerm(TreeInterface tree, QuasiSpeciesTree qsTree) {
         // first product term in f[T] over all QS transmission times
         //
         for (Node node : tree.getExternalNodes()){
@@ -578,16 +613,19 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel {
             //double[] QSTipTimesTemp = ((QuasiSpeciesNode) node).getTipTimesList();
             for (int j = nQSTemp - 1; j > 0; j--) {
                 double x = times[totalIntervals - 1] - QSTimesTemp[j];
-                index = index(x);
-                temp = Math.log(birth[index]) + log_q(index, times[index], x);
+                final int index = index(x);
+                double temp = Math.log(birth[index]) + log_q(index, times[index], x);
                 logP += temp;
                 if (printTempResults)
                     System.out.println("1st pwd" + " = " + temp + "; QSinterval & QS attachment branches = " + node.getID() + " " + j);
                 if (Double.isInfinite(logP))
-                    return logP;
+                    return;
             }
         }
+		
+	}
 
+	private void processMiddleTerm(TreeInterface tree, QuasiSpeciesTree qsTree, int nTips) {
         // middle product term in f[T]
         for (int i = 0; i < nTips; i++) {
 
@@ -598,18 +636,18 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel {
                 if (!isRhoTipArray[j] || m_rho.get() == null) {
                     int nQSTemp = node.getTipTimesCountList()[j];
                     double y = times[totalIntervals - 1] - node.getTipTimesList()[j];
-                    index = index(y);
+                    final int index = index(y);
 
 //                if (!(tree.getNode(i)).isDirectAncestor()) {
 //                    if (!SAModel) {
-                    temp = nQSTemp * (Math.log(psi[index]) - log_q(index, times[index], y));
+                    double temp = nQSTemp * (Math.log(psi[index]) - log_q(index, times[index], y));
 //                    } else {
 //                        temp = Math.log(psi[index] * (r[index] + (1 - r[index]) * p0(index, times[index], y))) - log_q(index, times[index], y);
 //                    }
                     logP += temp;
                     if (printTempResults) System.out.println("2nd PI = " + temp);
                     if (psi[index] == 0 || Double.isInfinite(logP))
-                        return logP;
+                        return;
 //                } else {
 //                    if (r[index] != 1) {
 //                        logP += Math.log((1 - r[index])*psi[index]);
@@ -624,7 +662,13 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel {
 //                }
                 }
             }
-        }
+        }		
+	}
+
+
+	private void processLastTerm(TreeInterface tree, QuasiSpeciesTree qsTree, int nTips) {
+        // number of lineages at each time ti
+        int[] n = new int[totalIntervals];
 
         // last product term in f[T], factorizing from 1 to m //
         double time;
@@ -639,12 +683,12 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel {
 //                n[j] = ((j == 0) ? 0 : lineageCountAtTime(times[totalIntervals - 1] - time, tree, k));
 //            }
             if (n[j] > 0) {
-                temp = n[j] * (log_q(j, times[j], time) + Math.log(1 - rho[j-1]));
+            	double temp = n[j] * (log_q(j, times[j], time) + Math.log(1 - rho[j-1]));
                 logP += temp;
                 if (printTempResults)
                     System.out.println("3rd factor (nj loop) = " + temp + "; interval = " + j + "; n[j] = " + n[j]);//+ "; Math.log(g(j, times[j], time)) = " + Math.log(g(j, times[j], time)));
                 if (Double.isInfinite(logP))
-                    return logP;
+                    return;
 
             }
 
@@ -657,27 +701,16 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel {
 //            }
 
             if (rho[j] > 0 && N[j] > 0) {
-                temp = N[j] * Math.log(rho[j]);    // term for contemporaneous sampling
+            	double temp = N[j] * Math.log(rho[j]);    // term for contemporaneous sampling
                 logP += temp;
                 if (printTempResults)
                     System.out.println("3rd factor (Nj loop) = " + temp + "; interval = " + j + "; N[j] = " + N[j]);
                 if (Double.isInfinite(logP))
-                    return logP;
+                    return;
 
             }
-        }
-
-        // factor for all possible QS trees
-        logP += logNumberOfQSTrees(tree);
-        if (Double.isInfinite(logP))
-            return logP;
-
-//        if (SAModel) {
-//            int internalNodeCount = tree.getLeafNodeCount() - ((Tree)tree).getDirectAncestorNodeCount()- 1;
-//            logP +=  Math.log(2)*internalNodeCount;
-//        }
-
-        return logP;
+        }	
     }
+
 
 }
