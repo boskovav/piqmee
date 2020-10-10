@@ -39,18 +39,26 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel {
     public void initAndValidate() {
         super.initAndValidate();
 
+        // set the size of the array storing information about if the tip was sampled at mass sampling time points (rho)
+        //   and get the max number of qs copies (for fastlog calculations of the binomials)
         isRhoTip = new ArrayList<Boolean>(treeInput.get().getLeafNodeCount());
+        int maxsize = 0;
         for (int i = 0; i < treeInput.get().getLeafNodeCount(); i++){
             QuasiSpeciesNode node = (QuasiSpeciesNode) treeInput.get().getNode(i);
+            // add to size of isRhoTip array
             double[] tipTimes = node.getTipTimesList();
             boolean[] isRhoTipArray = new boolean[tipTimes.length];
             isRhoTip.add(i,isRhoTipArray);
+            // check the number of the copies of the current haplo
+            if (node.getAttachmentTimesList().length > maxsize)
+                // take a log of size + 2
+                //      + 1 because if we have eg. 4 copies, the factor would be log(4) not log(3)
+                //      + 1 because the attach time array is always 1 smaller, as the first lineage is not "attaching"
+                maxsize = node.getAttachmentTimesList().length + 2;
         }
 
-        // TODO: do we know at this stage the maximum number of lineages, and thus
-        // the maximum size of the array? If so, fastlog() does not need to check
-        // array size        
-        log = new double[treeInput.get().getNodeCount()];
+        // set the maximum size of the array
+        log = new double[maxsize];
         for (int i = 0; i < log.length; i++) {
         	log[i] = Math.log(i);
         }
@@ -179,10 +187,9 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel {
         }
 
         // make array of sort indexes for INT --- for checking later if the node belonging to this height has QS passing through
+        // get in descending order (so compare --> -INT)
         int[] indexes = IntStream.range(0, INT.length).boxed()
                 .sorted((i, j) -> ((Double)(-INT[i])).compareTo(-INT[j])).mapToInt(ele -> ele).toArray();
-        // get in descending order
-        // invertArray(indexes);
 
         // sort time arrays in descending order
         sortListDescending(INT);
@@ -243,7 +250,6 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel {
                                 && tree.getNode(indexes[intp] + nrTips).getHeight() == allTimes[i]
                                 && ((QuasiSpeciesNode) tree.getNode(indexes[intp] + nrTips)).getContinuingHaploName() == node.getNr()) {
                             // if it does, add contribution to the gamma factor for possible attachment branches
-                            // gamma += Math.log(nrqslineages[i] + 1);
                             gamma += fastlog(nrqslineages[i] + 1);
                         }
                     }
@@ -257,7 +263,6 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel {
                     for (int lineage = nrqslineages[i]; lineage > nrqslineages[i] - nrqsattachments[i]; lineage--) {
                         // for qs lineages we have to have lineage + 1 since we did not count that at first split,
                         //  we created 2 lineages instead of just one, as at all later splits
-                        // gamma += Math.log(lineage) + Math.log(lineage + 1);
                         gamma += fastlog(lineage) + fastlog(lineage + 1);
                     }
                 }
@@ -296,14 +301,6 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel {
     }
 
     private double fastlog(int x) {
-		if (x > log.length) {
-	        double [] tmp = new double[x + 128];
-	        System.arraycopy(log, 0, tmp, 0, log.length);
-	        for (int i = log.length; i < tmp.length; i++) {
-	        	tmp[i] = Math.log(i);
-	        }
-	        log = tmp;
-		}
 		return log[x];
 	}
 
