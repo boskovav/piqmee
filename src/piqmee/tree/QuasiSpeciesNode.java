@@ -14,6 +14,7 @@ public class QuasiSpeciesNode extends QuasiSpeciesNodeBaseClass {
 
     // attachment times are sorted from the biggest to the smallest
     protected double[] attachmentTimesList;
+    boolean attachmentTimesListChanged;
 
     public QuasiSpeciesNode() {}
 
@@ -140,6 +141,15 @@ public class QuasiSpeciesNode extends QuasiSpeciesNodeBaseClass {
     public double[] getAttachmentTimesList() {
         return this.attachmentTimesList;
     }
+    
+    public boolean attachmentTimesListChanged() {
+    	return attachmentTimesListChanged;
+    }
+    
+    public double[] getAttachmentTimesListAndReset() {
+    	attachmentTimesListChanged = false;
+        return this.attachmentTimesList;
+    }
 
     /**
      * Sets the attachment times of the haplotype associated with this tip
@@ -149,6 +159,7 @@ public class QuasiSpeciesNode extends QuasiSpeciesNodeBaseClass {
     public void setAttachmentTimesList(double[] newAttachmentTimesList) {
         startEditing();
         this.attachmentTimesList = newAttachmentTimesList;
+        attachmentTimesListChanged = true;
     }
 
     /**

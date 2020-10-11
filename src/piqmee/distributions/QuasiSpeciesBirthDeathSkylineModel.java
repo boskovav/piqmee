@@ -10,8 +10,11 @@ import piqmee.tree.QuasiSpeciesTree;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.IntStream;
+
+import org.apache.commons.math3.util.FastMath;
 
 /**
  *  @author Veronika Boskova created on 26/06/2015
@@ -192,7 +195,7 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel {
                 .sorted((i, j) -> ((Double)(-INT[i])).compareTo(-INT[j])).mapToInt(ele -> ele).toArray();
 
         // sort time arrays in descending order
-        sortListDescending(INT);
+        //sortListDescending(INT); RRB: INT is not used in sorted form, but allTimes is, so only sort allTimes
         if (allTimes.length != uniqueSampTimes.length + INT.length) {
         	allTimes = new double[uniqueSampTimes.length + INT.length];
         }
@@ -574,7 +577,7 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel {
         return temp;
 	}
 
-	private void processFirstNonQSProductTerm(TreeInterface tree, int nTips) {
+	private void processFirstNonQSProductTerm(final TreeInterface tree, final int nTips) {
         // first product term in f[T] over all non-QS transmission times (for the tips sampled through time and at times of parameter change)
         // to start with, get array containing possible number of branches the true node can start from
         for (int i = 0; i < tree.getInternalNodeCount(); i++) {
@@ -601,28 +604,107 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel {
 	}
 
 
-	private void processFirstProductTerm(TreeInterface tree, QuasiSpeciesTree qsTree) {
+	
+	double [] currentFirstTerms;
+	double [] storedFirstTersm;
+	double [] storedBirth, storedAi, storedBi;
+	
+	private void processFirstProductTerm(final TreeInterface tree, final QuasiSpeciesTree qsTree) {
+		
+		if (currentFirstTerms == null) {
+			currentFirstTerms = new double[tree.getExternalNodes().size()];
+			storedFirstTersm = new double[tree.getExternalNodes().size()];
+			Arrays.fill(currentFirstTerms, Double.NaN);
+			Arrays.fill(storedFirstTersm, Double.NaN);
+			storedBirth = new double[birth.length];
+			storedAi = new double[Ai.length];
+			storedBi = new double[Bi.length];
+		}
+		
+		boolean bdskyIsDirty = bsdkyIsDirty();
+		
         // first product term in f[T] over all QS transmission times
         //
-        for (Node node : tree.getExternalNodes()){
-            int nQSTemp = qsTree.getHaplotypeCounts(node);
-            double[] QSTimesTemp = ((QuasiSpeciesNode) node).getAttachmentTimesList();
-            //double[] QSTipTimesTemp = ((QuasiSpeciesNode) node).getTipTimesList();
-            for (int j = nQSTemp - 1; j > 0; j--) {
-                double x = times[totalIntervals - 1] - QSTimesTemp[j];
-                final int index = index(x);
-                double temp = Math.log(birth[index]) + log_q(index, times[index], x);
+        for (Node node : tree.getExternalNodes()) {
+        	final boolean b = bdskyIsDirty || ((QuasiSpeciesNode) node).attachmentTimesListChanged() 
+        						|| Double.isNaN(currentFirstTerms[node.getNr()]);
+        	if (b) {
+	            int nQSTemp = qsTree.getHaplotypeCounts(node);
+	            
+	            double[] QSTimesTemp = ((QuasiSpeciesNode) node).getAttachmentTimesListAndReset();
+	            //double[] QSTipTimesTemp = ((QuasiSpeciesNode) node).getTipTimesList();
+	            double temp = 0;
+	            for (int j = nQSTemp - 1; j > 0; j--) {
+	                double x = times[totalIntervals - 1] - QSTimesTemp[j];
+	                final int index = index(x);
+	                temp += FastMath.log(birth[index]) + log_q(index, times[index], x);
+	                if (printTempResults)
+	                    System.out.println("1st pwd" + " = " + temp + "; QSinterval & QS attachment branches = " + node.getID() + " " + j);
+	            }
                 logP += temp;
-                if (printTempResults)
-                    System.out.println("1st pwd" + " = " + temp + "; QSinterval & QS attachment branches = " + node.getID() + " " + j);
-                if (Double.isInfinite(logP))
+            	if (!b) {
+            		if (Math.abs(currentFirstTerms[node.getNr()] - temp) > 1e-10) {
+            			int h = 3;
+            			h++;
+            		}
+            	}
+                currentFirstTerms[node.getNr()] = temp;
+                if (Double.isInfinite(logP)) {
                     return;
-            }
+                }
+        	} else {
+        		logP += currentFirstTerms[node.getNr()];
+        	}
         }
-		
+
 	}
 
-	private void processMiddleTerm(TreeInterface tree, QuasiSpeciesTree qsTree, int nTips) {
+	private boolean bsdkyIsDirty() {
+		for (int i = 0; i < birth.length; i++) {
+			if (birth[i] != storedBirth[i]) {
+				return true;
+			}
+		}
+		for (int i = 0; i < Ai.length; i++) {
+			if (Ai[i] != storedAi[i]) {
+				return true;
+			}
+		}
+		for (int i = 0; i < Bi.length; i++) {
+			if (Bi[i] != storedBi[i]) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	@Override
+	public void store() {
+		if (currentFirstTerms != null) {
+			System.arraycopy(currentFirstTerms, 0, storedFirstTersm, 0, currentFirstTerms.length);
+			System.arraycopy(birth, 0, storedBirth, 0, birth.length);
+			System.arraycopy(Ai, 0, storedAi, 0, Ai.length);
+			System.arraycopy(Bi, 0, storedBi, 0, Bi.length);
+		}
+		super.store();
+	}
+
+	@Override
+	public void restore() {
+		double [] tmp = currentFirstTerms;
+		currentFirstTerms = storedFirstTersm;
+		storedFirstTersm = tmp;
+		
+		tmp = birth; birth = storedBirth; storedBirth = tmp;
+		
+		tmp = Ai; Ai = storedAi; storedAi = tmp;
+		
+		tmp = Bi; Bi = storedBi; storedBi = tmp;
+				
+		super.restore();
+	}
+	
+	private void processMiddleTerm(final TreeInterface tree, final QuasiSpeciesTree qsTree, final int nTips) {
         // middle product term in f[T]
         for (int i = 0; i < nTips; i++) {
 
@@ -663,9 +745,7 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel {
 	}
 
 
-	private void processLastTerm(TreeInterface tree, QuasiSpeciesTree qsTree, int nTips) {
-        // number of lineages at each time ti
-        int[] n = new int[totalIntervals];
+	private void processLastTerm(final TreeInterface tree, final QuasiSpeciesTree qsTree, final int nTips) {
 
         // last product term in f[T], factorizing from 1 to m //
         double time;
@@ -675,15 +755,15 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel {
 //            if (!SAModel) {
             // changed the number of lineages surviving the next parameter change period done in function lineageCountAtTime
             //  to account for the QS lineages that could be also surviving the parameter change time
-            n[j] = ((j == 0) ? 0 : lineageCountAtTime(times[totalIntervals - 1] - time, tree));
+            final int nj = ((j == 0) ? 0 : lineageCountAtTime(times[totalIntervals - 1] - time, tree));
 //            } else {
 //                n[j] = ((j == 0) ? 0 : lineageCountAtTime(times[totalIntervals - 1] - time, tree, k));
 //            }
-            if (n[j] > 0) {
-            	double temp = n[j] * (log_q(j, times[j], time) + Math.log(1 - rho[j-1]));
+            if (nj > 0) {
+            	double temp = nj * (log_q(j, times[j], time) + Math.log(1 - rho[j-1]));
                 logP += temp;
                 if (printTempResults)
-                    System.out.println("3rd factor (nj loop) = " + temp + "; interval = " + j + "; n[j] = " + n[j]);//+ "; Math.log(g(j, times[j], time)) = " + Math.log(g(j, times[j], time)));
+                    System.out.println("3rd factor (nj loop) = " + temp + "; interval = " + j + "; n[j] = " + nj);//+ "; Math.log(g(j, times[j], time)) = " + Math.log(g(j, times[j], time)));
                 if (Double.isInfinite(logP))
                     return;
 
