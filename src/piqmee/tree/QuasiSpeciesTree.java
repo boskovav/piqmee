@@ -48,6 +48,7 @@ public class QuasiSpeciesTree extends Tree {
     }
 
     // init and validate from scratch in order to implement the quasi-species node -- holding the haplotype starting above
+    @Override
     public void initAndValidate() {
 
         if (m_initial.get() != null && !(this instanceof StateNodeInitialiser)) {
