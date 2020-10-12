@@ -38,11 +38,18 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel {
     
     double [] log;
 
+    // variables for logNumberOfQSTrees
+    double[] INT;
+    double[] allTimes;
+    int[] nrqsattachments;
+    int[] nrqslineages;
+    int[] indexes;
+
     @Override
     public void initAndValidate() {
         super.initAndValidate();
 
-        // set the size of the array storing information about if the tip was sampled at mass sampling time points (rho)
+        // set the size of the log array storing information about if the tip was sampled at mass sampling time points (rho)
         //   and get the max number of qs copies (for fastlog calculations of the binomials)
         isRhoTip = new ArrayList<Boolean>(treeInput.get().getLeafNodeCount());
         int maxsize = 0;
@@ -60,13 +67,21 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel {
                 maxsize = node.getAttachmentTimesList().length + 2;
         }
 
-        // set the maximum size of the array
+        // set the maximum size of the log array
         log = new double[maxsize];
         for (int i = 0; i < log.length; i++) {
         	log[i] = Math.log(i);
         }
-        
+
+        // get the unique sampling times as array
         uniqueSampTimes = getArrayOfUniqueSamplingTimes(treeInput.get());
+
+        // set the size of the array storing internal node times, all times, and nr qs attachment + nr qs lineages at those times (for logNumberOfQSTrees)
+        INT = new double[treeInput.get().getInternalNodeCount()];
+        allTimes = new double[uniqueSampTimes.length + INT.length];
+        nrqsattachments = new int[allTimes.length];
+        nrqslineages = new int[allTimes.length];
+        indexes = new int[INT.length];
 
         if(SAModel || r!=null)
             throw new IllegalArgumentException("The sampled ancestor model has not been implemented to work with quasispecies model yet");
@@ -152,13 +167,6 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel {
 
         return uniqueTimesArray;
     }
-
-    // temp memory
-    double[] INT = new double[0];
-    double[] allTimes = new double[0];
-    int[] nrqsattachments = new int[0];
-    int[] nrqslineages = new int[0];
-
     
     /**
      * Get number of full topologies the QS tree represents
@@ -180,9 +188,7 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel {
         // times arrays
         int nrTips = tree.getLeafNodeCount();
         int nrINTnodes = tree.getInternalNodeCount();
-        if (INT.length != nrINTnodes) {
-        	INT = new double[nrINTnodes];
-        }
+
         // fill time arrays
         for (int i = nrTips; i < nrTips+nrINTnodes; i++){
             // internal node, add its height to INT
@@ -191,24 +197,21 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel {
 
         // make array of sort indexes for INT --- for checking later if the node belonging to this height has QS passing through
         // get in descending order (so compare --> -INT)
-        int[] indexes = IntStream.range(0, INT.length).boxed()
+        indexes = IntStream.range(0, INT.length).boxed()
                 .sorted((i, j) -> ((Double)(-INT[i])).compareTo(-INT[j])).mapToInt(ele -> ele).toArray();
 
         // sort time arrays in descending order
         //sortListDescending(INT); RRB: INT is not used in sorted form, but allTimes is, so only sort allTimes
-        if (allTimes.length != uniqueSampTimes.length + INT.length) {
-        	allTimes = new double[uniqueSampTimes.length + INT.length];
-        }
         System.arraycopy(uniqueSampTimes,0, allTimes,0, uniqueSampTimes.length);
         System.arraycopy(INT, 0, allTimes, uniqueSampTimes.length, INT.length);
         sortListDescending(allTimes);
 
         // arrays to store number of bifurcations / total number of lineages of QS and total number of all lineages
-        // QS
-        if (nrqsattachments.length != allTimes.length) {
-        	nrqsattachments = new int[allTimes.length];
-        	nrqslineages = new int[allTimes.length];
-        }
+        // QS -- specified in initAndValidate
+//        if (nrqsattachments.length != allTimes.length) {
+//        	nrqsattachments = new int[allTimes.length];
+//        	nrqslineages = new int[allTimes.length];
+//        }
         // total
 //        int[] nrtotalqsattachments = new int[allTimes.length];
 //        int[] nrtotallineages = new int[allTimes.length];
@@ -642,6 +645,7 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel {
 	                    System.out.println("1st pwd" + " = " + temp + "; QSinterval & QS attachment branches = " + node.getID() + " " + j);
 	            }
                 logP += temp;
+	            //todo: are the 6 lines below used at all for something?
             	if (!b) {
             		if (Math.abs(currentFirstTerms[node.getNr()] - temp) > 1e-10) {
             			int h = 3;
