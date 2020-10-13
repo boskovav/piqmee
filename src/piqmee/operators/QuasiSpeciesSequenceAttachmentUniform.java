@@ -140,6 +140,9 @@ public class QuasiSpeciesSequenceAttachmentUniform extends QuasiSpeciesTreeOpera
         if (changeIdx == 1){
             tempqstimes[0] = tnew;
         }
+        node.setNewtimeofchangedcopy(tnew);
+        node.setOldtimeofchangedcopy(told);
+
         node.setAttachmentTimesList(tempqstimes);
 
         // account for the fact that we are changing the QS start

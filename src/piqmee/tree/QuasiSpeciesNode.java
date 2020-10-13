@@ -16,6 +16,12 @@ public class QuasiSpeciesNode extends QuasiSpeciesNodeBaseClass {
     protected double[] attachmentTimesList;
     boolean attachmentTimesListChanged;
 
+    // variables storing old and new attachment time if only a single one was changed via operators
+    //  -1 if not changed
+    double oldtimeofchangedcopy=-1;
+    double newtimeofchangedcopy=-1;
+
+
     public QuasiSpeciesNode() {}
 
     public QuasiSpeciesNode(final String id) {
@@ -258,6 +264,42 @@ public class QuasiSpeciesNode extends QuasiSpeciesNodeBaseClass {
                 k--;
             }
         }
+    }
+
+    /**
+     * Obtain the old time of changed haplotype copy
+     *
+     * @return old time
+     */
+    public double getOldtimeofchangedcopy() {
+        return this.oldtimeofchangedcopy;
+    }
+
+    /**
+     * Sets the old time of changed haplotype copy
+     *
+     * @return old time
+     */
+    public void setOldtimeofchangedcopy(double oldtime) {
+        this.oldtimeofchangedcopy = oldtime;
+    }
+
+    /**
+     * Obtain the new time of changed haplotype copy
+     *
+     * @return old time
+     */
+    public double getNewtimeofchangedcopy() {
+        return this.newtimeofchangedcopy;
+    }
+
+    /**
+     * Sets the old time of changed haplotype copy
+     *
+     * @return old time
+     */
+    public void setNewtimeofchangedcopy(double newtime) {
+        this.newtimeofchangedcopy = newtime;
     }
 
     /**

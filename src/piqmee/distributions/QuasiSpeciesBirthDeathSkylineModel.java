@@ -738,15 +738,35 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel {
 	            double[] QSTimesTemp = ((QuasiSpeciesNode) node).getAttachmentTimesList();
 	            //double[] QSTipTimesTemp = ((QuasiSpeciesNode) node).getTipTimesList();
 	            double temp = 0;
-	            for (int j = nQSTemp - 1; j > 0; j--) {
-	                double x = times[totalIntervals - 1] - QSTimesTemp[j];
-	                final int index = index(x);
-	                temp += FastMathLog(birth[index]) + log_q(index, times[index], x);
-	                if (printTempResults)
-	                    System.out.println("1st pwd" + " = " + temp + "; QSinterval & QS attachment branches = " + node.getID() + " " + j);
-	            }
-                logP += temp;
-                currentFirstTerms[node.getNr()] = temp;
+
+	            if (!bdskyIsDirty && !Double.isNaN(currentFirstTerms[node.getNr()]) && ((QuasiSpeciesNode) node).getOldtimeofchangedcopy()!=-1){
+                    //deduction fof contribution from old time
+	                double x = times[totalIntervals - 1] - ((QuasiSpeciesNode) node).getOldtimeofchangedcopy();
+                    int index = index(x);
+                    temp -= FastMathLog(birth[index]) + log_q(index, times[index], x);
+                    ((QuasiSpeciesNode) node).setOldtimeofchangedcopy(-1);
+                    //addition of contribution from new time
+                    x = times[totalIntervals - 1] - ((QuasiSpeciesNode) node).getNewtimeofchangedcopy();
+                    index = index(x);
+                    temp += FastMathLog(birth[index]) + log_q(index, times[index], x);
+                    ((QuasiSpeciesNode) node).setNewtimeofchangedcopy(-1);
+
+                    if (printTempResults)
+                        System.out.println("1st pwd changed by" + " = " + temp + "; QSinterval & QS attachment branches = " + node.getID());
+
+                    currentFirstTerms[node.getNr()] += temp;
+                    logP += currentFirstTerms[node.getNr()];
+                } else {
+                    for (int j = nQSTemp - 1; j > 0; j--) {
+                        double x = times[totalIntervals - 1] - QSTimesTemp[j];
+                        final int index = index(x);
+                        temp += FastMathLog(birth[index]) + log_q(index, times[index], x);
+                        if (printTempResults)
+                            System.out.println("1st pwd" + " = " + temp + "; QSinterval & QS attachment branches = " + node.getID() + " " + j);
+                    }
+                    logP += temp;
+                    currentFirstTerms[node.getNr()] = temp;
+                }
                 if (Double.isInfinite(logP)) {
                     return;
                 }
