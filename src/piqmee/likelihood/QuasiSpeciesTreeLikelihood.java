@@ -368,7 +368,7 @@ public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
             return Double.NEGATIVE_INFINITY;
         }
         m_nScale++;
-        if (logP > 0 || (likelihoodCore.getUseScaling() && m_nScale > X)) {
+        if (scaling.get().equals(Scaling._default) && m_nScale > X && likelihoodCore.getUseScaling()) {
             System.err.println("Switch off scaling");
             likelihoodCore.setUseScaling(1.0);
             likelihoodCore.unstore();

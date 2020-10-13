@@ -2270,5 +2270,10 @@ public class QuasiSpeciesBeerLikelihoodCore extends BeerLikelihoodCore {
             scalePartials(nodeIndex3);
         }
     }
+    
+    @Override
+    public boolean getUseScaling() {
+    	return useScaling;
+    }
 
 } // class QuasiSpeciesBeerLikelihoodCore
