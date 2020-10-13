@@ -309,8 +309,21 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel {
 
        	for (int k = start; k < end; k++) {
     		Node node = nodes.get(k);
-       		if (tree.somethingIsDirty() || ((QuasiSpeciesNode) node).attachmentTimesListChanged()) {
-	       		double gamma = 0;
+    		boolean isNodesAncestorDirty = false;
+    		if (tree.somethingIsDirty()){
+    		    QuasiSpeciesNode nodetocheck = (QuasiSpeciesNode) node;
+    		    while (nodetocheck.getContinuingHaploName() == node.getNr()){
+    		       if (nodetocheck.isDirty()>0){
+    		           isNodesAncestorDirty = true;
+    		           break;
+                   } else if (!nodetocheck.isRoot()){
+    		           nodetocheck = (QuasiSpeciesNode) nodetocheck.getParent();
+                   } else
+                       break;
+                }
+            }
+       		if (isNodesAncestorDirty || ((QuasiSpeciesNode) node).attachmentTimesListChanged()) {
+                double gamma = 0;
 	            Arrays.fill(nrqsattachments,0);
 	            Arrays.fill(nrqslineages,0);
 	            double[] QSTimesTemp = ((QuasiSpeciesNode) node).getAttachmentTimesListAndReset();
@@ -697,16 +710,16 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel {
 
 	
 	double [] currentFirstTerms;
-	double [] storedFirstTersm;
+	double [] storedFirstTerms;
 	double [] storedBirth, storedAi, storedBi;
 	
 	private void processFirstProductTerm(final TreeInterface tree, final QuasiSpeciesTree qsTree) {
 		
 		if (currentFirstTerms == null) {
 			currentFirstTerms = new double[tree.getExternalNodes().size()];
-			storedFirstTersm = new double[tree.getExternalNodes().size()];
+			storedFirstTerms = new double[tree.getExternalNodes().size()];
 			Arrays.fill(currentFirstTerms, Double.NaN);
-			Arrays.fill(storedFirstTersm, Double.NaN);
+			Arrays.fill(storedFirstTerms, Double.NaN);
 			storedBirth = new double[birth.length];
 			storedAi = new double[Ai.length];
 			storedBi = new double[Bi.length];
@@ -766,7 +779,7 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel {
 	@Override
 	public void store() {
 		if (currentFirstTerms != null) {
-			System.arraycopy(currentFirstTerms, 0, storedFirstTersm, 0, currentFirstTerms.length);
+			System.arraycopy(currentFirstTerms, 0, storedFirstTerms, 0, currentFirstTerms.length);
 			System.arraycopy(birth, 0, storedBirth, 0, birth.length);
 			System.arraycopy(Ai, 0, storedAi, 0, Ai.length);
 			System.arraycopy(Bi, 0, storedBi, 0, Bi.length);
@@ -778,8 +791,8 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel {
 	@Override
 	public void restore() {
 		double [] tmp = currentFirstTerms;
-		currentFirstTerms = storedFirstTersm;
-		storedFirstTersm = tmp;
+		currentFirstTerms = storedFirstTerms;
+		storedFirstTerms = tmp;
 		
 		tmp = birth; birth = storedBirth; storedBirth = tmp;
 		
