@@ -236,7 +236,7 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel {
 
 
 //        if (threads <= 1) {
-        	logNumberOfQSTrees(0, tree.getExternalNodes().size(), tree, qsTree, indexes, nrTips);
+        	logNumberOfQSTrees(0, ((QuasiSpeciesTree)tree).getExternalNodesArray().length, tree, qsTree, indexes, nrTips);
 //        } else {
 //            countDown = new CountDownLatch(threads - 1);
 //            int delta = tree.getExternalNodes().size() / threads;
@@ -302,15 +302,18 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel {
 //
 //    } // CoreRunnable
 //    
+    
+    
+    
     private void logNumberOfQSTrees(int start, int end, TreeInterface tree, QuasiSpeciesTree qsTree, int[] indexes, int nrTips) {
         // count for each haplo at each time point the n's and add to total count
-    	List<Node> nodes = tree.getExternalNodes();
+    	Node [] nodes = ((QuasiSpeciesTree)tree).getExternalNodesArray();
     	
     	//int [] nrqsattachments = new int[allTimes.length];
     	//int [] nrqslineages = new int[allTimes.length];
 
        	for (int k = start; k < end; k++) {
-    		Node node = nodes.get(k);
+    		Node node = nodes[k];
     		boolean isNodesAncestorDirty = false;
     		if (tree.somethingIsDirty()){
     		    QuasiSpeciesNode nodetocheck = (QuasiSpeciesNode) node;
@@ -324,6 +327,7 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel {
                        break;
                 }
             }
+
        		if (isNodesAncestorDirty || ((QuasiSpeciesNode) node).attachmentTimesListChanged()) {
                 double gamma = 0;
 	            Arrays.fill(nrqsattachments,0);
@@ -463,7 +467,7 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel {
     public Double preCalculation(TreeInterface tree) {
 
         double maxheight= tree.getRoot().getHeight();
-        for (Node node : tree.getExternalNodes()){
+        for (Node node : ((QuasiSpeciesTree)tree).getExternalNodesArray()){
             double[] attachmentTimes = ((QuasiSpeciesNode) node).getAttachmentTimesList();
             if (attachmentTimes.length > 1 && attachmentTimes[1] > maxheight){
                 maxheight = attachmentTimes[1];
@@ -731,7 +735,7 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel {
 		
         // first product term in f[T] over all QS transmission times
         //
-        for (Node node : tree.getExternalNodes()) {
+        for (Node node : ((QuasiSpeciesTree)tree).getExternalNodesArray()) {
         	final boolean b = bdskyIsDirty || ((QuasiSpeciesNode) node).attachmentTimesListChanged() 
         						|| Double.isNaN(currentFirstTerms[node.getNr()]);
         	if (b) {

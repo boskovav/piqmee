@@ -1773,4 +1773,17 @@ public class QuasiSpeciesTree extends Tree {
             Logger.getLogger(QuasiSpeciesTree.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+    
+    
+    Node [] externalNodeArray = null;
+    // fast alternative for getExternalNodes()
+    // assumes all leave nodes are numbered 0,...,leafnodecount-1
+	public Node [] getExternalNodesArray() {
+		if (externalNodeArray == null) {
+			externalNodeArray = new Node[getLeafNodeCount()];
+		}
+		System.arraycopy(m_nodes, 0, externalNodeArray, 0, externalNodeArray.length);
+        return externalNodeArray;
+    }
+
 }
