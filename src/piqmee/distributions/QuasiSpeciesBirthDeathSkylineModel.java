@@ -199,23 +199,25 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel {
         int nrTips = tree.getLeafNodeCount();
         int nrINTnodes = tree.getInternalNodeCount();
 
-        // fill time arrays
-        for (int i = nrTips; i < nrTips+nrINTnodes; i++){
-            // internal node, add its height to INT
-            INT[i-nrTips] = ((tree.getNode(i)).getHeight());
+        // only need to recalculate allTimes if an internal node changed
+        if (tree.somethingIsDirty()) {
+            // fill time arrays
+            for (int i = nrTips; i < nrTips + nrINTnodes; i++) {
+                // internal node, add its height to INT
+                INT[i - nrTips] = ((tree.getNode(i)).getHeight());
+            }
+
+            // make array of sort indexes for INT --- for checking later if the node belonging to this height has QS passing through
+            // get in descending order (so compare --> -INT)
+            indexes = IntStream.range(0, INT.length).boxed()
+                    .sorted((i, j) -> ((Double) (-INT[i])).compareTo(-INT[j])).mapToInt(ele -> ele).toArray();
+
+            // sort time arrays in descending order
+            //sortListDescending(INT); RRB: INT is not used in sorted form, but allTimes is, so only sort allTimes
+            System.arraycopy(uniqueSampTimes, 0, allTimes, 0, uniqueSampTimes.length);
+            System.arraycopy(INT, 0, allTimes, uniqueSampTimes.length, INT.length);
+            sortListDescending(allTimes);
         }
-
-        // make array of sort indexes for INT --- for checking later if the node belonging to this height has QS passing through
-        // get in descending order (so compare --> -INT)
-        indexes = IntStream.range(0, INT.length).boxed()
-                .sorted((i, j) -> ((Double)(-INT[i])).compareTo(-INT[j])).mapToInt(ele -> ele).toArray();
-
-        // sort time arrays in descending order
-        //sortListDescending(INT); RRB: INT is not used in sorted form, but allTimes is, so only sort allTimes
-        System.arraycopy(uniqueSampTimes,0, allTimes,0, uniqueSampTimes.length);
-        System.arraycopy(INT, 0, allTimes, uniqueSampTimes.length, INT.length);
-        sortListDescending(allTimes);
-
         if (logNumberOfQSTrees == null) {
             logNumberOfQSTrees = new double[tree.getExternalNodes().size()];
             storedLogNumberOfQSTrees = new double[logNumberOfQSTrees.length];
