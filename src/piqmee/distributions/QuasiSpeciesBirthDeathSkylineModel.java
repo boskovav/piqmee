@@ -807,6 +807,11 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel {
 			System.arraycopy(Bi, 0, storedBi, 0, Bi.length);
 			System.arraycopy(logNumberOfQSTrees, 0, storedLogNumberOfQSTrees, 0, logNumberOfQSTrees.length);
 		}
+		
+		for (Node node: treeInput.get().getNodesAsArray()) {
+			((QuasiSpeciesNode)node).setOldtimeofchangedcopy(-1);
+		}
+		
 		super.store();
 	}
 
