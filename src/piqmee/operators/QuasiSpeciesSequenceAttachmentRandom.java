@@ -187,18 +187,16 @@ public class QuasiSpeciesSequenceAttachmentRandom extends QuasiSpeciesTreeOperat
             else{
                 tnewQSstart = tempqstimes[2];
             }
-            node.setNewtimeofchangedcopy(tnewQSstart);
-            node.setOldtimeofchangedcopy(tempqstimes[0]);
             tempqstimes[0] = tnewQSstart;
         }
         // creation of new 1st attachment time
         else if (tmaxIdx==0){
             tnewQSstart = tnew;
-            node.setNewtimeofchangedcopy(tnewQSstart);
-            node.setOldtimeofchangedcopy(tempqstimes[0]);
             tempqstimes[0] = tnewQSstart;
         }
 
+        node.setNewtimeofchangedcopy(tnew);
+        node.setOldtimeofchangedcopy(tempqstimes[changeIdx]);
         tempqstimes[changeIdx]=tnew;
         if (changeIdx > tmaxIdx){
             for (int i=changeIdx; i>tmaxIdx+1; i--){
