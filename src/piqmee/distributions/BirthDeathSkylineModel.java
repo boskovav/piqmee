@@ -821,9 +821,9 @@ public class BirthDeathSkylineModel extends SpeciesTreeDistribution {
 
         if (printTempResults)
             System.out.println("in p0: b = " + b + "; g = " + g + "; psi = " + psi + "; A = " + A + " ; B = " + B + "; ti = " + ti + "; t = " + t);
-        // return ((b + g + psi - A *((FastMath.exp(A*(ti - t))*(1+B)-(1-B)))/(FastMath.exp(A*(ti - t))*(1+B)+(1-B)) ) / (2*b));
+        // return ((b + g + psi - A *((FastMathExp(A*(ti - t))*(1+B)-(1-B)))/(FastMathExp(A*(ti - t))*(1+B)+(1-B)) ) / (2*b));
         // formula from manuscript slightly rearranged for numerical stability
-        return ((b + g + psi - A * ((1 + B) - (1 - B) * (FastMath.exp(A * (t - ti)))) / ((1 + B) + FastMath.exp(A * (t - ti)) * (1 - B))) / (2 * b));
+        return ((b + g + psi - A * ((1 + B) - (1 - B) * (FastMathExp(A * (t - ti)))) / ((1 + B) + FastMathExp(A * (t - ti)) * (1 - B))) / (2 * b));
     }
 
     public double p0hat(int index, double t, double ti) {
@@ -834,14 +834,14 @@ public class BirthDeathSkylineModel extends SpeciesTreeDistribution {
 
     public double g(int index, double ti, double t) {
 
-        // return (FastMath.exp(Ai[index]*(ti - t))) / (0.25*FastMath.pow((FastMath.exp(Ai[index]*(ti - t))*(1+Bi[index])+(1-Bi[index])),2));
+        // return (FastMathExp(Ai[index]*(ti - t))) / (0.25*FastMath.pow((FastMathExp(Ai[index]*(ti - t))*(1+Bi[index])+(1-Bi[index])),2));
         // formula from manuscript slightly rearranged for numerical stability
-        return (4 * FastMath.exp(Ai[index] * (t - ti))) / (FastMath.exp(Ai[index] * (t - ti)) * (1 - Bi[index]) + (1 + Bi[index])) / (FastMath.exp(Ai[index] * (t - ti)) * (1 - Bi[index]) + (1 + Bi[index]));
+        return (4 * FastMathExp(Ai[index] * (t - ti))) / (FastMathExp(Ai[index] * (t - ti)) * (1 - Bi[index]) + (1 + Bi[index])) / (FastMathExp(Ai[index] * (t - ti)) * (1 - Bi[index]) + (1 + Bi[index]));
     }
 
     public double log_q(int index, double ti, double t) {
         // replacing FastMathLog( g(...) ) for better numerical stability
-        return FastMathLog(4) + Ai[index] * (t - ti) - 2 * FastMathLog(FastMath.exp(Ai[index] * (t - ti)) * (1 - Bi[index]) + (1 + Bi[index]));
+        return FastMathLog(4) + Ai[index] * (t - ti) - 2 * FastMathLog(FastMathExp(Ai[index] * (t - ti)) * (1 - Bi[index]) + (1 + Bi[index]));
     }
 
     /**
@@ -1213,22 +1213,32 @@ public class BirthDeathSkylineModel extends SpeciesTreeDistribution {
     }
     
 
-    static double [] log;
+    static double [] log, exp;
     final static double LOG_LOWER = 1.0;
     final static double LOG_UPPER = 1000.0;
+	final static double LOG_INTERVAL = 999.0;
     final static int LOG_LENGTH = 1000000;
+
+    final static double EXP_LOWER = -100;
+	final static double EXP_UPPER = 0;
+	final static double EXP_INTERVAL = 100.0;
+
     static {
     	log = new double[LOG_LENGTH];
     	for (int i = 0; i < LOG_LENGTH; i++) {
-    		log[i] = Math.log(LOG_LOWER + LOG_UPPER * i / LOG_LENGTH);
+    		log[i] = Math.log(LOG_LOWER + LOG_INTERVAL * i / LOG_LENGTH);
+    	}
+    	exp = new double[LOG_LENGTH + 1];
+    	for (int i = 0; i < LOG_LENGTH + 1; i++) {
+    		exp[i] = Math.exp(EXP_LOWER + EXP_INTERVAL * i / LOG_LENGTH);
     	}
     }
     
 	protected double FastMathLog(final double x) {
-		if (x < LOG_LOWER || x > LOG_UPPER) {
+		if (x < LOG_LOWER || x >= LOG_UPPER) {
 			return FastMath.log(x);
 		}
-		final double index = log.length * (x-LOG_LOWER) / LOG_UPPER;				
+		final double index = LOG_LENGTH * (x-LOG_LOWER) / LOG_INTERVAL;				
 		final int i = (int) index;
 		
 		// stepwise approximation
@@ -1239,4 +1249,41 @@ public class BirthDeathSkylineModel extends SpeciesTreeDistribution {
 	}
 
 	
+	
+//	double min = Double.MAX_VALUE;
+//	double max = Double.MIN_VALUE;
+//	double count = 0;
+	
+	
+			
+	public double FastMathExp(final double x) {
+//		min = Math.min(x,  min);
+//		max = Math.max(x,  max);
+//		count++;
+//		if (count % 1000000 == 0) {
+//			System.out.println(min + " " + max);
+//			min = Double.MAX_VALUE;
+//			max = Double.MIN_VALUE;
+//		}
+		
+		if (x < EXP_LOWER || x >= EXP_UPPER) {
+			return FastMath.exp(x);
+		}
+
+		final double index = LOG_LENGTH * (x - EXP_LOWER) / EXP_INTERVAL;				
+		final int i = (int) index;
+		
+		// stepwise approximation
+		// return exp[i];
+		
+		// linear approximation
+		return exp[i] + (exp[i+1]-exp[i]) * (index - i);
+
+	}
+
+//	protected double FastMathExp(final double x) {
+//		final long tmp = (long) (1512775 * x + 1072632447);
+//	    return Double.longBitsToDouble(tmp << 32);
+//	    // return FastMath.exp(x);
+//	}
 }
