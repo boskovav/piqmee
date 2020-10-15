@@ -2,8 +2,10 @@ package piqmee.tree;
 
 import beast.app.beauti.BeautiDoc;
 import beast.core.*;
+import beast.core.util.Log;
 import beast.evolution.alignment.Alignment;
 import beast.evolution.alignment.FilteredAlignment;
+import beast.evolution.alignment.Sequence;
 import beast.evolution.alignment.distance.Distance;
 import beast.evolution.tree.Node;
 import beast.evolution.tree.TraitSet;
@@ -1505,19 +1507,54 @@ public class QuasiSpeciesTree extends Tree {
      * @return
      */
     protected double[][] getSequenceDistances(Alignment data, Tree tree) {
+    	// collect unique sequences
+    	Map<String, List<Integer>> sequenceMap = new HashMap<>();
+    	for (Sequence seq : data.sequenceInput.get()) {
+    		String sequence = seq.dataInput.get();
+    		if (!sequenceMap.containsKey(sequence)) {
+    			sequenceMap.put(sequence, new ArrayList<>());
+    		}
+    		sequenceMap.get(sequence).add(data.getTaxonIndex(seq.getTaxon()));
+    	}
+    	
+    	
         // Get the distances for the sequences:
         Distance distance = new DifferenceCount();
         ((Distance.Base) distance).setPatterns(data);
         // make a tip sequence distance matrix
         int taxaSize = data.getTaxonCount();
         double[][] distanceMatrix = new double[taxaSize][taxaSize];
-        for (int i = 0; i < taxaSize - 1; i++) {
-            for (int j = i + 1; j < taxaSize; j++) {
-                distanceMatrix[i][j] = distance.pairwiseDistance(data.getTaxonIndex(tree.getNode(i).getID()),
-                        data.getTaxonIndex(tree.getNode(j).getID()));
-                distanceMatrix[j][i] = distanceMatrix[i][j];
+
+        String [] uniuqueSequences = sequenceMap.keySet().toArray(new String[]{});
+        int n = uniuqueSequences.length;
+
+        Log.info("Found " + n + " unique sequences out of " + taxaSize + " sequences");
+        
+        if (n > 1000) {
+        	Log.warning("\nWARNING: with " + n + " unique sequences you might consider sub-sampling\n");
+        }
+        
+        Log.warning.print("Prepping distance matrix");        
+        for (int i = 0; i < n - 1; i++) {
+        	List<Integer> taxa1 = sequenceMap.get(uniuqueSequences[i]);
+            for (int j = i + 1; j < n; j++) {
+            	List<Integer> taxa2 = sequenceMap.get(uniuqueSequences[j]);
+             	double dist = distance.pairwiseDistance(taxa1.get(0), taxa2.get(0));
+            	for (int k = 0; k < taxa1.size(); k++) {
+            		int taxon1 = taxa1.get(k);
+            		for (int m = 0; m < taxa2.size(); m++) {
+                		int taxon2 = taxa2.get(m);
+                		distanceMatrix[taxon1][taxon2] = dist;
+                		distanceMatrix[taxon2][taxon1] = dist;
+            		}
+            	}
+            }
+            if (i % 100 == 0) {
+            	Log.warning.print(".");
             }
         }
+        Log.warning.println("Done.");
+    	
         return distanceMatrix;
     }
 
