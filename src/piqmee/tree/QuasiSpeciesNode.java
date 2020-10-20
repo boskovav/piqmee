@@ -439,4 +439,21 @@ public class QuasiSpeciesNode extends QuasiSpeciesNodeBaseClass {
         return 0;
     }
 
+    /** return part of the branch above haplo node **/
+	public double getLengthWithoutHaplo() {
+		if (haploAboveName == -1) {
+			return super.getLength();
+		}
+		if (isRoot()) {
+			return 0;
+		}
+		if (((QuasiSpeciesNode)getParent()).getHaploAboveName() == haploAboveName) {
+			return 0;
+		}
+		if (isLeaf()) {
+			return getParent().getHeight() - attachmentTimesList[0];
+		}
+		return 0;
+	}
+
 }
