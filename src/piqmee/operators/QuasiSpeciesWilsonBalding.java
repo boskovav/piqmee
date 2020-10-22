@@ -354,7 +354,8 @@ public class QuasiSpeciesWilsonBalding extends QuasiSpeciesTreeOperator{
 //            }
 //        }
         // in any case (changed or not the aboveNodeHaplo/parentHaplo array) recalculate countPossibleStartBranches
-        qsTree.countAndSetPossibleStartBranches();
+        qsTree.countAndSetPossibleStartBranches(destNode);
+        qsTree.countAndSetPossibleStartBranches(srcNode);
 
         // Incorporate probability of choosing current haplotype to move
         logHastingsRatio += Math.log(possibleHaplo.size());

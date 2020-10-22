@@ -272,7 +272,7 @@ public class QuasiSpeciesSequenceAttachmentRandom extends QuasiSpeciesTreeOperat
         }
 
         // recalculate countPossibleStartBranches
-        qsTree.countAndSetPossibleStartBranches();
+        qsTree.countAndSetPossibleStartBranches(node);
 
         // Ensure BEAST knows to recalculate affected likelihood:
         node.makeDirty(QuasiSpeciesTree.IS_FILTHY);

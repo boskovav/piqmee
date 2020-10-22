@@ -110,7 +110,7 @@ public class QuasiSpeciesHaplotypeScale extends QuasiSpeciesTreeOperator{
         }
 
         // in any case (changed or not the aboveNodeHaplo/parentHaplo array) recalculate countPossibleStartBranches
-        qsTree.countAndSetPossibleStartBranches();
+        qsTree.countAndSetPossibleStartBranches(node);
 
         // Ensure BEAST knows to recalculate affected likelihood:
         node.makeDirty(QuasiSpeciesTree.IS_FILTHY);

@@ -368,6 +368,14 @@ public class QuasiSpeciesTree extends Tree {
 //            }
         }
     }
+    
+    public void countAndSetPossibleStartBranches(Node node){
+    	if (!node.isLeaf()) {
+    		((QuasiSpeciesNode)node).setStartBranchCounts(1);
+    		countAndSetPossibleStartBranches(node.getLeft());
+    		countAndSetPossibleStartBranches(node.getRight());
+    	}
+    }
 
     /**
      * Method to determine the parent haplotype for each haplotype
@@ -1612,7 +1620,7 @@ public class QuasiSpeciesTree extends Tree {
     @Override
     public int scale(final double scale) {
         int dof = ((QuasiSpeciesNode) root).scale(scale);
-        this.countAndSetPossibleStartBranches();
+        // this.countAndSetPossibleStartBranches();
         return getInternalNodeCount() + getTotalAttachmentCounts() - getDirectAncestorNodeCount();
     }
 
