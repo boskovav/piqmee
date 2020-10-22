@@ -7,6 +7,7 @@ import beast.evolution.alignment.Alignment;
 import beast.evolution.alignment.FilteredAlignment;
 import beast.evolution.alignment.Sequence;
 import beast.evolution.alignment.distance.Distance;
+import beast.evolution.datatype.DataType;
 import beast.evolution.tree.Node;
 import beast.evolution.tree.TraitSet;
 import beast.evolution.tree.Tree;
@@ -32,10 +33,19 @@ public class QuasiSpeciesTree extends Tree {
     public Input<TraitSet> haplotypeCountsInput =
             new Input<TraitSet>("haplotypeCounts","Count of sequences for each haplotype (including the one representative of each haplotype in the tree input)");//,
            // Input.Validate.REQUIRED);
+    public Input<Boolean> collapseSequencesWithMissingDataInput = new Input<>("collapseSequencesIfIdenticalUpToMissingParts",
+                   "Flag to indicate if sequences that have missing data (stretches of N's) should" +
+                           "be collapsed with a sequence that is identical to it up the missing data. Default false.",
+                   false);
 
     protected TraitSet haplotypeCountsSet;
     protected Map<String,Integer> haplotypeCounts;
     protected String qsLabel = "qscounts";
+
+    // for quick access to external nodes
+    Node[] externalNodeArray = null;
+    // hash table with unique sequences and the corresponding tip names -- for likelihood to be able to subset the data
+    List<Map<String, List<String>>> uniqueSequenceMap;
 
     public QuasiSpeciesTree() { }
 
@@ -478,6 +488,27 @@ public class QuasiSpeciesTree extends Tree {
 
         haplotypeCountsSet = traitSet;
     }
+
+    /**
+     * Fast alternative for getExternalNodes()
+     * assumes all leave nodes are numbered 0,...,leafnodecount-1
+     */
+    public Node [] getExternalNodesArray() {
+        if (externalNodeArray == null) {
+            externalNodeArray = new Node[getLeafNodeCount()];
+        }
+        System.arraycopy(m_nodes, 0, externalNodeArray, 0, externalNodeArray.length);
+        return externalNodeArray;
+    }
+
+    /**
+     * Gets the unique sequences and associated taxon IDs
+     *
+     */
+    public List<Map<String, List<String>>> getUniqueSequenceMap(){
+        return uniqueSequenceMap;
+    }
+
 
 
 
@@ -948,47 +979,12 @@ public class QuasiSpeciesTree extends Tree {
      *
      * @param uniqueHaploTree
      */
-    public void initFromUniqueHaploTree(Tree uniqueHaploTree, Alignment data, boolean collapseIdentical, TraitSet haplotypeCountsTrait){
+    public void initFromUniqueHaploTree(Tree uniqueHaploTree, Alignment data, boolean collapseIdentical,
+                                        boolean collapseSequencesWithMissingData, TraitSet haplotypeCountsTrait){
 
         // In unique haplo tree, there can still be duplicate sequences, if found at different points in time
         // Get the distances for the sequences:
-        int taxaSize = data.getTaxonCount();
-        double[][] distanceMatrix = new double[taxaSize][taxaSize];
-        double[][] distanceMatrixSum = new double[taxaSize][taxaSize];
-        double[][] distanceMatrixTmp;
-        // 1) check if there are multiple alignments linked with this tree -- such that unique sequences correctly identified
-        Set<BEASTInterface> outputset;
-        if (m_initial.get() != null)
-            outputset = m_initial.get().getOutputs();
-        else
-            outputset = this.getOutputs();
-        for (BEASTInterface o : outputset) {
-            if (o instanceof GenericTreeLikelihood) {
-                GenericTreeLikelihood likelihood = (GenericTreeLikelihood) o;
-                Alignment odata = likelihood.dataInput.get();
-                if (odata instanceof FilteredAlignment) {
-                    odata = ((FilteredAlignment) odata).alignmentInput.get();
-                }
-                if (odata.getTaxaNames() == null){
-                    Alignment odatatmp = new Alignment(odata.sequenceInput.get(), odata.dataTypeInput.get());
-                    odata = odatatmp;
-                }
-                // 2) make a distance matrix for each such alignment
-                distanceMatrixTmp = getSequenceDistances(odata, uniqueHaploTree);
-                // 3) add this distance to distances from other alignments
-                for (int i = 0; i < taxaSize - 1; i++) {
-                    for (int j = i + 1; j < taxaSize; j++) {
-                        distanceMatrixSum[i][j] = distanceMatrix[i][j] + distanceMatrixTmp[i][j];
-                        distanceMatrixSum[j][i] = distanceMatrixSum[i][j];
-                    }
-                }
-                // 4)copy sum of distances to distanceMatrix
-                System.arraycopy(distanceMatrixSum, 0, distanceMatrix, 0, distanceMatrix.length);
-            }
-        }
-        // 5) it could be, especially in a test case, that the tree is not linked with any output - check for this
-        if (outputset.size() == 0)
-            distanceMatrix = getSequenceDistances(data, uniqueHaploTree);
+        double[][] distanceMatrix = getDistanceMatrix(data, collapseSequencesWithMissingData);
 
         // Build new quasi-species tree:
         ArrayList haplotypesSeen = new ArrayList<>();
@@ -1077,46 +1073,11 @@ public class QuasiSpeciesTree extends Tree {
      *
      * @param fullTree
      */
-    public void initFromFullTree(Tree fullTree, Alignment data, boolean collapseIdentical){
+    public void initFromFullTree(Tree fullTree, Alignment data, boolean collapseIdentical,
+                                 boolean collapseSequencesWithMissingData){
 
         // Get the distances for the sequences:
-        int taxaSize = data.getTaxonCount();
-        double[][] distanceMatrix = new double[taxaSize][taxaSize];
-        double[][] distanceMatrixSum = new double[taxaSize][taxaSize];
-        double[][] distanceMatrixTmp;
-        // 1) check if there are multiple alignments linked with this tree -- such that unique sequences correctly identified
-        Set<BEASTInterface> outputset;
-        if (m_initial.get() != null)
-            outputset = m_initial.get().getOutputs();
-        else
-            outputset = this.getOutputs();
-        for (BEASTInterface o : outputset) {
-            if (o instanceof GenericTreeLikelihood) {
-                GenericTreeLikelihood likelihood = (GenericTreeLikelihood) o;
-                Alignment odata = likelihood.dataInput.get();
-                if (odata instanceof FilteredAlignment) {
-                    odata = ((FilteredAlignment) odata).alignmentInput.get();
-                }
-                if (odata.getTaxaNames() == null){
-                    Alignment odatatmp = new Alignment(odata.sequenceInput.get(), odata.dataTypeInput.get());
-                    odata = odatatmp;
-                }
-                // 2) make a distance matrix for each such alignment
-                distanceMatrixTmp = getSequenceDistances(odata, fullTree);
-                // 3) add this distance to distances from other alignments
-                for (int i = 0; i < taxaSize - 1; i++) {
-                    for (int j = i + 1; j < taxaSize; j++) {
-                        distanceMatrixSum[i][j] = distanceMatrix[i][j] + distanceMatrixTmp[i][j];
-                        distanceMatrixSum[j][i] = distanceMatrixSum[i][j];
-                    }
-                }
-                // 4)copy sum of distances to distanceMatrix
-                System.arraycopy(distanceMatrixSum, 0, distanceMatrix, 0, distanceMatrix.length);
-            }
-        }
-        // 5) it could be, especially in a test case, that the tree is not linked with any output - check for this
-        if (outputset.size() == 0)
-            distanceMatrix = getSequenceDistances(data, fullTree);
+        double[][] distanceMatrix = getDistanceMatrix(data, collapseSequencesWithMissingData);
 
         // Build new quasi-species tree:
         ArrayList haplotypesSeen = new ArrayList<>();
@@ -1188,6 +1149,242 @@ public class QuasiSpeciesTree extends Tree {
         for (Node node : this.getExternalNodes()){
             setHaploCounts(node, ((QuasiSpeciesNode) node).getHaplotypeCountsFromTips());
         }
+    }
+
+    /**
+     * Calculate the distance matrix from all partitions
+     *
+     * @param data
+     * @param collapseSequencesWithMissingData
+     */
+    public double[][] getDistanceMatrix(Alignment data, boolean collapseSequencesWithMissingData) {
+        int taxaSize = data.getTaxonCount();
+        double[][] distanceMatrix = new double[taxaSize][taxaSize];
+        double[][] distanceMatrixSum = new double[taxaSize][taxaSize];
+        double[][] distanceMatrixTmp;
+        // 1) check if there are multiple alignments linked with this tree -- such that unique sequences correctly identified
+        Set<BEASTInterface> outputset;
+        if (m_initial.get() != null)
+            outputset = m_initial.get().getOutputs();
+        else
+            outputset = this.getOutputs();
+        for (BEASTInterface o : outputset) {
+            if (o instanceof GenericTreeLikelihood) {
+                GenericTreeLikelihood likelihood = (GenericTreeLikelihood) o;
+                Alignment odata = likelihood.dataInput.get();
+                if (odata instanceof FilteredAlignment) {
+                    odata = ((FilteredAlignment) odata).alignmentInput.get();
+                }
+                if (odata.getTaxaNames() == null) {
+                    Alignment odatatmp = new Alignment(odata.sequenceInput.get(), odata.dataTypeInput.get());
+                    odata = odatatmp;
+                }
+                // 2) make a distance matrix for each such alignment
+                distanceMatrixTmp = getSequenceDistances(odata, collapseSequencesWithMissingData);
+                // 3) add this distance to distances from other alignments
+                for (int i = 0; i < taxaSize - 1; i++) {
+                    for (int j = i + 1; j < taxaSize; j++) {
+                        distanceMatrixSum[i][j] = distanceMatrix[i][j] + distanceMatrixTmp[i][j];
+                        distanceMatrixSum[j][i] = distanceMatrixSum[i][j];
+                    }
+                }
+                // 4)copy sum of distances to distanceMatrix
+                System.arraycopy(distanceMatrixSum, 0, distanceMatrix, 0, distanceMatrix.length);
+            }
+        }
+        // 5) it could be, especially in a test case, that the tree is not linked with any output - check for this
+        if (outputset.size() == 0)
+            distanceMatrix = getSequenceDistances(data, collapseSequencesWithMissingData);
+
+        // quickly check if all sequences are unique reciprocally, if not throw an error for now
+        if (! checkIfDistMatrixFullyReciprocal(distanceMatrix)){
+            throw new IllegalArgumentException("When we do allow for collapsing of sequences that are identical even if"+
+                    "we take ambiguous sites into account, we have several possibilities of how this collapsing should " +
+                    "be done. ");
+        }
+        // TODO : change the method of sequence collapsing by not outputting distance matrix but hash with unique sequences
+        //  & corresponding tip names
+        //  Also in the loop checking if we have partitions, get all partitions and pipe it to the function that
+        //  should collapse sequences if identical ... in this function, loop through each partition at the same time
+        //  and check / create consensus sequence, then assign it to the tips that should be collapsed such that when
+        //  we retrieve the collapsed alignment for the purpose of likelihood calculation, we do not need to do this again
+        //  --- when two "unique" sequences are collapsed, then recalculate distances and rejudge what shall be merged
+
+
+        return distanceMatrix;
+    }
+
+    /**
+     * Helper method used by initFromFullTree/initFromUniqueHaploTree to
+     * calculate pairwise sequence distances and return the matrix of them.
+     *
+     * @param data
+     * @param collapseSequencesWithMissingData
+     * @return
+     */
+    protected double[][] getSequenceDistances(Alignment data, boolean collapseSequencesWithMissingData) {
+        // collect unique sequences into a hash
+        Map<String, List<Integer>> sequenceMap = new HashMap<>();
+        for (Sequence seq : data.sequenceInput.get()) {
+            String sequence = seq.dataInput.get();
+            if (!sequenceMap.containsKey(sequence)) {
+                sequenceMap.put(sequence, new ArrayList<>());
+            }
+            sequenceMap.get(sequence).add(data.getTaxonIndex(seq.getTaxon()));
+        }
+        // Get the distances for the sequences:
+        Distance distance = new DifferenceCount();
+        ((Distance.Base) distance).setPatterns(data);
+        // make a tip sequence distance matrix
+        int taxaSize = data.getTaxonCount();
+        double[][] distanceMatrix = new double[taxaSize][taxaSize];
+
+        String [] uniqueSequences = sequenceMap.keySet().toArray(new String[]{});
+        int n = uniqueSequences.length;
+
+        Log.info("Found " + n + " unique sequences out of " + taxaSize + " sequences");
+
+        if (n > 1000) {
+            Log.warning("\nWARNING: with " + n + " unique sequences you might consider sub-sampling\n");
+        }
+
+        // if collapseSequencesWithMissingData = true we need to check if ambiguities in sequences happen
+        boolean[] ambiguousSequences = new boolean[uniqueSequences.length];
+        if (collapseSequencesWithMissingData) {
+            // need to find out if sequences are identical when ambiguities are taken into account
+            //   first need to know which sequences contain ambiguous codes
+            ambiguousSequences = new boolean[uniqueSequences.length];
+            for (int i = 0; i < uniqueSequences.length; i++) {
+                ambiguousSequences[i] = isAmbiguousSequence(uniqueSequences[i], dataInput.get().getDataType());
+            }
+        }
+
+        Log.warning.print("Prepping distance matrix");
+        // fill in the entries of distance matrix which are not 0
+        //    and at the same time check if some sequences are identical up to missing data parts
+        for (int i = 0; i < n - 1; i++) {
+            List<Integer> taxa1 = sequenceMap.get(uniqueSequences[i]);
+            for (int j = i + 1; j < n; j++) {
+                List<Integer> taxa2 = sequenceMap.get(uniqueSequences[j]);
+                double dist;
+                // if collapseSequencesWithMissingData = true
+                //    we can perhaps further collapse some of the uniqueSequences found so far
+                if (collapseSequencesWithMissingData && (ambiguousSequences[i] || ambiguousSequences[j]) ) {
+                    dist = ((DifferenceCount) distance).pairwiseDifference(taxa1.get(0), taxa2.get(0),
+                                                                            collapseSequencesWithMissingData);
+                } else {
+                    dist = 1;
+                }
+                if (dist == 0){
+                    Log.warning.print("\nwe can reduce the matrix\n");
+                }
+                for (int k = 0; k < taxa1.size(); k++) {
+                    int taxon1 = taxa1.get(k);
+                    for (int m = 0; m < taxa2.size(); m++) {
+                        int taxon2 = taxa2.get(m);
+                        // for sequences that remained un-collapsed  fill in distance 1
+                        //   the exact distance is not of interest here, just an indication that some distance exists
+                        distanceMatrix[taxon1][taxon2] = dist;
+                        distanceMatrix[taxon2][taxon1] = dist;
+                    }
+                }
+            }
+            if (i % 100 == 0) {
+                Log.warning.print(".");
+            }
+        }
+        Log.warning.println("Done.");
+
+        return distanceMatrix;
+    }
+
+    /**
+     * Method to determine if a sequence has ambiguous sites
+     *
+     * @param sequence  string sequences of characters that define sequence
+     * @param type      data type to know number of unambiguous states
+     * @return          return true if sequence contains ambiguous sites
+     */
+    protected boolean isAmbiguousSequence(String sequence, DataType type) {
+        List<Integer> seq = type.stringToEncoding(sequence);
+        for (int i = 0; i < seq.size(); i++){
+            if (type.isAmbiguousCode(seq.get(i)))
+                return true;
+        }
+        return false;
+    }
+
+    /**
+     * Method to determine if a sequence has ambiguous sites
+     *
+     * @param sequence1 string sequence of characters that define sequence 1
+     * @param sequence2 string sequence of characters that define sequence 2
+     * @param type      data type to know number of unambiguous states
+     * @return          return true if sequence contains ambiguous sites
+     */
+    protected String findSequenceIntersection(String sequence1, String sequence2, DataType type) {
+        List<Integer> intersectionsequence = Arrays.asList(new Integer[sequence1.length()]);
+        List<Integer> seq1 = type.stringToEncoding(sequence1);
+        List<Integer> seq2 = type.stringToEncoding(sequence2);
+        int seq1state;
+        int seq2state;
+        for (int i = 0; i < seq1.size(); i++){
+            seq1state = seq1.get(i);
+            seq2state = seq2.get(i);
+            if (seq1state < type.getStateCount()) {
+                intersectionsequence.set(i, seq1state);
+            } else if (seq2state < type.getStateCount()) {
+                intersectionsequence.set(i, seq2state);
+            } else {
+
+            }
+
+            for (int j = 0; j < type.getStateCount(); j++) {
+                if (sequence1.substring(i, i + 1).equalsIgnoreCase(type.getCharacter(j))) {
+                    break;
+                }
+            }
+        }
+        return type.encodingToString(intersectionsequence);
+    }
+
+    /**
+     * Method to determine if a distance matrix is fully reciprocal,
+     *   ie if dist=0 would represent and edge between two taxa (nodes), and we have fully reciprocal distance matrix,
+     *   we would have fully connected cliques
+     *
+     * @param distanceMatrix matrix of distances between taxa (expected 0 - something positive)
+     * @return          return true if the matrix is reciprocal
+     */
+
+    private boolean checkIfDistMatrixFullyReciprocal(double[][] distanceMatrix){
+        List<List<Integer>> taxaGroups = new ArrayList<>();
+        List<Integer> groupoftaxa = new ArrayList<>();
+        groupoftaxa.add(0);
+        for (int j = 0; j < distanceMatrix.length; j++){
+            if (distanceMatrix[0][j] == 0)
+                groupoftaxa.add(j);
+        }
+        taxaGroups.add(groupoftaxa);
+        for (int i = 1; i < distanceMatrix.length; i++){
+            groupoftaxa.clear();
+            for (int j = 0; j < distanceMatrix.length; j++){
+                if (distanceMatrix[i][j] == 0)
+                    groupoftaxa.add(j);
+            }
+            for ( List<Integer> existingGroup : taxaGroups ){
+                if ( existingGroup.contains(i)){
+                    if (existingGroup.size() == groupoftaxa.size()) {
+                        break;
+                    } else {
+                        return false;
+                    }
+                }
+
+            }
+            taxaGroups.add(groupoftaxa);
+        }
+        return true;
     }
 
     /**
@@ -1499,66 +1696,6 @@ public class QuasiSpeciesTree extends Tree {
     }
 
     /**
-     * Helper method used by initFromFullTree/initFromUniqueHaploTree to
-     * calculate pairwise sequence distances and return the matrix of them.
-     *
-     * @param data
-     * @param tree
-     * @return
-     */
-    protected double[][] getSequenceDistances(Alignment data, Tree tree) {
-    	// collect unique sequences
-    	Map<String, List<Integer>> sequenceMap = new HashMap<>();
-    	for (Sequence seq : data.sequenceInput.get()) {
-    		String sequence = seq.dataInput.get();
-    		if (!sequenceMap.containsKey(sequence)) {
-    			sequenceMap.put(sequence, new ArrayList<>());
-    		}
-    		sequenceMap.get(sequence).add(data.getTaxonIndex(seq.getTaxon()));
-    	}
-    	
-    	
-        // Get the distances for the sequences:
-        Distance distance = new DifferenceCount();
-        ((Distance.Base) distance).setPatterns(data);
-        // make a tip sequence distance matrix
-        int taxaSize = data.getTaxonCount();
-        double[][] distanceMatrix = new double[taxaSize][taxaSize];
-
-        String [] uniuqueSequences = sequenceMap.keySet().toArray(new String[]{});
-        int n = uniuqueSequences.length;
-
-        Log.info("Found " + n + " unique sequences out of " + taxaSize + " sequences");
-        
-        if (n > 1000) {
-        	Log.warning("\nWARNING: with " + n + " unique sequences you might consider sub-sampling\n");
-        }
-        
-        Log.warning.print("Prepping distance matrix");        
-        for (int i = 0; i < n - 1; i++) {
-        	List<Integer> taxa1 = sequenceMap.get(uniuqueSequences[i]);
-            for (int j = i + 1; j < n; j++) {
-            	List<Integer> taxa2 = sequenceMap.get(uniuqueSequences[j]);
-             	double dist = distance.pairwiseDistance(taxa1.get(0), taxa2.get(0));
-            	for (int k = 0; k < taxa1.size(); k++) {
-            		int taxon1 = taxa1.get(k);
-            		for (int m = 0; m < taxa2.size(); m++) {
-                		int taxon2 = taxa2.get(m);
-                		distanceMatrix[taxon1][taxon2] = dist;
-                		distanceMatrix[taxon2][taxon1] = dist;
-            		}
-            	}
-            }
-            if (i % 100 == 0) {
-            	Log.warning.print(".");
-            }
-        }
-        Log.warning.println("Done.");
-    	
-        return distanceMatrix;
-    }
-
-    /**
      * Helper method used by initFromFullTree/initFromUniqueHaploTree to assign sensible node numbers
      * to each internal node.  This is a post-order traversal, meaning the
      * root is given the largest number.
@@ -1809,18 +1946,6 @@ public class QuasiSpeciesTree extends Tree {
         } catch (Exception ex) {
             Logger.getLogger(QuasiSpeciesTree.class.getName()).log(Level.SEVERE, null, ex);
         }
-    }
-    
-    
-    Node [] externalNodeArray = null;
-    // fast alternative for getExternalNodes()
-    // assumes all leave nodes are numbered 0,...,leafnodecount-1
-	public Node [] getExternalNodesArray() {
-		if (externalNodeArray == null) {
-			externalNodeArray = new Node[getLeafNodeCount()];
-		}
-		System.arraycopy(m_nodes, 0, externalNodeArray, 0, externalNodeArray.length);
-        return externalNodeArray;
     }
 
 }

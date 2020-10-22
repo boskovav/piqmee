@@ -34,10 +34,6 @@ public class QuasiSpeciesClusterTree extends QuasiSpeciesTree implements StateNo
         else
             processTraits(m_traitList.get());
 
-        // Ensure tree is compatible with traits.
-        if (hasDateTrait())
-            adjustTreeNodeHeights(root);
-
         // initialize the tree
         // get the input alignment
         Alignment data = dataInput.get();
@@ -55,9 +51,12 @@ public class QuasiSpeciesClusterTree extends QuasiSpeciesTree implements StateNo
 
         // initialize the quasispecies tree - and collapse identical sequences, if necessary
         if (haplotypeCountsSet != null && !haplotypeCountIsAll1(haplotypeCountsSet))
-            initFromUniqueHaploTree(inputTree, data, collapseIdenticalSequencesInput.get(), haplotypeCountsSet);
+            initFromUniqueHaploTree(inputTree, data,
+                    collapseIdenticalSequencesInput.get(), collapseSequencesWithMissingDataInput.get(),
+                    haplotypeCountsSet);
         else
-            initFromFullTree(inputTree, data, collapseIdenticalSequencesInput.get());
+            initFromFullTree(inputTree, data,
+                    collapseIdenticalSequencesInput.get(),collapseSequencesWithMissingDataInput.get());
 
         initStateNodes();
     }

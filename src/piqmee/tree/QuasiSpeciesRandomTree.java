@@ -45,10 +45,6 @@ public class QuasiSpeciesRandomTree extends QuasiSpeciesTree implements StateNod
         else
             processTraits(m_traitList.get());
 
-        // Ensure tree is compatible with traits.
-        if (hasDateTrait())
-            adjustTreeNodeHeights(root);
-
         // initialize the tree
         // get the input alignment
         Alignment data = dataInput.get();
@@ -69,35 +65,7 @@ public class QuasiSpeciesRandomTree extends QuasiSpeciesTree implements StateNod
         // specify monophyletic clusters from distance matrix
         List<MRCAPrior> monophyleticGroups = new ArrayList();
         // Get the distances for the sequences:
-        int taxaSize = data.getTaxonCount();
-        double[][] distanceMatrix = new double[taxaSize][taxaSize];
-        double[][] distanceMatrixSum = new double[taxaSize][taxaSize];
-        double[][] distanceMatrixTmp;
-        // 1) check if there are multiple alignments linked with this tree -- such that unique sequences correctly identified
-        for (BEASTInterface o : m_initial.get().getOutputs()) {
-            if (o instanceof GenericTreeLikelihood) {
-                GenericTreeLikelihood likelihood = (GenericTreeLikelihood) o;
-                Alignment odata = likelihood.dataInput.get();
-                if (odata instanceof FilteredAlignment) {
-                    odata = ((FilteredAlignment) odata).alignmentInput.get();
-                }
-                if (odata.getTaxaNames() == null){
-                    Alignment odatatmp = new Alignment(odata.sequenceInput.get(), odata.dataTypeInput.get());
-                    odata = odatatmp;
-                }
-                // 2) make a distance matrix for each such alignment
-                distanceMatrixTmp = getSequenceDistances(odata, toyRandomTree);
-                // 3) add this distance to distances from other alignments
-                for (int i = 0; i < taxaSize - 1; i++) {
-                    for (int j = i + 1; j < taxaSize; j++) {
-                        distanceMatrixSum[i][j] = distanceMatrix[i][j] + distanceMatrixTmp[i][j];
-                        distanceMatrixSum[j][i] = distanceMatrixSum[i][j];
-                    }
-                }
-                // 4)copy sum of distances to distanceMatrix
-                System.arraycopy(distanceMatrixSum, 0, distanceMatrix, 0, distanceMatrix.length);
-            }
-        }
+        double[][] distanceMatrix = getDistanceMatrix(data, collapseSequencesWithMissingDataInput.get());
         // specify monophyletic constraints
         for (int i = 0; i < distanceMatrix.length; i++){
             List<Taxon> identical = new ArrayList<>();
@@ -135,9 +103,12 @@ public class QuasiSpeciesRandomTree extends QuasiSpeciesTree implements StateNod
 
         // initialize the quasispecies tree - and collapse identical sequences, if necessary
         if (haplotypeCountsSet != null && !haplotypeCountIsAll1(haplotypeCountsSet))
-            initFromUniqueHaploTree(inputTree, data, collapseIdenticalSequencesInput.get(), haplotypeCountsSet);
+            initFromUniqueHaploTree(inputTree, data,
+                    collapseIdenticalSequencesInput.get(), collapseSequencesWithMissingDataInput.get(),
+                    haplotypeCountsSet);
         else
-            initFromFullTree(inputTree, data, collapseIdenticalSequencesInput.get());
+            initFromFullTree(inputTree, data,
+                    collapseIdenticalSequencesInput.get(), collapseSequencesWithMissingDataInput.get());
 
         initStateNodes();
     }
