@@ -259,7 +259,8 @@ public class QuasiSpeciesWilsonBaldingEasy extends QuasiSpeciesTreeOperator{
         recalculateParentHaploAndCorrectContinuingHaploName(-1, (QuasiSpeciesNode) qsTree.getRoot());
 
         // in any case (changed or not the aboveNodeHaplo/parentHaplo array) recalculate countPossibleStartBranches
-        qsTree.countAndSetPossibleStartBranches();
+        qsTree.countAndSetPossibleStartBranches(srcNode);
+        qsTree.countAndSetPossibleStartBranches(destNode);
 
         // HR contribution of topology and node height changes:
         logHastingsRatio += Math.log(t_destNodeP - Math.max(t_srcNode, t_destNode))

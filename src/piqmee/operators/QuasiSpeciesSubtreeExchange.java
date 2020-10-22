@@ -206,7 +206,8 @@ public class QuasiSpeciesSubtreeExchange extends QuasiSpeciesTreeOperator{
         recalculateParentHaploAndCorrectContinuingHaploName(-1, (QuasiSpeciesNode) qsTree.getRoot());
 
         // in any case (changed or not the aboveNodeHaplo/parentHaplo array) recalculate countPossibleStartBranches
-        qsTree.countAndSetPossibleStartBranches();
+        qsTree.countAndSetPossibleStartBranches(srcnodehaplo);
+        qsTree.countAndSetPossibleStartBranches(destnodehaplo);
 
         // Incorporate probability of choosing current haplotype to move
         logHastingsRatio += Math.log(possibleSrcHaplo.size());
