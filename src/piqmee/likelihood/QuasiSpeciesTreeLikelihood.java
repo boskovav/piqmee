@@ -46,7 +46,7 @@ public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
     protected int hasDirt;
 
     protected LikelihoodCore likelihoodCore;
-//    BeagleTreeLikelihood beagle;
+    QuasiSpeciesBeagleTreeLikelihood beagle;
     protected SubstitutionModel substitutionModel;
     protected SiteModel.Base siteModel;
     protected BranchRateModel.Base branchRateModel;
@@ -94,22 +94,22 @@ public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
         }
         else
             alignment = dataInput.get();
-//        beagle = null;
-//        beagle = new BeagleTreeLikelihood();
-//        try {
-//            beagle.initByName(
-//                    "data", dataInput.get(), "tree", treeInput.get(), "siteModel", siteModelInput.get(),
-//                    "branchRateModel", branchRateModelInput.get(), "useAmbiguities", useAmbiguities.get(),
-//                    "useTipLikelihoods", useTipLikelihoods.get(),"scaling", scaling.get().toString());
-//            if (beagle.beagle != null) {
-//                //a Beagle instance was found, so we use it
-//                return;
-//            }
-//        } catch (Exception e) {
-//            // ignore
-//        }
+        beagle = null;
+        beagle = new QuasiSpeciesBeagleTreeLikelihood();
+        try {
+            beagle.initByName(
+                    "data", dataInput.get(), "tree", treeInput.get(), "siteModel", siteModelInput.get(),
+                    "branchRateModel", branchRateModelInput.get(), "useAmbiguities", useAmbiguities.get(),
+                    "useTipLikelihoods", useTipLikelihoods.get(),"scaling", scaling.get().toString());
+            if (beagle.beagle != null) {
+                //a Beagle instance was found, so we use it
+                return;
+            }
+        } catch (Exception e) {
+            // ignore
+        }
         // No Beagle instance was found, so we use the good old java likelihood core
-//        beagle = null;
+        beagle = null;
 
         nodeCount = treeInput.get().getNodeCount();
         leafNodeCount = treeInput.get().getLeafNodeCount();
@@ -351,10 +351,10 @@ public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
 
     @Override
     public double calculateLogP() {
-//        if (beagle != null) {
-//            logP = beagle.calculateLogP();
-//            return logP;
-//        }
+        if (beagle != null) {
+            logP = beagle.calculateLogP();
+            return logP;
+        }
         final TreeInterface tree = treeInput.get();
 
         if (siteModel.isDirtyCalculation())
@@ -413,9 +413,9 @@ public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
      */
     @Override
     protected boolean requiresRecalculation() {
-//        if (beagle != null) {
-//            return beagle.requiresRecalculation();
-//        }
+        if (beagle != null) {
+            return beagle.requiresRecalculation();
+        }
         hasDirt = QuasiSpeciesTree.IS_CLEAN;
 
         if (alignment.isDirtyCalculation()) {
@@ -435,11 +435,11 @@ public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
 
     @Override
     public void store() {
-//        if (beagle != null) {
-//            beagle.store();
-//            super.store();
-//            return;
-//        }
+        if (beagle != null) {
+            beagle.store();
+            super.store();
+            return;
+        }
         if (likelihoodCore != null) {
             likelihoodCore.store();
         }
@@ -450,11 +450,11 @@ public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
 
     @Override
     public void restore() {
-//        if (beagle != null) {
-//            beagle.restore();
-//            super.restore();
-//            return;
-//        }
+        if (beagle != null) {
+            beagle.restore();
+            super.restore();
+            return;
+        }
         if (likelihoodCore != null) {
             likelihoodCore.restore();
         }
