@@ -1228,8 +1228,10 @@ public class BirthDeathSkylineModel extends SpeciesTreeDistribution {
     	for (int i = 0; i < LOG_LENGTH; i++) {
     		log[i] = Math.log(LOG_LOWER + LOG_INTERVAL * i / LOG_LENGTH);
     	}
-    	exp = new double[LOG_LENGTH + 1];
-    	for (int i = 0; i < LOG_LENGTH + 1; i++) {
+    	// need LOG_LENGTH + 2 because it can happen that we have a number super close to 0,
+        //    so index=1000000,i=1000000 and thus i+1=1000001 will be out of bound for array of size LOG_LENGTH+1 only
+    	exp = new double[LOG_LENGTH + 2];
+    	for (int i = 0; i < LOG_LENGTH + 2; i++) {
     		exp[i] = Math.exp(EXP_LOWER + EXP_INTERVAL * i / LOG_LENGTH);
     	}
     }
