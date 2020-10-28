@@ -351,31 +351,32 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel {
 	                if (i+1 < allTimes.length){
 	                    // number of lineages at time i+1 is the same as at i ... + bifurcations (i to i+1) - sampling (i)
 	                    nrqslineages[i + 1] += nrqslineages[i];
-	                    // if the time is different from previous time - then take into account possible birth/death of lineages
-	                    if (allTimes[i] == allTimes[0] || allTimes[i] != allTimes[i-1]) {
-	                        // the time in allTimes[i] can be a time for sampling at time i, remove lineages from time i+1
-	                        if (qstiptimep >= 0 && QSTipTimesTemp[qstiptimep] == allTimes[i]) {
-	                            nrqslineages[i + 1] -= QSTipTimesCountTemp[qstiptimep];
-	                            qstiptimep--;
-	                        }
-	                        // the time in allTimes[i] can be the time for a real internal node
-	                        //              - account for all possible QS lineages it can attach to
-	                        // check if the internal node with this height belongs to this haplotype
-	                        while (intp < indexes.length && tree.getNode(indexes[intp] + nrTips).getHeight() > allTimes[i])
-	                            intp++;
-	                        if (intp < indexes.length
-	                                && tree.getNode(indexes[intp] + nrTips).getHeight() == allTimes[i]
-	                                && ((QuasiSpeciesNode) tree.getNode(indexes[intp] + nrTips)).getContinuingHaploName() == node.getNr()) {
-	                            // if it does, add contribution to the gamma factor for possible attachment branches
-	                            gamma += log[nrqslineages[i] + 1];
-	                        }
-	                    }
+                        // take into account possible birth/death of lineages
+                        // the time in allTimes[i] can be a time for sampling at time i, remove lineages from time i+1
+                        if (qstiptimep >= 0 && QSTipTimesTemp[qstiptimep] == allTimes[i]) {
+                            nrqslineages[i + 1] -= QSTipTimesCountTemp[qstiptimep];
+                            qstiptimep--;
+                        }
+                        // the time in allTimes[i] can be the time for a real internal node
+                        //              - account for all possible QS lineages it can attach to
+                        // check if the internal node with this height belongs to this haplotype
+                        while (intp < indexes.length && tree.getNode(indexes[intp] + nrTips).getHeight() > allTimes[i])
+                            intp++;
+                        if (intp < indexes.length && i > 0 && tree.getNode(indexes[intp] + nrTips).getHeight() == allTimes[i-1])
+                            intp++;
+                        if (intp < indexes.length
+                                && tree.getNode(indexes[intp] + nrTips).getHeight() == allTimes[i]
+                                && ((QuasiSpeciesNode) tree.getNode(indexes[intp] + nrTips)).getContinuingHaploName() == node.getNr()) {
+                            // if it does, add contribution to the gamma factor for possible attachment branches
+                            gamma += log[nrqslineages[i] + 1];
+                        }
 	                }
 	
 	//                nrtotallineages[i] += nrqslineages[i];
 	//                nrtotalqsattachments[i] += nrqsattachments[i];
 	                // this factor is only needed for trees with tips sampled through time
-	                if (uniqueSampTimes.length > 1) {
+                    // if already factored in in previous pass with exactly the same time, do not include it this time
+	                if (uniqueSampTimes.length > 1 && i > 0 && allTimes[i] != allTimes[i-1]) {
 	                    // include all the (gammaj) factors for the possible combinations of QS lineages at each merge point
 	                    for (int lineage = nrqslineages[i]; lineage > nrqslineages[i] - nrqsattachments[i]; lineage--) {
 	                        // for qs lineages we have to have lineage + 1 since we did not count that at first split,
