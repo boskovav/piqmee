@@ -157,6 +157,10 @@ public class QuasiSpeciesNode extends QuasiSpeciesNodeBaseClass {
         return this.attachmentTimesList;
     }
 
+    public void resetAttachmentTimesListChangedTag() {
+        attachmentTimesListChanged = false;
+    }
+
     /**
      * Sets the attachment times of the haplotype associated with this tip
      *

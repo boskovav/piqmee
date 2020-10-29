@@ -1832,6 +1832,10 @@ public class QuasiSpeciesTree extends Tree {
             } //else
               //  sink.setStartBranchCounts(src.getStartBranchCounts());
 
+            sink.setNewtimeofchangedcopy(-1);
+            sink.setOldtimeofchangedcopy(-1);
+            sink.resetAttachmentTimesListChangedTag();
+
             if (src.getLeft()!=null) {
                 sink.setLeft(m_storedNodes[src.getLeft().getNr()]);
                 if (src.getRight()!=null)
