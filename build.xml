@@ -114,6 +114,7 @@
 
     <!-- Get dependencies -->
     <target name="get-dependencies">
+    <!--
         <echo>Downloading dependencies...</echo>
 
         <echo>BDSKY:</echo>
@@ -124,7 +125,7 @@
         <move todir="${build-lib}">
             <fileset dir="${build-lib}/BDSKY/lib" includes="*.jar"/>
         </move>
-
+	-->
     </target>
 
     <!-- Compile -->

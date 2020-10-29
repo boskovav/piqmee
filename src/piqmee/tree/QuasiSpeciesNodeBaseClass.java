@@ -10,13 +10,17 @@ import beast.evolution.tree.Node;
 @Description("A base class for a node in a quasi-species-type of phylogenetic tree.")
 public abstract class QuasiSpeciesNodeBaseClass extends Node {
 
+	// haplotype starting just above this node, -1 otherwise
+	// so leaf nodes are sometimes -1 if haplotype continues above parent
     protected int haploAboveName = -1;
+    // Node number for leafs, for internal nodes depends if haplotype passes through it
     protected int continuingHaploName = -1;
     // tip times are sorted from the most recent to the most into the past
     // NOTICE: the real tip in the tree has the value of tipTimesList[0]
     protected double[] tipTimesList;
     // same order as tipTimesList count in tipTimesCountList[0] includes the real tip
     protected int[] tipTimesCountList;
+    // TODO: check if may not be used?
     protected int parentHaplo = -1;
 
     @Override
