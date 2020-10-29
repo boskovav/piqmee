@@ -376,7 +376,7 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel {
 	//                nrtotalqsattachments[i] += nrqsattachments[i];
 	                // this factor is only needed for trees with tips sampled through time
                     // if already factored in in previous pass with exactly the same time, do not include it this time
-	                if (uniqueSampTimes.length > 1 && i > 0 && allTimes[i] != allTimes[i-1]) {
+	                if (uniqueSampTimes.length > 1) {
 	                    // include all the (gammaj) factors for the possible combinations of QS lineages at each merge point
 	                    for (int lineage = nrqslineages[i]; lineage > nrqslineages[i] - nrqsattachments[i]; lineage--) {
 	                        // for qs lineages we have to have lineage + 1 since we did not count that at first split,
