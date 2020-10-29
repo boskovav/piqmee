@@ -1244,10 +1244,10 @@ public class BirthDeathSkylineModel extends SpeciesTreeDistribution {
 		final int i = (int) index;
 		
 		// stepwise approximation
-		return log[i];
+		//return log[i];
 				
 		// linear approximation
-		// return log[i] + (log[i+1]-log[i]) * (index - i);
+		return log[i] + (log[i+1]-log[i]) * (index - i);
 	}
 
 	
