@@ -992,7 +992,7 @@ public class QuasiSpeciesTree extends Tree {
 
         // In unique haplo tree, there can still be duplicate sequences, if found at different points in time
         // Get the distances for the sequences:
-        double[][] distanceMatrix = getDistanceMatrix(data, collapseSequencesWithMissingData);
+        double[][] distanceMatrix = getDistanceMatrix(data, uniqueHaploTree, collapseSequencesWithMissingData);
 
         // Build new quasi-species tree:
         ArrayList haplotypesSeen = new ArrayList<>();
@@ -1085,7 +1085,7 @@ public class QuasiSpeciesTree extends Tree {
                                  boolean collapseSequencesWithMissingData){
 
         // Get the distances for the sequences:
-        double[][] distanceMatrix = getDistanceMatrix(data, collapseSequencesWithMissingData);
+        double[][] distanceMatrix = getDistanceMatrix(data, fullTree, collapseSequencesWithMissingData);
 
         // Build new quasi-species tree:
         ArrayList haplotypesSeen = new ArrayList<>();
@@ -1163,9 +1163,10 @@ public class QuasiSpeciesTree extends Tree {
      * Calculate the distance matrix from all partitions
      *
      * @param data
+     * @param tree
      * @param collapseSequencesWithMissingData
      */
-    public double[][] getDistanceMatrix(Alignment data, boolean collapseSequencesWithMissingData) {
+    public double[][] getDistanceMatrix(Alignment data, Tree tree, boolean collapseSequencesWithMissingData) {
         int taxaSize = data.getTaxonCount();
         double[][] distanceMatrix = new double[taxaSize][taxaSize];
         double[][] distanceMatrixSum = new double[taxaSize][taxaSize];
@@ -1188,7 +1189,7 @@ public class QuasiSpeciesTree extends Tree {
                     odata = odatatmp;
                 }
                 // 2) make a distance matrix for each such alignment
-                distanceMatrixTmp = getSequenceDistances(odata, collapseSequencesWithMissingData);
+                distanceMatrixTmp = getSequenceDistances(odata, tree, collapseSequencesWithMissingData);
                 // 3) add this distance to distances from other alignments
                 for (int i = 0; i < taxaSize - 1; i++) {
                     for (int j = i + 1; j < taxaSize; j++) {
@@ -1202,7 +1203,7 @@ public class QuasiSpeciesTree extends Tree {
         }
         // 5) it could be, especially in a test case, that the tree is not linked with any output - check for this
         if (outputset.size() == 0)
-            distanceMatrix = getSequenceDistances(data, collapseSequencesWithMissingData);
+            distanceMatrix = getSequenceDistances(data, tree, collapseSequencesWithMissingData);
 
         // quickly check if all sequences are unique reciprocally, if not throw an error for now
         if (! checkIfDistMatrixFullyReciprocal(distanceMatrix)){
@@ -1230,15 +1231,17 @@ public class QuasiSpeciesTree extends Tree {
      * @param collapseSequencesWithMissingData
      * @return
      */
-    protected double[][] getSequenceDistances(Alignment data, boolean collapseSequencesWithMissingData) {
+    protected double[][] getSequenceDistances(Alignment data, Tree tree, boolean collapseSequencesWithMissingData) {
         // collect unique sequences into a hash
         Map<String, List<Integer>> sequenceMap = new HashMap<>();
-        for (Sequence seq : data.sequenceInput.get()) {
+        for (Node node : tree.getExternalNodes()){
+            int taxonNrInData = data.getTaxonIndex(node.getID());
+            Sequence seq = data.sequenceInput.get().get(taxonNrInData);
             String sequence = seq.dataInput.get();
             if (!sequenceMap.containsKey(sequence)) {
                 sequenceMap.put(sequence, new ArrayList<>());
             }
-            sequenceMap.get(sequence).add(data.getTaxonIndex(seq.getTaxon()));
+            sequenceMap.get(sequence).add(node.getNr());
         }
         // Get the distances for the sequences:
         Distance distance = new DifferenceCount();

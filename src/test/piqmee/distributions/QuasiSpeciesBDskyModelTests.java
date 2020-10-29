@@ -162,6 +162,7 @@ public class QuasiSpeciesBDskyModelTests {
         // Assemble BEASTObjects needed by QuasiSpeciesTree
         QuasiSpeciesTree tree = QuasiSpeciesTestCase.setTreeFromFullNewick("(((((((((((t0 : 1, t1 : 1) : 1, t2 : 2) : 0.5, t3 : 1) : 1, t4 : 2) : 1, t5 : 3) : 1, t6 : 4) : 1, t7 : 5) : 0.5, t8 : 2) : 1, t9 : 3) : 1, t10 : 4 ) : 1, t11 : 10 ) : 1;",
                 new String[] {"A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "G"});
+        tree.setEverythingDirty(true);
 
         // calculate the tree likelihood with QS algorithm
         QuasiSpeciesBirthDeathSkylineModel bdsqs = this.getQSBDSKYmodel(tree, new RealParameter("11.0"),
@@ -212,6 +213,7 @@ public class QuasiSpeciesBDskyModelTests {
         // Assemble BEASTObjects needed by QuasiSpeciesTree
         QuasiSpeciesTree tree = QuasiSpeciesTestCase.setTreeFromFullNewick("(((((((((((t0 : 1, t1 : 1) : 1, t2 : 2) : 0.5, t3 : 1) : 1, t4 : 2) : 1, t5 : 3) : 1, t6 : 4) : 1, t7 : 5) : 0.5, t8 : 2) : 1, t9 : 3) : 1, t10 : 4 ) : 1, t11 : 10 ) : 1;",
                 new String[] {"A", "A", "G", "A", "A", "A", "A", "A", "A", "A", "A", "A"});
+        tree.setEverythingDirty(true);
 
         // calculate the tree likelihood with QS algorithm
         QuasiSpeciesBirthDeathSkylineModel bdsqs = this.getQSBDSKYmodel(tree, new RealParameter("11.0"),
@@ -267,6 +269,7 @@ public class QuasiSpeciesBDskyModelTests {
         // Assemble BEASTObjects needed by QuasiSpeciesTree
         QuasiSpeciesTree tree = QuasiSpeciesTestCase.setTreeFromFullNewick("(((((((((((t0 : 1, t1 : 1) : 1, t2 : 2) : 0.5, t3 : 1) : 1, t4 : 2) : 1, t5 : 3) : 1, t6 : 4) : 1, t7 : 5) : 0.5, t8 : 2) : 1, t9 : 3) : 1, t10 : 4 ) : 1, t11 : 10 ) : 1;",
                 new String[] {"A", "A", "G", "A", "T", "A", "A", "A", "A", "A", "A", "A"});
+        tree.setEverythingDirty(true);
 
         // calculate the tree likelihood with QS algorithm
         QuasiSpeciesBirthDeathSkylineModel bdsqs = this.getQSBDSKYmodel(tree, new RealParameter("11.0"),
@@ -329,6 +332,7 @@ public class QuasiSpeciesBDskyModelTests {
         // Assemble BEASTObjects needed by QuasiSpeciesTree
         QuasiSpeciesTree tree = QuasiSpeciesTestCase.setTreeFromFullNewick("(((((((((((t0 : 1, t1 : 1) : 1, t2 : 2) : 0.5, t3 : 2.5) : 1, t4 : 3.5) : 1, t5 : 4.5) : 1, t6 : 5.5) : 1, t7 : 6.5) : 0.5, t8 : 7) : 1, t9 : 8) : 1, t10 : 9 ) : 1, t11 : 10 ) : 1;",
                 new String[] {"A", "A", "G", "A", "T", "A", "A", "A", "A", "A", "A", "A"});
+        tree.setEverythingDirty(true);
 
         // calculate the tree likelihood with QS algorithm
         QuasiSpeciesBirthDeathSkylineModel bdsqs = this.getQSBDSKYmodel(tree, new RealParameter("11.0"),

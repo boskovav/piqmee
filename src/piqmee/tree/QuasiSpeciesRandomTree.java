@@ -65,7 +65,7 @@ public class QuasiSpeciesRandomTree extends QuasiSpeciesTree implements StateNod
         // specify monophyletic clusters from distance matrix
         List<MRCAPrior> monophyleticGroups = new ArrayList();
         // Get the distances for the sequences:
-        double[][] distanceMatrix = getDistanceMatrix(data, collapseSequencesWithMissingDataInput.get());
+        double[][] distanceMatrix = getDistanceMatrix(data, toyRandomTree, collapseSequencesWithMissingDataInput.get());
         // specify monophyletic constraints
         for (int i = 0; i < distanceMatrix.length; i++){
             List<Taxon> identical = new ArrayList<>();
