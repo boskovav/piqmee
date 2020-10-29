@@ -42,7 +42,7 @@ public class DifferenceCount extends Distance.Base {
             pattern = patterns.getPattern(i);
             state1 = pattern[taxon1];
             state2 = pattern[taxon2];
-            // check if patterns represent a single characeter
+            // check if patterns represent a single character
             if (!dataType.isAmbiguousCode(state1) && !dataType.isAmbiguousCode(state2)){
                 if (state1 != state2) {
                     // only a single character difference is enough for us to determine that sequences are not identical
