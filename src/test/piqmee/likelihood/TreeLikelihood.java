@@ -69,7 +69,7 @@ public class TreeLikelihood extends GenericTreeLikelihood {
     /**
      * calculation engine *
      */
-    protected LikelihoodCore likelihoodCore;
+    public LikelihoodCore likelihoodCore;
     protected BeagleTreeLikelihood beagle;
 
     /**

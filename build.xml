@@ -176,9 +176,10 @@
             <batchtest fork="yes" todir="${test-reports}">
                 <fileset dir="${test}">
                     <include name="**/*Tests.java"/>
+                    <include name="**/*Tests2.java"/>
                 </fileset>
                 <formatter type="plain"/>
-                <!--formatter type="plain" usefile="false"/--> <!-- to screen -->
+                <formatter type="plain" usefile="false"/> <!-- to screen -->
             </batchtest>
         </junit>
 

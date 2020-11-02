@@ -1,4 +1,4 @@
-package test.piqmee.operators;
+package piqmee.operators;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertArrayEquals;

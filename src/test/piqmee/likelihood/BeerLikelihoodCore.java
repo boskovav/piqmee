@@ -341,7 +341,7 @@ public class BeerLikelihoodCore extends LikelihoodCore {
      * @param outPartials an array into which the partials will go
      */
     @Override
-    protected void calculateIntegratePartials(double[] inPartials, double[] proportions, double[] outPartials) {
+    public void calculateIntegratePartials(double[] inPartials, double[] proportions, double[] outPartials) {
 
         int u = 0;
         int v = 0;

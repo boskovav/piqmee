@@ -157,7 +157,7 @@ abstract public class LikelihoodCore {
     public void processStack() {
     }
 
-    abstract protected void calculateIntegratePartials(double[] inPartials, double[] proportions, double[] outPartials);
+    abstract public void calculateIntegratePartials(double[] inPartials, double[] proportions, double[] outPartials);
 //    abstract public void calcRootPsuedoRootPartials(double[] frequencies, int nodeIndex, double [] pseudoPartials);
 //    abstract public void calcNodePsuedoRootPartials(double[] inPseudoPartials, int nodeIndex, double [] outPseudoPartials);
 //    abstract public void calcPsuedoRootPartials(double [] parentPseudoPartials, int nodeIndex, double [] pseudoPartials);

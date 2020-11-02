@@ -1,4 +1,4 @@
-package test.piqmee.likelihood;
+package piqmee.likelihood;
 
 import beast.evolution.alignment.Alignment;
 import beast.evolution.likelihood.TreeLikelihood;
