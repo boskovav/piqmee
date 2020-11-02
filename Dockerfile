@@ -8,4 +8,4 @@ WORKDIR /root
 
 ADD . ./
 
-ENTRYPOINT ant test
+ENTRYPOINT ant test 
