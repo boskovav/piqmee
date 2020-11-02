@@ -1,0 +1,14 @@
+sudo: require
+
+services:
+    - docker
+
+branches:
+  only:
+    - master
+
+before_install:
+    - docker build -t docker-image .
+
+script:
+    - docker run docker-image
