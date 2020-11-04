@@ -31,66 +31,62 @@ import piqmee.tree.QuasiSpeciesTree;
 
 @Description("Calculates the probability of sequence data on a beast.piqmee.tree " +
         "given a site and substitution model using a variant of the 'peeling algorithm'. ")
-public class QuasiSpeciesTreeLikelihood3 extends QuasiSpeciesTreeLikelihood2 {
+public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
 
-//    final public Input<Boolean> m_useAmbiguities = new Input<>("useAmbiguities", "flag to indicate that sites containing ambiguous states should be handled instead of ignored (the default)", false);
-//    final public Input<Boolean> m_useTipLikelihoods = new Input<>("useTipLikelihoods", "flag to indicate that partial likelihoods are provided at the tips", false);
-//    final public Input<String> implementationInput = new Input<>("implementation", "name of class that implements this treelikelihood potentially more efficiently. "
-//    		+ "This class will be tried first, with the TreeLikelihood as fallback implementation. "
-//    		+ "When multi-threading, multiple objects can be created.", "beast.evolution.likelihood.BeagleTreeLikelihood");
-//    
-//    public static enum Scaling {none, always, _default};
-//    final public Input<Scaling> scaling = new Input<>("scaling", "type of scaling to use, one of " + Arrays.toString(Scaling.values()) + ". If not specified, the -beagle_scaling flag is used.", Scaling._default, Scaling.values());
-//
-//    final public Input<Frequencies> rootFrequenciesInput =
-//            new Input<>("rootFrequencies", "prior state frequencies at root, optional", Input.Validate.OPTIONAL);
-//    final public Input<Double> toleranceInput = new Input<>("tolerance", "tolerance on branch length times branch rate. If non-zero, this quantity will be deemed the same as less than tolerance, and speed things up", 0.0);
+    final public Input<Boolean> m_useAmbiguities = new Input<>("useAmbiguities", "flag to indicate that sites containing ambiguous states should be handled instead of ignored (the default)", false);
+    final public Input<Boolean> m_useTipLikelihoods = new Input<>("useTipLikelihoods", "flag to indicate that partial likelihoods are provided at the tips", false);
+    final public Input<String> implementationInput = new Input<>("implementation", "name of class that implements this treelikelihood potentially more efficiently. "
+    		+ "This class will be tried first, with the TreeLikelihood as fallback implementation. "
+    		+ "When multi-threading, multiple objects can be created.", "beast.evolution.likelihood.BeagleTreeLikelihood");
+    
+    public static enum Scaling {none, always, _default};
+    final public Input<Scaling> scaling = new Input<>("scaling", "type of scaling to use, one of " + Arrays.toString(Scaling.values()) + ". If not specified, the -beagle_scaling flag is used.", Scaling._default, Scaling.values());
 
 
-//    /**
-//     * calculation engine *
-//     */
-//    protected LikelihoodCore likelihoodCore;
-//    public LikelihoodCore getLikelihoodCore() {return likelihoodCore;}
-//    protected QuasiSpeciesBeagleTreeLikelihood beagle;
-//
-//    /**
-//     * BEASTObject associated with inputs. Since none of the inputs are StateNodes, it
-//     * is safe to link to them only once, during initAndValidate.
-//     */
-//    protected SubstitutionModel substitutionModel;
-//    public SubstitutionModel getSubstitutionModel() {return substitutionModel;}
-//    
-//    protected SiteModel.Base siteModel;
-//    protected BranchRateModel.Base branchRateModel;
-//    int nodeCount;
+    /**
+     * calculation engine *
+     */
+    protected LikelihoodCore likelihoodCore;
+    public LikelihoodCore getLikelihoodCore() {return likelihoodCore;}
+    protected QuasiSpeciesBeagleTreeLikelihood beagle;
+
+    /**
+     * BEASTObject associated with inputs. Since none of the inputs are StateNodes, it
+     * is safe to link to them only once, during initAndValidate.
+     */
+    protected SubstitutionModel substitutionModel;
+    public SubstitutionModel getSubstitutionModel() {return substitutionModel;}
+    
+    protected SiteModel.Base siteModel;
+    protected BranchRateModel.Base branchRateModel;
+    int nodeCount;
     int [][] states;
-//    Alignment alignment;
-//
-//    /**
-//     * flag to indicate the
-//     * // when CLEAN=0, nothing needs to be recalculated for the node
-//     * // when DIRTY=1 indicates a node partial needs to be recalculated
-//     * // when FILTHY=2 indicates the indices for the node need to be recalculated
-//     * // (often not necessary while node partial recalculation is required)
-//     */
-//    protected int hasDirt;
-//
-//    /**
-//     * Lengths of the branches in the tree associated with each of the nodes
-//     * in the tree through their node  numbers. By comparing whether the
-//     * current branch length differs from stored branch lengths, it is tested
-//     * whether a node is dirty and needs to be recomputed (there may be other
-//     * reasons as well...).
-//     * These lengths take branch rate models in account.
-//     */
-//    //protected double[] m_branchLengths;
-//    //protected double[] storedBranchLengths;
-//    
-//    /**
-//     * memory allocation for likelihoods for each of the patterns *
-//     */
-//    protected double[] patternLogLikelihoods;
+    Alignment alignment;
+
+    /**
+     * flag to indicate the
+     * // when CLEAN=0, nothing needs to be recalculated for the node
+     * // when DIRTY=1 indicates a node partial needs to be recalculated
+     * // when FILTHY=2 indicates the indices for the node need to be recalculated
+     * // (often not necessary while node partial recalculation is required)
+     */
+    protected int hasDirt;
+
+    /**
+     * Lengths of the branches in the tree associated with each of the nodes
+     * in the tree through their node  numbers. By comparing whether the
+     * current branch length differs from stored branch lengths, it is tested
+     * whether a node is dirty and needs to be recomputed (there may be other
+     * reasons as well...).
+     * These lengths take branch rate models in account.
+     */
+    protected double[] branchLengths;
+    protected double[] storedBranchLengths;
+    
+    /**
+     * memory allocation for likelihoods for each of the patterns *
+     */
+    protected double[] patternLogLikelihoods;
     /**
      * memory allocation for the root partials *
      */
@@ -103,18 +99,18 @@ public class QuasiSpeciesTreeLikelihood3 extends QuasiSpeciesTreeLikelihood2 {
     protected int[] storedLeafIndex;
     protected double[][][] leafLogScaleFactors;
     private double [] logProbabilities;
-//    
-//    /**
-//     * memory allocation for probability tables obtained from the SiteModel *
-//     */
-//    protected double[] probabilities;
-//    private double[] rates;
-//    private double[] storedRates;
-//    private double[] tmpevectimesevals;
-
-//    private int nStates;
     
-//    protected int matrixSize;
+    /**
+     * memory allocation for probability tables obtained from the SiteModel *
+     */
+    protected double[] probabilities;
+    private double[] rates;
+    private double[] storedRates;
+    private double[] tmpevectimesevals;
+
+    private int nStates;
+    
+    protected int matrixSize;
 
     /**
      * flag to indicate ascertainment correction should be applied *
@@ -793,10 +789,11 @@ public class QuasiSpeciesTreeLikelihood3 extends QuasiSpeciesTreeLikelihood2 {
     	for (int i = 0; i < categoryCount; i++) {
     		for (int j = 0; j < patternCount; j++) {
     			int state = states[j];
-    			if (dataInput.get().getDataType().isAmbiguousCode(state) )
     			if (state >= 0 && state < nStates) {
     				// only contribute for non-ambiguous states
     				current[w++] = logProbabilities[v+state];
+    			} else {
+    				w++;
     			}
     		}
     		v = v + nStates;
@@ -863,14 +860,14 @@ public class QuasiSpeciesTreeLikelihood3 extends QuasiSpeciesTreeLikelihood2 {
             super.store();
             return;
         }
-//        if (likelihoodCore != null) {
-//            likelihoodCore.store();
-//        }
+        if (likelihoodCore != null) {
+            likelihoodCore.store();
+        }
         super.store();
-        // System.arraycopy(m_branchLengths, 0, storedBranchLengths, 0, m_branchLengths.length);
+        System.arraycopy(branchLengths, 0, storedBranchLengths, 0, branchLengths.length);
         System.arraycopy(accumulatedLogLeafScaleFactors, 0, storedAccumulatedLogLeafScaleFactors, 0, accumulatedLogLeafScaleFactors.length);
         System.arraycopy(leafIndex, 0, storedLeafIndex, 0, leafIndex.length);
-        // System.arraycopy(rates, 0, storedRates, 0, rates.length);
+        System.arraycopy(rates, 0, storedRates, 0, rates.length);
 
     }
 
@@ -881,17 +878,16 @@ public class QuasiSpeciesTreeLikelihood3 extends QuasiSpeciesTreeLikelihood2 {
             super.restore();
             return;
         }
-//        if (likelihoodCore != null) {
-//            likelihoodCore.restore();
-//        }
+        if (likelihoodCore != null) {
+            likelihoodCore.restore();
+        }
         super.restore();
-        double[] tmp;
-//        double[] tmp = m_branchLengths;
-//        m_branchLengths = storedBranchLengths;
-//        storedBranchLengths = tmp;
+        double[] tmp = branchLengths;
+        branchLengths = storedBranchLengths;
+        storedBranchLengths = tmp;
         
         tmp = accumulatedLogLeafScaleFactors; accumulatedLogLeafScaleFactors = storedAccumulatedLogLeafScaleFactors; storedAccumulatedLogLeafScaleFactors = tmp;
-//        tmp = rates; rates = storedRates; storedRates = tmp;
+        tmp = rates; rates = storedRates; storedRates = tmp;
 
         int[] tmp2 = leafIndex; leafIndex = storedLeafIndex; storedLeafIndex = tmp2; 
     }

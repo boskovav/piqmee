@@ -10,6 +10,7 @@ import beast.evolution.tree.Tree;
 import beast.util.TreeParser;
 import org.junit.Test;
 import piqmee.likelihood.QuasiSpeciesTreeLikelihood2;
+import piqmee.likelihood.QuasiSpeciesTreeLikelihood3;
 import piqmee.tree.QuasiSpeciesNode;
 import piqmee.tree.QuasiSpeciesTree;
 import test.beast.BEASTTestCase;
@@ -95,7 +96,7 @@ public class QuasiSpeciesTreeLikelihoodTests2 {
         logP = likelihoodNormal.calculateLogP();
 
         double[] rates = new double[4];
-        ((QuasiSpeciesTreeLikelihood2)likelihood).getNoChangeRates(rates);
+        getNoChangeRates(rates, likelihood);
 
         // compare the two
         assertEquals(logP + (rates[3] * 0.5 * 13) + (rates[1] * 1 * 13), logQSP, BEASTTestCase.PRECISION);
@@ -168,7 +169,17 @@ public class QuasiSpeciesTreeLikelihoodTests2 {
 
      */
 
-    /**
+    private void getNoChangeRates(double[] rates, GenericTreeLikelihood likelihood) {
+    	if (likelihood instanceof QuasiSpeciesTreeLikelihood2) {
+        ((QuasiSpeciesTreeLikelihood2)likelihood).getNoChangeRates(rates);
+    	} else if (likelihood instanceof QuasiSpeciesTreeLikelihood3) {
+            ((QuasiSpeciesTreeLikelihood3)likelihood).getNoChangeRates(rates);
+    	} else {
+    		throw new IllegalArgumentException("Expected likelihood of type QuasiSpeciesTreeLikelihood2 or QuasiSpeciesTreeLikelihood3");
+    	}
+	}
+
+	/**
      * test that the two likelihoods are different even if all rates are the same
      */
     @Test
@@ -266,7 +277,7 @@ public class QuasiSpeciesTreeLikelihoodTests2 {
         logP = likelihoodNormal.calculateLogP();
 
         double[] rates = new double[4];
-        ((QuasiSpeciesTreeLikelihood2)likelihood).getNoChangeRates(rates);
+        getNoChangeRates(rates, likelihood);
 
         // compare the two
         QuasiSpeciesNode newNode = new QuasiSpeciesNode();
@@ -409,7 +420,7 @@ public class QuasiSpeciesTreeLikelihoodTests2 {
         logP = likelihoodNormal.calculateLogP();
 
         double[] rates = new double[4];
-        ((QuasiSpeciesTreeLikelihood2)likelihood).getNoChangeRates(rates);
+        getNoChangeRates(rates, likelihood);
 
         // compare the two
         QuasiSpeciesNode newNode = new QuasiSpeciesNode();
