@@ -1,6 +1,7 @@
 package test.piqmee.likelihood;
 
 import beast.evolution.alignment.Alignment;
+import beast.evolution.likelihood.GenericTreeLikelihood;
 import beast.evolution.likelihood.TreeLikelihood;
 import beast.evolution.sitemodel.SiteModel;
 import piqmee.evolution.branchratemodel.QuasiSpeciesUCRelaxedClockModel;
@@ -31,7 +32,7 @@ public class QuasiSpeciesTreeLikelihoodTests2 {
      */
 
 
-    protected QuasiSpeciesTreeLikelihood2 newQSTreeLikelihood() {
+    protected GenericTreeLikelihood newQSTreeLikelihood() {
         System.setProperty("java.only","true");
         return new QuasiSpeciesTreeLikelihood2();
     }
@@ -52,7 +53,7 @@ public class QuasiSpeciesTreeLikelihoodTests2 {
         // it's divided by 3 before multiplying in the exponent (not sure why)
 
         System.out.println("Without tip likelihoods:");
-        QuasiSpeciesTreeLikelihood2 likelihood = newQSTreeLikelihood();
+        GenericTreeLikelihood likelihood = newQSTreeLikelihood();
         likelihood.initByName("data", data, "tree", tree, "siteModel", siteModel, "scaling", TreeLikelihood.Scaling.none);
         double[] logP = new double[2];
         logP[0] = likelihood.calculateLogP();
@@ -82,7 +83,7 @@ public class QuasiSpeciesTreeLikelihoodTests2 {
         siteModel.initByName("mutationRate", "13.0", "gammaCategoryCount", 1, "substModel", JC);
 
         // QS likelihood
-        QuasiSpeciesTreeLikelihood2 likelihood = newQSTreeLikelihood();
+        GenericTreeLikelihood likelihood = newQSTreeLikelihood();
         likelihood.initByName("data", data, "tree", tree, "siteModel", siteModel);
         double logQSP = 0;
         logQSP = likelihood.calculateLogP();
@@ -94,7 +95,7 @@ public class QuasiSpeciesTreeLikelihoodTests2 {
         logP = likelihoodNormal.calculateLogP();
 
         double[] rates = new double[4];
-        likelihood.getNoChangeRates(rates);
+        ((QuasiSpeciesTreeLikelihood2)likelihood).getNoChangeRates(rates);
 
         // compare the two
         assertEquals(logP + (rates[3] * 0.5 * 13) + (rates[1] * 1 * 13), logQSP, BEASTTestCase.PRECISION);
@@ -202,7 +203,7 @@ public class QuasiSpeciesTreeLikelihoodTests2 {
         }
 
         // QS likelihood
-        QuasiSpeciesTreeLikelihood2 likelihood = newQSTreeLikelihood();
+        GenericTreeLikelihood likelihood = newQSTreeLikelihood();
         likelihood.initByName("data", data, "tree", tree, "siteModel", siteModel, "branchRateModel", branchModel);
         double logQSP = 0;
         logQSP = likelihood.calculateLogP();
@@ -253,7 +254,7 @@ public class QuasiSpeciesTreeLikelihoodTests2 {
         }
 
         // QS likelihood
-        QuasiSpeciesTreeLikelihood2 likelihood = newQSTreeLikelihood();
+        GenericTreeLikelihood likelihood = newQSTreeLikelihood();
         likelihood.initByName("data", data, "tree", tree, "siteModel", siteModel, "branchRateModel", branchModel);
         double logQSP = 0;
         logQSP = likelihood.calculateLogP();
@@ -265,7 +266,7 @@ public class QuasiSpeciesTreeLikelihoodTests2 {
         logP = likelihoodNormal.calculateLogP();
 
         double[] rates = new double[4];
-        likelihood.getNoChangeRates(rates);
+        ((QuasiSpeciesTreeLikelihood2)likelihood).getNoChangeRates(rates);
 
         // compare the two
         QuasiSpeciesNode newNode = new QuasiSpeciesNode();
@@ -324,7 +325,7 @@ public class QuasiSpeciesTreeLikelihoodTests2 {
         }
 
         // QS likelihood
-        QuasiSpeciesTreeLikelihood2 likelihood = newQSTreeLikelihood();
+        GenericTreeLikelihood likelihood = newQSTreeLikelihood();
         likelihood.initByName("data", data, "tree", tree, "siteModel", siteModel, "branchRateModel", branchModel);
         double logQSP = 0;
         logQSP = likelihood.calculateLogP();
@@ -396,7 +397,7 @@ public class QuasiSpeciesTreeLikelihoodTests2 {
         }
 
         // QS likelihood
-        QuasiSpeciesTreeLikelihood2 likelihood = newQSTreeLikelihood();
+        GenericTreeLikelihood likelihood = newQSTreeLikelihood();
         likelihood.initByName("data", data, "tree", tree, "siteModel", siteModel, "branchRateModel", branchModel);
         double logQSP = 0;
         logQSP = likelihood.calculateLogP();
@@ -408,7 +409,7 @@ public class QuasiSpeciesTreeLikelihoodTests2 {
         logP = likelihoodNormal.calculateLogP();
 
         double[] rates = new double[4];
-        likelihood.getNoChangeRates(rates);
+        ((QuasiSpeciesTreeLikelihood2)likelihood).getNoChangeRates(rates);
 
         // compare the two
         QuasiSpeciesNode newNode = new QuasiSpeciesNode();
@@ -480,7 +481,7 @@ public class QuasiSpeciesTreeLikelihoodTests2 {
         }
 
         // QS likelihood
-        QuasiSpeciesTreeLikelihood2 likelihood = newQSTreeLikelihood();
+        GenericTreeLikelihood likelihood = newQSTreeLikelihood();
         likelihood.initByName("data", data, "tree", tree, "siteModel", siteModel, "branchRateModel", branchModel);
         double logQSP = 0;
         logQSP = likelihood.calculateLogP();
@@ -583,11 +584,11 @@ public class QuasiSpeciesTreeLikelihoodTests2 {
         }
 
         // QS likelihood
-        QuasiSpeciesTreeLikelihood2 likelihood1 = newQSTreeLikelihood();
+        GenericTreeLikelihood likelihood1 = newQSTreeLikelihood();
         likelihood1.initByName("data", data, "tree", tree, "siteModel", siteModel1, "branchRateModel", branchModel1);
         double logQSP1 = 0;
         logQSP1 = likelihood1.calculateLogP();
-        QuasiSpeciesTreeLikelihood2 likelihood2 = newQSTreeLikelihood();
+        GenericTreeLikelihood likelihood2 = newQSTreeLikelihood();
         likelihood2.initByName("data", data, "tree", tree, "siteModel", siteModel2, "branchRateModel", branchModel2);
         double logQSP2 = 0;
         logQSP2 = likelihood2.calculateLogP();

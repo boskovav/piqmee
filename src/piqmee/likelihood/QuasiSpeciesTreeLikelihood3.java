@@ -31,66 +31,66 @@ import piqmee.tree.QuasiSpeciesTree;
 
 @Description("Calculates the probability of sequence data on a beast.piqmee.tree " +
         "given a site and substitution model using a variant of the 'peeling algorithm'. ")
-public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
+public class QuasiSpeciesTreeLikelihood3 extends QuasiSpeciesTreeLikelihood2 {
 
 //    final public Input<Boolean> m_useAmbiguities = new Input<>("useAmbiguities", "flag to indicate that sites containing ambiguous states should be handled instead of ignored (the default)", false);
-    final public Input<Boolean> m_useTipLikelihoods = new Input<>("useTipLikelihoods", "flag to indicate that partial likelihoods are provided at the tips", false);
-    final public Input<String> implementationInput = new Input<>("implementation", "name of class that implements this treelikelihood potentially more efficiently. "
-    		+ "This class will be tried first, with the TreeLikelihood as fallback implementation. "
-    		+ "When multi-threading, multiple objects can be created.", "beast.evolution.likelihood.BeagleTreeLikelihood");
-    
-    public static enum Scaling {none, always, _default};
-    final public Input<Scaling> scaling = new Input<>("scaling", "type of scaling to use, one of " + Arrays.toString(Scaling.values()) + ". If not specified, the -beagle_scaling flag is used.", Scaling._default, Scaling.values());
+//    final public Input<Boolean> m_useTipLikelihoods = new Input<>("useTipLikelihoods", "flag to indicate that partial likelihoods are provided at the tips", false);
+//    final public Input<String> implementationInput = new Input<>("implementation", "name of class that implements this treelikelihood potentially more efficiently. "
+//    		+ "This class will be tried first, with the TreeLikelihood as fallback implementation. "
+//    		+ "When multi-threading, multiple objects can be created.", "beast.evolution.likelihood.BeagleTreeLikelihood");
+//    
+//    public static enum Scaling {none, always, _default};
+//    final public Input<Scaling> scaling = new Input<>("scaling", "type of scaling to use, one of " + Arrays.toString(Scaling.values()) + ". If not specified, the -beagle_scaling flag is used.", Scaling._default, Scaling.values());
+//
+//    final public Input<Frequencies> rootFrequenciesInput =
+//            new Input<>("rootFrequencies", "prior state frequencies at root, optional", Input.Validate.OPTIONAL);
+//    final public Input<Double> toleranceInput = new Input<>("tolerance", "tolerance on branch length times branch rate. If non-zero, this quantity will be deemed the same as less than tolerance, and speed things up", 0.0);
 
-    final public Input<Frequencies> rootFrequenciesInput =
-            new Input<>("rootFrequencies", "prior state frequencies at root, optional", Input.Validate.OPTIONAL);
-    final public Input<Double> toleranceInput = new Input<>("tolerance", "tolerance on branch length times branch rate. If non-zero, this quantity will be deemed the same as less than tolerance, and speed things up", 0.0);
 
-
-    /**
-     * calculation engine *
-     */
-    protected LikelihoodCore likelihoodCore;
-    public LikelihoodCore getLikelihoodCore() {return likelihoodCore;}
-    protected QuasiSpeciesBeagleTreeLikelihood beagle;
-
-    /**
-     * BEASTObject associated with inputs. Since none of the inputs are StateNodes, it
-     * is safe to link to them only once, during initAndValidate.
-     */
-    protected SubstitutionModel substitutionModel;
-    public SubstitutionModel getSubstitutionModel() {return substitutionModel;}
-    
-    protected SiteModel.Base m_siteModel;
-    protected BranchRateModel.Base branchRateModel;
-    int nodeCount;
+//    /**
+//     * calculation engine *
+//     */
+//    protected LikelihoodCore likelihoodCore;
+//    public LikelihoodCore getLikelihoodCore() {return likelihoodCore;}
+//    protected QuasiSpeciesBeagleTreeLikelihood beagle;
+//
+//    /**
+//     * BEASTObject associated with inputs. Since none of the inputs are StateNodes, it
+//     * is safe to link to them only once, during initAndValidate.
+//     */
+//    protected SubstitutionModel substitutionModel;
+//    public SubstitutionModel getSubstitutionModel() {return substitutionModel;}
+//    
+//    protected SiteModel.Base siteModel;
+//    protected BranchRateModel.Base branchRateModel;
+//    int nodeCount;
     int [][] states;
-    Alignment alignment;
-
-    /**
-     * flag to indicate the
-     * // when CLEAN=0, nothing needs to be recalculated for the node
-     * // when DIRTY=1 indicates a node partial needs to be recalculated
-     * // when FILTHY=2 indicates the indices for the node need to be recalculated
-     * // (often not necessary while node partial recalculation is required)
-     */
-    protected int hasDirt;
-
-    /**
-     * Lengths of the branches in the tree associated with each of the nodes
-     * in the tree through their node  numbers. By comparing whether the
-     * current branch length differs from stored branch lengths, it is tested
-     * whether a node is dirty and needs to be recomputed (there may be other
-     * reasons as well...).
-     * These lengths take branch rate models in account.
-     */
-    protected double[] m_branchLengths;
-    protected double[] storedBranchLengths;
-    
-    /**
-     * memory allocation for likelihoods for each of the patterns *
-     */
-    protected double[] patternLogLikelihoods;
+//    Alignment alignment;
+//
+//    /**
+//     * flag to indicate the
+//     * // when CLEAN=0, nothing needs to be recalculated for the node
+//     * // when DIRTY=1 indicates a node partial needs to be recalculated
+//     * // when FILTHY=2 indicates the indices for the node need to be recalculated
+//     * // (often not necessary while node partial recalculation is required)
+//     */
+//    protected int hasDirt;
+//
+//    /**
+//     * Lengths of the branches in the tree associated with each of the nodes
+//     * in the tree through their node  numbers. By comparing whether the
+//     * current branch length differs from stored branch lengths, it is tested
+//     * whether a node is dirty and needs to be recomputed (there may be other
+//     * reasons as well...).
+//     * These lengths take branch rate models in account.
+//     */
+//    //protected double[] m_branchLengths;
+//    //protected double[] storedBranchLengths;
+//    
+//    /**
+//     * memory allocation for likelihoods for each of the patterns *
+//     */
+//    protected double[] patternLogLikelihoods;
     /**
      * memory allocation for the root partials *
      */
@@ -103,18 +103,18 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
     protected int[] storedLeafIndex;
     protected double[][][] leafLogScaleFactors;
     private double [] logProbabilities;
-    
-    /**
-     * memory allocation for probability tables obtained from the SiteModel *
-     */
-    protected double[] probabilities;
-    private double[] rates;
-    private double[] storedRates;
-    private double[] tmpevectimesevals;
+//    
+//    /**
+//     * memory allocation for probability tables obtained from the SiteModel *
+//     */
+//    protected double[] probabilities;
+//    private double[] rates;
+//    private double[] storedRates;
+//    private double[] tmpevectimesevals;
 
-    private int stateCount;
+//    private int nStates;
     
-    protected int matrixSize;
+//    protected int matrixSize;
 
     /**
      * flag to indicate ascertainment correction should be applied *
@@ -132,7 +132,7 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
 	public List<Integer> getConstantPattern() {return constantPattern;}
     public void setConstantPattern(List<Integer> constantPattern) {this.constantPattern = constantPattern;}
 
-    protected double tolerance = 0;
+    // protected double tolerance = 0;
     Node toyNode = new Node();
 
     @Override
@@ -160,7 +160,7 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
 //		}
         // No Beagle instance was found, so we use the good old java likelihood core
         beagle = null;
-        tolerance = toleranceInput.get();
+        // tolerance = toleranceInput.get();
         nodeCount = treeInput.get().getNodeCount();
         int leafNodeCount = treeInput.get().getLeafNodeCount();
 
@@ -168,21 +168,21 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
         if (!(siteModelInput.get() instanceof SiteModel.Base)) {
         	throw new IllegalArgumentException("siteModel input should be of type SiteModel.Base");
         }
-        m_siteModel = (SiteModel.Base) siteModelInput.get();
-        m_siteModel.setDataType(alignment.getDataType());
-        substitutionModel = m_siteModel.substModelInput.get();
+        siteModel = (SiteModel.Base) siteModelInput.get();
+        siteModel.setDataType(alignment.getDataType());
+        substitutionModel = siteModel.substModelInput.get();
 
         if (branchRateModelInput.get() != null) {
             branchRateModel = branchRateModelInput.get();
         } else {
             branchRateModel = new StrictClockModel();
         }
-        m_branchLengths = new double[nodeCount + leafNodeCount];
+        branchLengths = new double[nodeCount + leafNodeCount];
         storedBranchLengths = new double[nodeCount + leafNodeCount];
 
-        stateCount = alignment.getMaxStateCount();
+        nStates = alignment.getMaxStateCount();
         int patterns = alignment.getPatternCount();
-        likelihoodCore = createLikelihoodCore(stateCount);
+        likelihoodCore = createLikelihoodCore(nStates);
 
         String className = getClass().getSimpleName();
 
@@ -190,19 +190,19 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
         Log.info.println("  " + alignment.toString(true));
         // print startup messages via Log.print*
 
-        proportionInvariant = m_siteModel.getProportionInvariant();
-        m_siteModel.setPropInvariantIsCategory(false);
+        proportionInvariant = siteModel.getProportionInvariant();
+        siteModel.setPropInvariantIsCategory(false);
         if (proportionInvariant > 0) {
-            calcConstantPatternIndices(patterns, stateCount);
+            calcConstantPatternIndices(patterns, nStates);
         }
 
         initCore();
 
         patternLogLikelihoods = new double[patterns];
-        m_fRootPartials = new double[patterns * stateCount];
-        rawRootPartials = new double[patterns * stateCount * m_siteModel.getCategoryCount()];
-        matrixSize = (stateCount + 1) * (stateCount + 1);
-        probabilities = new double[(stateCount + 1) * (stateCount + 1)];
+        m_fRootPartials = new double[patterns * nStates];
+        rawRootPartials = new double[patterns * nStates * siteModel.getCategoryCount()];
+        matrixSize = (nStates + 1) * (nStates + 1);
+        probabilities = new double[(nStates + 1) * (nStates + 1)];
         Arrays.fill(probabilities, 1.0);
 
         if (alignment.isAscertained) {
@@ -211,15 +211,15 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
 
         leafIndex = new int[leafNodeCount];        
         storedLeafIndex = new int[leafNodeCount];        
-        leafLogScaleFactors = new double[2][leafNodeCount][patterns * m_siteModel.getCategoryCount()];
-        accumulatedLogLeafScaleFactors = new double[patterns * m_siteModel.getCategoryCount()];
-        storedAccumulatedLogLeafScaleFactors = new double[patterns * m_siteModel.getCategoryCount()];
+        leafLogScaleFactors = new double[2][leafNodeCount][patterns * siteModel.getCategoryCount()];
+        accumulatedLogLeafScaleFactors = new double[patterns * siteModel.getCategoryCount()];
+        storedAccumulatedLogLeafScaleFactors = new double[patterns * siteModel.getCategoryCount()];
         
-        logProbabilities = new double[stateCount * m_siteModel.getCategoryCount()];
+        logProbabilities = new double[nStates * siteModel.getCategoryCount()];
 
-        rates = new double[stateCount];
-        storedRates = new double [stateCount];
-        tmpevectimesevals = new double[stateCount * stateCount];
+        rates = new double[nStates];
+        storedRates = new double [nStates];
+        tmpevectimesevals = new double[nStates * nStates];
         getNoChangeRates(rates);
 
     }
@@ -278,11 +278,11 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
         return subsetData;
     }
     
-    protected LikelihoodCore createLikelihoodCore(int stateCount) {
-        if (stateCount == 4) {
+    protected LikelihoodCore createLikelihoodCore(int nStates) {
+        if (nStates == 4) {
             return new BeerLikelihoodCore4();
         } else {
-            return new BeerLikelihoodCore(stateCount);
+            return new BeerLikelihoodCore(nStates);
         }
     }
     
@@ -295,23 +295,23 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
      * // taking ambiguities in account, there is a contribution of 1 from
      * // the 'site invariant' category.
      */
-    protected void calcConstantPatternIndices(final int patterns, final int stateCount) {
+    protected void calcConstantPatternIndices(final int patterns, final int nStates) {
         constantPattern = new ArrayList<>();
         for (int i = 0; i < patterns; i++) {
             final int[] pattern = alignment.getPattern(i);
-            final boolean[] isInvariant = new boolean[stateCount];
+            final boolean[] isInvariant = new boolean[nStates];
             Arrays.fill(isInvariant, true);
             for (final int state : pattern) {
                 final boolean[] isStateSet = alignment.getStateSet(state);
 //                if (m_useAmbiguities.get() || !alignment.getDataType().isAmbiguousCode(state)) {
-//                    for (int k = 0; k < stateCount; k++) {
+//                    for (int k = 0; k < nStates; k++) {
 //                        isInvariant[k] &= isStateSet[k];
 //                    }
 //                }
             }
-            for (int k = 0; k < stateCount; k++) {
+            for (int k = 0; k < nStates; k++) {
                 if (isInvariant[k]) {
-                    constantPattern.add(i * stateCount + k);
+                    constantPattern.add(i * nStates + k);
                 }
             }
         }
@@ -322,7 +322,7 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
         likelihoodCore.initialize(
                 nodeCount,
                 alignment.getPatternCount(),
-                m_siteModel.getCategoryCount(),
+                siteModel.getCategoryCount(),
                 true, false // m_useAmbiguities.get()
         );
 
@@ -398,21 +398,20 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
      */
     protected void setPartials(Node node, int patternCount) {
         if (node.isLeaf()) {
-            int states = alignment.getDataType().getStateCount();
-            double[] partials = new double[patternCount * states];
+            double[] partials = new double[patternCount * nStates];
             int k = 0;
             int taxonIndex = getTaxonIndex(node.getID(), alignment);
             for (int patternIndex_ = 0; patternIndex_ < patternCount; patternIndex_++) {                
                 double[] tipLikelihoods = alignment.getTipLikelihoods(taxonIndex,patternIndex_);
                 if (tipLikelihoods != null) {
-                	for (int state = 0; state < states; state++) {
+                	for (int state = 0; state < nStates; state++) {
                 		partials[k++] = tipLikelihoods[state];
                 	}
                 }
                 else {
-                	int stateCount = alignment.getPattern(taxonIndex, patternIndex_);
-	                boolean[] stateSet = alignment.getStateSet(stateCount);
-	                for (int state = 0; state < states; state++) {
+                	int nStates = alignment.getPattern(taxonIndex, patternIndex_);
+	                boolean[] stateSet = alignment.getStateSet(nStates);
+	                for (int state = 0; state < nStates; state++) {
 	                	 partials[k++] = (stateSet[state] ? 1.0 : 0.0);                
 	                }
                 }
@@ -446,7 +445,7 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
             return logP;
         }
 
-        if (m_siteModel.isDirtyCalculation())
+        if (siteModel.isDirtyCalculation())
             getNoChangeRates(rates);
         
         final TreeInterface tree = treeInput.get();
@@ -487,13 +486,13 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
     	accumulateLogLeafScale();
     	
     	Node root = treeInput.get().getRoot();
-        final double[] proportions = m_siteModel.getCategoryProportions(root);
+        final double[] proportions = siteModel.getCategoryProportions(root);
         
         likelihoodCore.getNodePartials(root.getNr(), rawRootPartials);
         integratePartials(rawRootPartials, proportions, m_fRootPartials, patternLogLikelihoods.length, proportions.length);
 
         if (constantPattern != null) { // && !SiteModel.g_bUseOriginal) {
-            proportionInvariant = m_siteModel.getProportionInvariant();
+            proportionInvariant = siteModel.getProportionInvariant();
             // some portion of sites is invariant, so adjust root partials for this
             for (final int i : constantPattern) {
                 m_fRootPartials[i] += proportionInvariant;
@@ -501,9 +500,6 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
         }
 
         double[] rootFrequencies = substitutionModel.getFrequencies();
-        if (rootFrequenciesInput.get() != null) {
-            rootFrequencies = rootFrequenciesInput.get().getFreqs();
-        }
         calculateLogLikelihoods(m_fRootPartials, rootFrequencies, patternLogLikelihoods, patternLogLikelihoods.length);
 
     	
@@ -533,14 +529,16 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
 
         int u = 0;
         int v = 0;
+        int w = 0;
         for (int k = 0; k < nrOfPatterns; k++) {
 
-            for (int i = 0; i < stateCount; i++) {
-
-                outPartials[u] = inPartials[v] * proportions[0];
+            for (int i = 0; i < nStates; i++) {
+            	// TODO: deal with underflows of Math.exp
+                outPartials[u] = inPartials[v] * proportions[0]  * Math.exp(accumulatedLogLeafScaleFactors[w]);
                 u++;
                 v++;
             }
+            w++;
         }
 
 
@@ -549,12 +547,13 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
 
             for (int k = 0; k < nrOfPatterns; k++) {
 
-                for (int i = 0; i < stateCount; i++) {
+                for (int i = 0; i < nStates; i++) {
                 	// TODO: deal with underflows of Math.exp
-                    outPartials[u] += inPartials[v] * proportions[l] * Math.exp(accumulatedLogLeafScaleFactors[u]);
+                    outPartials[u] += inPartials[v] * proportions[l] * Math.exp(accumulatedLogLeafScaleFactors[w]);
                     u++;
                     v++;
                 }
+                w++;
             }
         }
     }
@@ -565,7 +564,7 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
         for (int k = 0; k < nrOfPatterns; k++) {
 
             double sum = 0.0;
-            for (int i = 0; i < stateCount; i++) {
+            for (int i = 0; i < nStates; i++) {
 
                 sum += frequencies[i] * partials[v];
                 v++;
@@ -587,15 +586,15 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
         double[] evec = eigenDecomposition.getEigenVectors();
         double[] eval = eigenDecomposition.getEigenValues();
         double[] ievc = eigenDecomposition.getInverseEigenVectors();
-        for (int i = 0; i < stateCount ; i++) {
-            for (int j = 0; j < stateCount; j++) {
-                tmpevectimesevals[i * stateCount + j] = evec[i * stateCount + j] * eval[j];
+        for (int i = 0; i < nStates ; i++) {
+            for (int j = 0; j < nStates; j++) {
+                tmpevectimesevals[i * nStates + j] = evec[i * nStates + j] * eval[j];
             }
         }
-        for (int i = 0; i < stateCount; i++) {
+        for (int i = 0; i < nStates; i++) {
             rates[i] = 0;
-            for (int j = 0; j < stateCount; j++) {
-                rates[i] += tmpevectimesevals[i * stateCount + j] * ievc[j * stateCount + i];
+            for (int j = 0; j < nStates; j++) {
+                rates[i] += tmpevectimesevals[i * nStates + j] * ievc[j * nStates + i];
             }
             //            System.out.println(rates[i]);
         }
@@ -648,12 +647,12 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
                 partBranchRate = branchRateModel.getRateForBranch(toyNode);
                 partBranchTime = (node.getLength() - (firstBranchingTime - node.getHeight())) * partBranchRate;
             }
-            if (update != Tree.IS_CLEAN || partBranchTime != m_branchLengths[nodeCount + haploNr]) {
-            	m_branchLengths[nodeCount + haploNr] = partBranchTime;
+            if (update != Tree.IS_CLEAN || partBranchTime != branchLengths[nodeCount + haploNr]) {
+            	branchLengths[nodeCount + haploNr] = partBranchTime;
                 final Node parent = node.getParent();
                 likelihoodCore.setNodeMatrixForUpdate(haploNr);
-                for (int i = 0; i < m_siteModel.getCategoryCount(); i++) {
-                    final double jointBranchRate = m_siteModel.getRateForCategory(i, toyNode) * partBranchRate;
+                for (int i = 0; i < siteModel.getCategoryCount(); i++) {
+                    final double jointBranchRate = siteModel.getRateForCategory(i, toyNode) * partBranchRate;
                     if (parent != null)
                         substitutionModel.getTransitionProbabilities(null, parent.getHeight(), firstBranchingTime, jointBranchRate, probabilities);
                     else
@@ -666,22 +665,23 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
         // First update the transition probability matrix(ices) for this branch
         // Update the transition probability for the branches that do not evolve
         // if the node is at tip, it holds the probability that the sequence does not change from the tip to the start of the haplo
-        if (node.isLeaf() && (update != Tree.IS_CLEAN  || branchTime != m_branchLengths[nodeIndex])){
+        if (node.isLeaf() && (update != Tree.IS_CLEAN  || branchTime != branchLengths[nodeIndex])){
         	// TODO: verify that we have the right branch time (as logged by relaxed clock logger)
-        	m_branchLengths[nodeIndex] = branchTime;
+        	branchLengths[nodeIndex] = branchTime;
             // likelihoodCore.setNodeMatrixForUpdate(nodeCount + nodeIndex);
         	int k = 0;
-            for (int i = 0; i < m_siteModel.getCategoryCount(); i++) {
-                final double jointBranchRate = m_siteModel.getRateForCategory(i, node) * branchRate;
+            for (int i = 0; i < siteModel.getCategoryCount(); i++) {
+                final double jointBranchRate = siteModel.getRateForCategory(i, node) * branchRate;
                 // fill the transition probability matrix with move probabilities
                 Arrays.fill(probabilities, 0);
-                for (int j = 0; j < stateCount; j++) {
+                for (int j = 0; j < nStates; j++) {
                     logProbabilities[j + k] = totalBranchTime * jointBranchRate * rates[j];
                     // probabilities[j * (nStates + 1)] = Math.exp(totalBranchTime * jointBranchRate * rates[j]);
                 }
-                k += stateCount;
+                k += nStates;
                 // likelihoodCore.setNodeMatrix(nodeCount + nodeIndex, i, probabilities);
             }
+            // TODO: delete following line
             update |= Tree.IS_DIRTY;
             
             // this sets node partials at top of leaf clade at partial[nodeIndex]
@@ -691,23 +691,23 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
         }
         //Update the transition probability matrix(ices) for all other branches
         //if (!node.isRoot() && (update != Tree.IS_CLEAN || branchTime != m_StoredBranchLengths[nodeIndex])) {
-        else if (!node.isRoot() && !node.isLeaf() && (update != Tree.IS_CLEAN || branchTime != m_branchLengths[nodeIndex])) {
-        	m_branchLengths[nodeIndex] = branchTime;
+        else if (!node.isRoot() && !node.isLeaf() && (update != Tree.IS_CLEAN || branchTime != branchLengths[nodeIndex])) {
+        	branchLengths[nodeIndex] = branchTime;
             final Node parent = node.getParent();
             likelihoodCore.setNodeMatrixForUpdate(nodeIndex);
-            for (int i = 0; i < m_siteModel.getCategoryCount(); i++) {
-                final double jointBranchRate = m_siteModel.getRateForCategory(i, node) * branchRate;
+            for (int i = 0; i < siteModel.getCategoryCount(); i++) {
+                final double jointBranchRate = siteModel.getRateForCategory(i, node) * branchRate;
                 substitutionModel.getTransitionProbabilities(node, parent.getHeight(), node.getHeight(), jointBranchRate, probabilities);
                 likelihoodCore.setNodeMatrix(nodeIndex, i, probabilities);
             }
             update |= Tree.IS_DIRTY;
         }
         //Update the transition probability matrix(ices) for root-origin branch
-        else if (node.isRoot() && (update != Tree.IS_CLEAN || branchTime != m_branchLengths[nodeIndex])) {
-        	m_branchLengths[nodeIndex] = branchTime;
+        else if (node.isRoot() && (update != Tree.IS_CLEAN || branchTime != branchLengths[nodeIndex])) {
+        	branchLengths[nodeIndex] = branchTime;
             likelihoodCore.setNodeMatrixForUpdate(nodeIndex);
-            for (int i = 0; i < m_siteModel.getCategoryCount(); i++) {
-                final double jointBranchRate = m_siteModel.getRateForCategory(i, node) * branchRate;
+            for (int i = 0; i < siteModel.getCategoryCount(); i++) {
+                final double jointBranchRate = siteModel.getRateForCategory(i, node) * branchRate;
                 substitutionModel.getTransitionProbabilities(node, node.getHeight(), node.getHeight(), jointBranchRate, probabilities);
                 likelihoodCore.setNodeMatrix(nodeIndex, i, probabilities);
             }
@@ -742,7 +742,7 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
                 if (update >= Tree.IS_FILTHY)
                     likelihoodCore.setNodeStatesForUpdate(nodeIndex);
 
-                if (m_siteModel.integrateAcrossCategories()) {
+                if (siteModel.integrateAcrossCategories()) {
                     likelihoodCore.calculatePartials(childNum1, childNum2, nodeIndex);
                 } else {
                     throw new RuntimeException("Error TreeLikelihood 632: Site categories not supported");
@@ -752,11 +752,11 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
                     // ((QuasieSpeciesBeerLikelihoodCore)likelihoodCore).calculateOriginRootPartials(nodeIndex, child1parentQS, nodeCount, rootPartials);
 
                     // integrate over all possible site categories the sites can be in
-//                    final double[] proportions = m_siteModel.getCategoryProportions(node);
+//                    final double[] proportions = siteModel.getCategoryProportions(node);
 //                    likelihoodCore.integratePartials(node.getNr(), proportions, m_fRootPartials);xx
 //
 //                    if (constantPattern != null) { // && !SiteModel.g_bUseOriginal) {
-//                        proportionInvariant = m_siteModel.getProportionInvariant();
+//                        proportionInvariant = siteModel.getProportionInvariant();
 //                        // some portion of sites is invariant, so adjust root partials for this
 //                        for (final int i : constantPattern) {
 //                            m_fRootPartials[i] += proportionInvariant;
@@ -789,13 +789,14 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
     	int v = 0;
     	int w = 0;
     	// TODO: deal with prop invariant?
-    	int categoryCount = m_siteModel.getCategoryCount();
+    	int categoryCount = siteModel.getCategoryCount();
     	for (int i = 0; i < categoryCount; i++) {
     		for (int j = 0; j < patternCount; j++) {
     			int state = states[j];
+    			xx deal with ambiguous state '?' 
     			current[w++] = logProbabilities[v+state];
     		}
-    		v = v + stateCount;
+    		v = v + nStates;
     	}
 		
 	}
@@ -841,7 +842,7 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
             hasDirt = Tree.IS_FILTHY;
             return true;
         }
-        if (m_siteModel.isDirtyCalculation()) {
+        if (siteModel.isDirtyCalculation()) {
             hasDirt = Tree.IS_DIRTY;
             return true;
         }
@@ -859,14 +860,14 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
             super.store();
             return;
         }
-        if (likelihoodCore != null) {
-            likelihoodCore.store();
-        }
+//        if (likelihoodCore != null) {
+//            likelihoodCore.store();
+//        }
         super.store();
-        System.arraycopy(m_branchLengths, 0, storedBranchLengths, 0, m_branchLengths.length);
+        // System.arraycopy(m_branchLengths, 0, storedBranchLengths, 0, m_branchLengths.length);
         System.arraycopy(accumulatedLogLeafScaleFactors, 0, storedAccumulatedLogLeafScaleFactors, 0, accumulatedLogLeafScaleFactors.length);
         System.arraycopy(leafIndex, 0, storedLeafIndex, 0, leafIndex.length);
-        System.arraycopy(rates, 0, storedRates, 0, rates.length);
+        // System.arraycopy(rates, 0, storedRates, 0, rates.length);
 
     }
 
@@ -877,16 +878,17 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
             super.restore();
             return;
         }
-        if (likelihoodCore != null) {
-            likelihoodCore.restore();
-        }
+//        if (likelihoodCore != null) {
+//            likelihoodCore.restore();
+//        }
         super.restore();
-        double[] tmp = m_branchLengths;
-        m_branchLengths = storedBranchLengths;
-        storedBranchLengths = tmp;
+        double[] tmp;
+//        double[] tmp = m_branchLengths;
+//        m_branchLengths = storedBranchLengths;
+//        storedBranchLengths = tmp;
         
         tmp = accumulatedLogLeafScaleFactors; accumulatedLogLeafScaleFactors = storedAccumulatedLogLeafScaleFactors; storedAccumulatedLogLeafScaleFactors = tmp;
-        tmp = rates; rates = storedRates; storedRates = tmp;
+//        tmp = rates; rates = storedRates; storedRates = tmp;
 
         int[] tmp2 = leafIndex; leafIndex = storedLeafIndex; storedLeafIndex = tmp2; 
     }
@@ -904,7 +906,7 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
      */
     @Override
 	public List<String> getConditions() {
-        return m_siteModel.getConditions();
+        return siteModel.getConditions();
     }
 
 } // class TreeLikelihood
