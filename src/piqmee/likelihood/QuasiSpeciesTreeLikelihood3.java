@@ -793,8 +793,11 @@ public class QuasiSpeciesTreeLikelihood3 extends QuasiSpeciesTreeLikelihood2 {
     	for (int i = 0; i < categoryCount; i++) {
     		for (int j = 0; j < patternCount; j++) {
     			int state = states[j];
-    			xx deal with ambiguous state '?' 
-    			current[w++] = logProbabilities[v+state];
+    			if (dataInput.get().getDataType().isAmbiguousCode(state) )
+    			if (state >= 0 && state < nStates) {
+    				// only contribute for non-ambiguous states
+    				current[w++] = logProbabilities[v+state];
+    			}
     		}
     		v = v + nStates;
     	}
