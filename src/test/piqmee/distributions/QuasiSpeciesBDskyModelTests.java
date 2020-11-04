@@ -1,4 +1,4 @@
-package piqmee.distributions;
+package test.piqmee.distributions;
 
 import static org.junit.Assert.assertEquals;
 import beast.core.Description;

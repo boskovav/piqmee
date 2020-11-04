@@ -1,4 +1,4 @@
-package piqmee.tree;
+package test.piqmee.tree;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertArrayEquals;

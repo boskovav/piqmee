@@ -2,7 +2,7 @@
 
     <!-- Source, JUnit test code and jar library locations. -->
     <property name="src" location="src"/>
-    <property name="test" location="src/test"/>
+    <property name="test" location="test"/>
     <property name="lib" location="lib"/>
 
     <!-- Location to check for local copy of beast2 repository -->
@@ -154,7 +154,7 @@
 
     <!-- Compile unit tests -->
     <target name="compile-test" depends="init-test,compile,copy-resources">
-        <javac target="${targetVersion}" source="${sourceVersion}" srcdir="${test}" destdir="${build-test}" includeantruntime="false">
+        <javac target="${targetVersion}" source="${sourceVersion}" srcdir="${src}" destdir="${build-test}" includeantruntime="false">
             <classpath>
                 <pathelement path="${classpath}"/>
                 <pathelement path="${build}" />
@@ -174,11 +174,11 @@
                 <fileset dir="${build-lib}" includes="*.jar"/>
             </classpath>
             <batchtest fork="yes" todir="${test-reports}">
-                <fileset dir="${test}">
-                    <include name="**/*Tests.java"/>
-                    <include name="**/*Tests2.java"/>
+                <fileset dir="${src}">
+                    <include name="test/**/*Tests.java"/>
+                    <include name="test/**/*Tests2.java"/>
                 </fileset>
-                <formatter type="plain"/>
+<!--                <formatter type="plain"/>-->
                 <formatter type="plain" usefile="false"/> <!-- to screen -->
             </batchtest>
         </junit>
