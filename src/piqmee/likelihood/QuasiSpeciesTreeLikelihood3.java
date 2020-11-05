@@ -21,7 +21,6 @@ import beast.evolution.likelihood.GenericTreeLikelihood;
 import beast.evolution.likelihood.LikelihoodCore;
 import beast.evolution.sitemodel.SiteModel;
 import beast.evolution.substitutionmodel.EigenDecomposition;
-import beast.evolution.substitutionmodel.Frequencies;
 import beast.evolution.substitutionmodel.SubstitutionModel;
 import beast.evolution.tree.Node;
 import beast.evolution.tree.Tree;
@@ -32,13 +31,11 @@ import piqmee.tree.QuasiSpeciesTree;
 @Description("Calculates the probability of sequence data on a beast.piqmee.tree " +
         "given a site and substitution model using a variant of the 'peeling algorithm'. ")
 public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
-
-    final public Input<Boolean> m_useAmbiguities = new Input<>("useAmbiguities", "flag to indicate that sites containing ambiguous states should be handled instead of ignored (the default)", false);
-    final public Input<Boolean> m_useTipLikelihoods = new Input<>("useTipLikelihoods", "flag to indicate that partial likelihoods are provided at the tips", false);
-    final public Input<String> implementationInput = new Input<>("implementation", "name of class that implements this treelikelihood potentially more efficiently. "
-    		+ "This class will be tried first, with the TreeLikelihood as fallback implementation. "
-    		+ "When multi-threading, multiple objects can be created.", "beast.evolution.likelihood.BeagleTreeLikelihood");
-    
+	
+	// TODO: this input is ignored, but required by junit test. Needs fixing.
+	final public Input<Boolean> useAmbiguities = new Input<>("useAmbiguities", "flag to indicate that sites containing ambiguous states should be handled instead of ignored (the default)", false);
+	
+	
     public static enum Scaling {none, always, _default};
     final public Input<Scaling> scaling = new Input<>("scaling", "type of scaling to use, one of " + Arrays.toString(Scaling.values()) + ". If not specified, the -beagle_scaling flag is used.", Scaling._default, Scaling.values());
 
@@ -98,17 +95,17 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
     protected int[] leafIndex;
     protected int[] storedLeafIndex;
     protected double[][][] leafLogScaleFactors;
-    private double [] logProbabilities;
+    protected double [] logProbabilities;
     
     /**
      * memory allocation for probability tables obtained from the SiteModel *
      */
     protected double[] probabilities;
-    private double[] rates;
-    private double[] storedRates;
-    private double[] tmpevectimesevals;
+    protected double[] rates;
+    protected double[] storedRates;
+    protected double[] tmpevectimesevals;
 
-    private int nStates;
+    protected int nStates;
     
     protected int matrixSize;
 
@@ -669,7 +666,7 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
             for (int i = 0; i < siteModel.getCategoryCount(); i++) {
                 final double jointBranchRate = siteModel.getRateForCategory(i, node) * branchRate;
                 // fill the transition probability matrix with move probabilities
-                Arrays.fill(probabilities, 0);
+                // Arrays.fill(probabilities, 0);
                 for (int j = 0; j < nStates; j++) {
                     logProbabilities[j + k] = totalBranchTime * jointBranchRate * rates[j];
                     // probabilities[j * (nStates + 1)] = Math.exp(totalBranchTime * jointBranchRate * rates[j]);
@@ -778,7 +775,7 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
 
 
 
-    private void calculateLogLeafScale(int nodeIndex, double[] logProbabilities) {
+    protected void calculateLogLeafScale(int nodeIndex, double[] logProbabilities) {
     	double [] current = leafLogScaleFactors[leafIndex[nodeIndex]][nodeIndex];
     	int [] states = this.states[nodeIndex];
     	int patternCount = states.length;
@@ -802,19 +799,36 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
 	}
     
     
-    private void accumulateLogLeafScale() {
-		Arrays.fill(accumulatedLogLeafScaleFactors, 0.0);
+    protected void accumulateLogLeafScale() {
 		final int n = accumulatedLogLeafScaleFactors.length;
 		int leafNodeCount = nodeCount / 2 + 1;
-		for (int j = 0; j < leafNodeCount; j++) {
-			double [] x = leafLogScaleFactors[leafIndex[j]][j];
-			for (int i = 0; i < n; i++) {
-				accumulatedLogLeafScaleFactors[i] += x[i];
+		if (hasDirt == Tree.IS_FILTHY || true) {
+			// recalc from sratch
+			Arrays.fill(accumulatedLogLeafScaleFactors, 0.0);
+			for (int j = 0; j < leafNodeCount; j++) {
+				double [] x = leafLogScaleFactors[leafIndex[j]][j];
+				for (int i = 0; i < n; i++) {
+					accumulatedLogLeafScaleFactors[i] += x[i];
+				}
+			}
+			
+		} else {
+			// calc delta
+			for (int j = 0; j < leafNodeCount; j++) {
+				if (leafIndex[j] != storedLeafIndex[j]) {
+					double [] x = leafLogScaleFactors[leafIndex[j]][j];
+					double [] oldX = leafLogScaleFactors[storedLeafIndex[j]][j];
+					for (int i = 0; i < n; i++) {
+						accumulatedLogLeafScaleFactors[i] += x[i] - oldX[i];
+					}
+				}
 			}
 		}
+		
+		
     }
     
-	private void setLeafScaleForUpdate(int nodeIndex) {
+	protected void setLeafScaleForUpdate(int nodeIndex) {
 		leafIndex[nodeIndex] = 1 - leafIndex[nodeIndex];
 	}
     
@@ -837,6 +851,12 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
             return beagle.requiresRecalculation();
         }
         hasDirt = Tree.IS_CLEAN;
+        
+        if (siteModel.isDirtyCalculation() && treeInput.get().somethingIsDirty()) {
+        	// if both site model and tree are dirty, it is time for a fresh recalcalation
+            hasDirt = Tree.IS_FILTHY;
+            return true;
+        }
 
         if (alignment.isDirtyCalculation()) {
             hasDirt = Tree.IS_FILTHY;
@@ -906,6 +926,6 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
     @Override
 	public List<String> getConditions() {
         return siteModel.getConditions();
-    }
+    }	
 
 } // class TreeLikelihood

@@ -1224,8 +1224,8 @@ public class BirthDeathSkylineModel extends SpeciesTreeDistribution {
 	final static double EXP_INTERVAL = 100.0;
 
     static {
-    	log = new double[LOG_LENGTH];
-    	for (int i = 0; i < LOG_LENGTH; i++) {
+    	log = new double[LOG_LENGTH + 2];
+    	for (int i = 0; i < LOG_LENGTH + 2; i++) {
     		log[i] = Math.log(LOG_LOWER + LOG_INTERVAL * i / LOG_LENGTH);
     	}
     	// need LOG_LENGTH + 2 because it can happen that we have a number super close to 0,
