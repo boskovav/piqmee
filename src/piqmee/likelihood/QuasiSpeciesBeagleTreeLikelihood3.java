@@ -27,7 +27,6 @@ package piqmee.likelihood;
 
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import beagle.Beagle;
@@ -120,6 +119,7 @@ public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihoo
 	        leafLogScaleFactors = new double[2][leafNodeCount][patternCount * siteModel.getCategoryCount()];
 	        accumulatedLogLeafScaleFactors = new double[patternCount * siteModel.getCategoryCount()];
 	        storedAccumulatedLogLeafScaleFactors = new double[patternCount * siteModel.getCategoryCount()];
+	        accumulatedLeafScaleFactors = new double[accumulatedLogLeafScaleFactors.length];
 	        
 	        logProbabilities = new double[nStates * siteModel.getCategoryCount()];
 
@@ -1133,6 +1133,8 @@ public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihoo
 	        // get the branch length, if the node is a tip, the total branch length above is the sum of the
 	        // branch lengths from the origin/attachment time to tip
 	        final double totalBranchTime;
+	        
+	        
 	        if (node.isLeaf())
 	            totalBranchTime = node.getTotalBranchLengths();
 	        else if (node.isRoot())

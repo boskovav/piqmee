@@ -92,6 +92,7 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
     /** **/
     protected double[] accumulatedLogLeafScaleFactors;
     protected double[] storedAccumulatedLogLeafScaleFactors;
+    protected double[] accumulatedLeafScaleFactors;
     protected int[] leafIndex;
     protected int[] storedLeafIndex;
     protected double[][][] leafLogScaleFactors;
@@ -207,6 +208,7 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
         leafLogScaleFactors = new double[2][leafNodeCount][patterns * siteModel.getCategoryCount()];
         accumulatedLogLeafScaleFactors = new double[patterns * siteModel.getCategoryCount()];
         storedAccumulatedLogLeafScaleFactors = new double[patterns * siteModel.getCategoryCount()];
+        accumulatedLeafScaleFactors = new double[accumulatedLogLeafScaleFactors.length];
         
         logProbabilities = new double[nStates * siteModel.getCategoryCount()];
 
@@ -519,15 +521,20 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
      */
 	protected void integratePartials(double[] inPartials, double[] proportions, double[] outPartials, 
 			final int nrOfPatterns, final int nrOfMatrices) {
-
+		
+		int n = accumulatedLogLeafScaleFactors.length;
+    	// TODO: deal with underflows of Math.exp
+        for (int k = 0; k < n; k++) {
+        	accumulatedLeafScaleFactors[k] = Math.exp(accumulatedLogLeafScaleFactors[k]);
+        }
+        
         int u = 0;
         int v = 0;
         int w = 0;
         for (int k = 0; k < nrOfPatterns; k++) {
 
             for (int i = 0; i < nStates; i++) {
-            	// TODO: deal with underflows of Math.exp
-                outPartials[u] = inPartials[v] * proportions[0]  * Math.exp(accumulatedLogLeafScaleFactors[w]);
+                outPartials[u] = inPartials[v] * proportions[0]  * accumulatedLeafScaleFactors[w];
                 u++;
                 v++;
             }
@@ -541,8 +548,7 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
             for (int k = 0; k < nrOfPatterns; k++) {
 
                 for (int i = 0; i < nStates; i++) {
-                	// TODO: deal with underflows of Math.exp
-                    outPartials[u] += inPartials[v] * proportions[l] * Math.exp(accumulatedLogLeafScaleFactors[w]);
+                    outPartials[u] += inPartials[v] * proportions[l] * accumulatedLeafScaleFactors[w];
                     u++;
                     v++;
                 }
