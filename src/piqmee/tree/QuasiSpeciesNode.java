@@ -451,13 +451,11 @@ public class QuasiSpeciesNode extends QuasiSpeciesNodeBaseClass {
 		if (isRoot()) {
 			return 0;
 		}
-		if (((QuasiSpeciesNode)getParent()).getHaploAboveName() == haploAboveName) {
-			return 0;
-		}
 		if (isLeaf()) {
 			return getParent().getHeight() - attachmentTimesList[0];
 		}
-		return 0;
+		
+		return getParent().getHeight() - ((QuasiSpeciesNode)getTree().getNode(haploAboveName)).getAttachmentTimesList()[0];
 	}
 
 }

@@ -836,7 +836,7 @@ public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihoo
 	        	accumulateLogLeafScale();
 	        	
 	            final double[] proportions = siteModel.getCategoryProportions(root);
-	            beagle.getPartials(partialBufferHelper.getOffsetIndex(root.getNr()), 
+	            beagle.getPartials(rootIndex, 
 	            		0, rawRootPartials);
 	            integratePartials(rawRootPartials, proportions, m_fRootPartials, patternLogLikelihoods.length, proportions.length);
 
@@ -1126,6 +1126,10 @@ public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihoo
 	        int update = (node.isDirty() | hasDirt);
 
 	        final int nodeIndex = node.getNr();
+if (nodeIndex == 0) {
+	int h = 4;
+	h--;
+}
 
 	        final double branchRate = branchRateModel.getRateForBranch(node);
 
@@ -1167,6 +1171,10 @@ public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihoo
 	                partBranchRate = branchRateModel.getRateForBranch(toyNode);
 	                partBranchTime = (node.getLength() - (firstBranchingTime - node.getHeight())) * partBranchRate;
 	            }
+	            // TODO: if only the attachment list changed, no need to recalc partials
+	            // TODO: then  partBranchTime == branchLengths[nodeCount + haploNr], but extra condition
+	            // TODO: needed to detect this situation (operators tend to mark nodes as IS_FILTHY when 
+	            // TODO: operating on attachment list)
 	            if (update != Tree.IS_CLEAN || partBranchTime != branchLengths[nodeCount + haploNr]) {
 	            	branchLengths[nodeCount + haploNr] = partBranchTime;
 	            	
@@ -1177,9 +1185,9 @@ public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihoo
 
 		            // then set which matrix to update
 		            final int eigenIndex = 0;// = m_substitutionModel.getBranchIndex(node);
-		            final int updateCount = branchUpdateCount;
-		            matrixUpdateIndices[eigenIndex][updateCount] = matrixBufferHelper.getOffsetIndex(nodeIndex);
-		            branchLengthsForBeagle[updateCount] = partBranchTime;
+		            //final int updateCount = branchUpdateCount;
+		            matrixUpdateIndices[eigenIndex][branchUpdateCount] = matrixBufferHelper.getOffsetIndex(nodeIndex);
+		            branchLengthsForBeagle[branchUpdateCount] = partBranchTime;
 		            branchUpdateCount++;
 
 	            	
@@ -1210,7 +1218,7 @@ public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihoo
 	                // Arrays.fill(probabilities, 0);
 	                for (int j = 0; j < nStates; j++) {
 	                    logProbabilities[j + k] = totalBranchTime * jointBranchRate * rates[j];
-	                    // probabilities[j * (nStates + 1)] = Math.exp(totalBranchTime * jointBranchRate * rates[j]);
+	                    // probabilities[j + k] = Math.exp(totalBranchTime * jointBranchRate * rates[j]);
 	                }
 	                k += nStates;
 	                // likelihoodCore.setNodeMatrix(nodeCount + nodeIndex, i, probabilities);
@@ -1234,9 +1242,9 @@ public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihoo
 
 	            // then set which matrix to update
 	            final int eigenIndex = 0;// = m_substitutionModel.getBranchIndex(node);
-	            final int updateCount = branchUpdateCount;
-	            matrixUpdateIndices[eigenIndex][updateCount] = matrixBufferHelper.getOffsetIndex(nodeIndex);
-	            branchLengthsForBeagle[updateCount] = branchTime;
+	            //final int updateCount = branchUpdateCount;
+	            matrixUpdateIndices[eigenIndex][branchUpdateCount] = matrixBufferHelper.getOffsetIndex(nodeIndex);
+	            branchLengthsForBeagle[branchUpdateCount] = branchTime;
 	            branchUpdateCount++;
 
 //	            final Node parent = node.getParent();
@@ -1272,7 +1280,7 @@ public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihoo
 	            final int update2 = traverse((QuasiSpeciesNode) child2, operatorNumber, flip);
 
 	            // If either child node was updated then update this node too
-	            if (update1 != Tree.IS_CLEAN || update2 != Tree.IS_CLEAN || update != Tree.IS_CLEAN) {
+                if (update1 != Tree.IS_CLEAN || update2 != Tree.IS_CLEAN || update != Tree.IS_CLEAN) {
 
 	                final int childNum1 = child1.getNr();
 	                final int child1QS = ((QuasiSpeciesNode) child1).getContinuingHaploName();
@@ -1284,7 +1292,7 @@ public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihoo
 	                    throw new IllegalStateException("In QuasiSpeciesTreeLikelihood - QS of parent of child 1 ne to QS of parent of child 2");
 
 //	                likelihoodCore.setNodePartialsForUpdate(nodeIndex);
-//	                update |= (update1 | update2);
+	                update |= (update1 | update2);
 //	                if (update >= Tree.IS_FILTHY)
 //	                    likelihoodCore.setNodeStatesForUpdate(nodeIndex);
 

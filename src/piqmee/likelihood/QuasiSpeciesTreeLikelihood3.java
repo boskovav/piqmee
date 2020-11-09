@@ -646,6 +646,10 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
                 partBranchRate = branchRateModel.getRateForBranch(toyNode);
                 partBranchTime = (node.getLength() - (firstBranchingTime - node.getHeight())) * partBranchRate;
             }
+            // TODO: if only the attachment list changed, no need to recalc partials
+            // TODO: then  partBranchTime == branchLengths[nodeCount + haploNr], but extra condition
+            // TODO: needed to detect this situation (operators tend to mark nodes as IS_FILTHY when 
+            // TODO: operating on attachment list)
             if (update != Tree.IS_CLEAN || partBranchTime != branchLengths[nodeCount + haploNr]) {
             	branchLengths[nodeCount + haploNr] = partBranchTime;
                 final Node parent = node.getParent();
