@@ -45,7 +45,7 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
      */
     protected LikelihoodCore likelihoodCore;
     public LikelihoodCore getLikelihoodCore() {return likelihoodCore;}
-    protected QuasiSpeciesBeagleTreeLikelihood beagle;
+    protected QuasiSpeciesBeagleTreeLikelihood3 beagle;
 
     /**
      * BEASTObject associated with inputs. Since none of the inputs are StateNodes, it
@@ -473,6 +473,7 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
             calcLogP();
             return logP;
         }
+        System.err.println("QUASI3 :" + logP);        
         return logP;
     }
 
@@ -812,7 +813,7 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
     protected void accumulateLogLeafScale() {
 		final int n = accumulatedLogLeafScaleFactors.length;
 		int leafNodeCount = nodeCount / 2 + 1;
-		if (hasDirt == Tree.IS_FILTHY || true) {
+		if (hasDirt == Tree.IS_FILTHY) { // || true) {
 			// recalc from sratch
 			Arrays.fill(accumulatedLogLeafScaleFactors, 0.0);
 			for (int j = 0; j < leafNodeCount; j++) {
@@ -894,7 +895,9 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
             likelihoodCore.store();
         }
         super.store();
-        System.arraycopy(branchLengths, 0, storedBranchLengths, 0, branchLengths.length);
+        if (branchLengths != null) {
+        	System.arraycopy(branchLengths, 0, storedBranchLengths, 0, branchLengths.length);
+        }
         System.arraycopy(accumulatedLogLeafScaleFactors, 0, storedAccumulatedLogLeafScaleFactors, 0, accumulatedLogLeafScaleFactors.length);
         System.arraycopy(leafIndex, 0, storedLeafIndex, 0, leafIndex.length);
         System.arraycopy(rates, 0, storedRates, 0, rates.length);
@@ -912,9 +915,12 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
             likelihoodCore.restore();
         }
         super.restore();
-        double[] tmp = branchLengths;
-        branchLengths = storedBranchLengths;
-        storedBranchLengths = tmp;
+        double[] tmp;
+        if (branchLengths != null) {
+        	tmp = branchLengths;
+        	branchLengths = storedBranchLengths;
+        	storedBranchLengths = tmp;
+        }
         
         tmp = accumulatedLogLeafScaleFactors; accumulatedLogLeafScaleFactors = storedAccumulatedLogLeafScaleFactors; storedAccumulatedLogLeafScaleFactors = tmp;
         tmp = rates; rates = storedRates; storedRates = tmp;

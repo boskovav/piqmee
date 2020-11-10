@@ -446,7 +446,11 @@ public class QuasiSpeciesNode extends QuasiSpeciesNodeBaseClass {
     /** return part of the branch above haplo node **/
 	public double getLengthWithoutHaplo() {
 		if (haploAboveName == -1) {
-			return super.getLength();
+			if (continuingHaploName != -1) {
+				return 0;
+			} else {
+				return super.getLength();
+			}
 		}
 		if (isRoot()) {
 			return 0;
