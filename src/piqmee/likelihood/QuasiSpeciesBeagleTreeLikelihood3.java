@@ -859,13 +859,6 @@ public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihoo
                 }
             }
       
-            
-//            double[] sumLogLikelihoods = new double[1];
-//
-//            beagle.calculateRootLogLikelihoods(new int[]{rootIndex}, new int[]{0}, new int[]{0},
-//                    new int[]{cumulateScaleBufferIndex}, 1, sumLogLikelihoods);
-//
-//            logL = sumLogLikelihoods[0];
 
 //            if (ascertainedSitePatterns) {
 //                // Need to correct for ascertainedSitePatterns
@@ -877,9 +870,8 @@ public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihoo
 //                beagle.getSiteLogLikelihoods(patternLogLikelihoods);
                 int [] patternWeights = alignment.getWeights();
                 proportionInvariant = siteModel.getProportionInvariant();
-                
-                
-    	        for (int k : constantPattern) {
+
+                for (int k : constantPattern) {
     	        	int i = k / m_nStateCount;
     	        	int j = k % m_nStateCount;
     	        	patternLogLikelihoods[i] = (Math.log(Math.exp(patternLogLikelihoods[i]) + proportionInvariant * frequencies[j]));
@@ -890,6 +882,35 @@ public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihoo
 	                logL += patternLogLikelihoods[i] * patternWeights[i];
 	            }
             }
+            	
+            if (useScaleFactors) {   
+                int [] patternWeights = alignment.getWeights();
+            	double[] sumLogLikelihoods = new double[1];
+
+            	beagle.calculateRootLogLikelihoods(new int[]{rootIndex}, new int[]{0}, new int[]{0},
+                    new int[]{cumulateScaleBufferIndex}, 1, sumLogLikelihoods);
+
+	            final double logLScaled = sumLogLikelihoods[0];
+            	
+                integratePartialsRaw(rawRootPartials, proportions, m_fRootPartials, patternLogLikelihoods.length, proportions.length);
+                calculateLogLikelihoods(m_fRootPartials, rootFrequencies, patternLogLikelihoods, patternLogLikelihoods.length);
+                
+            	if (invariantCategory >= 0) {
+	                for (int k : constantPattern) {
+	    	        	int i = k / m_nStateCount;
+	    	        	int j = k % m_nStateCount;
+	    	        	patternLogLikelihoods[i] = (Math.log(Math.exp(patternLogLikelihoods[i]) + proportionInvariant * frequencies[j]));
+	    	        }
+            	}
+        	
+	            double logLRaw = 0.0;
+	            for (int i = 0; i < patternCount; i++) {
+	                logLRaw += patternLogLikelihoods[i] * patternWeights[i];
+	            }
+
+	            logL += logLScaled - logLRaw;
+            }
+
 
             if (Double.isNaN(logL) || Double.isInfinite(logL)) {
 System.out.println("BEAGLE UNDERFLOW");            	
@@ -946,6 +967,39 @@ System.out.println("BEAGLE UNDERFLOW");
         return logL;
     }
 
+    /** not taking accumulated scale factors in account **/
+	protected void integratePartialsRaw(double[] inPartials, double[] proportions, double[] outPartials, 
+			final int nrOfPatterns, final int nrOfMatrices) {
+		
+        
+        int u = 0;
+        int v = 0;
+        int w = 0;
+        for (int k = 0; k < nrOfPatterns; k++) {
+
+            for (int i = 0; i < nStates; i++) {
+                outPartials[u] = inPartials[v] * proportions[0];
+                u++;
+                v++;
+            }
+            w++;
+        }
+
+
+        for (int l = 1; l < nrOfMatrices; l++) {
+            u = 0;
+
+            for (int k = 0; k < nrOfPatterns; k++) {
+
+                for (int i = 0; i < nStates; i++) {
+                    outPartials[u] += inPartials[v] * proportions[l];
+                    u++;
+                    v++;
+                }
+                w++;
+            }
+        }
+    }
     
 	public void calculateLogLikelihoods(double[] partials, double[] frequencies, double[] outLogLikelihoods,
 			final int nrOfPatterns) {
