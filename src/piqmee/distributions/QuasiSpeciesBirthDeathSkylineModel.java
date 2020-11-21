@@ -61,7 +61,7 @@ public class QuasiSpeciesBirthDeathSkylineModel extends BirthDeathSkylineModel {
             boolean[] isRhoTipArray = new boolean[tipTimes.length];
             isRhoTip.add(i,isRhoTipArray);
             // check the number of the copies of the current haplo
-            if (node.getAttachmentTimesList().length > maxsize)
+            if (node.getAttachmentTimesList().length + 2 > maxsize)
                 // take a log of size + 2
                 //      + 1 because if we have eg. 4 copies, the factor would be log(4) not log(3)
                 //      + 1 because the attach time array is always 1 smaller, as the first lineage is not "attaching"
