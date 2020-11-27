@@ -216,10 +216,17 @@ public class QuasiSpeciesTree extends Tree {
             // this one is marking the start of the haplotype
             if (tempqstimes.length > 1){
                 // check if the tree has more than one tip
-                if (this.getLeafNodeCount() > 1)
-                    initAttachmentTimesHelper(tempqstimes,temptiptimes,temptiptimescount,node.getParent().getHeight(),attachmentTimesListOld);
-                // or there is just one sequence possibly sampled through time
-                else
+                if (this.getLeafNodeCount() > 1) {
+                    double maxtiptime = temptiptimes[temptiptimes.length-1];
+                    double maxtime = node.getParent().getHeight();
+                    QuasiSpeciesNode checkThis = (QuasiSpeciesNode) node;
+                    while ( checkThis.getHeight() < maxtiptime ){
+                        checkThis = (QuasiSpeciesNode) checkThis.getParent();
+                        maxtime = checkThis.getHeight();
+                    }
+                    initAttachmentTimesHelper(tempqstimes, temptiptimes, temptiptimescount, maxtime, attachmentTimesListOld);
+                } // or there is just one sequence possibly sampled through time
+                  else
 //                    initAttachmentTimesHelper(tempqstimes,temptiptimes,temptiptimescount,originInput.get().getValue(),attachmentTimesListOld);
                     initAttachmentTimesHelper(tempqstimes,temptiptimes,temptiptimescount,attachmentTimesListOld[0],attachmentTimesListOld);
             }
