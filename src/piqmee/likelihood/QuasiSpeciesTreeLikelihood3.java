@@ -93,6 +93,8 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
     protected double[] accumulatedLogLeafScaleFactors;
     protected double[] storedAccumulatedLogLeafScaleFactors;
     protected double[] accumulatedLeafScaleFactors;
+    protected double [] scale, storedScale;
+
     protected int[] leafIndex;
     protected int[] storedLeafIndex;
     protected double[][][] leafLogScaleFactors;
@@ -209,7 +211,9 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
         accumulatedLogLeafScaleFactors = new double[patterns * siteModel.getCategoryCount()];
         storedAccumulatedLogLeafScaleFactors = new double[patterns * siteModel.getCategoryCount()];
         accumulatedLeafScaleFactors = new double[accumulatedLogLeafScaleFactors.length];
-        
+    	scale = new double[patterns];
+    	storedScale = new double[patterns];
+
         logProbabilities = new double[nStates * siteModel.getCategoryCount()];
 
         rates = new double[nStates];
@@ -429,7 +433,7 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
      *
      * @return the log likelihood.
      */
-    double m_fScale = 1.01;
+    double m_fScale = 1.0;
     int m_nScale = 0;
     int X = 100;
 
@@ -473,7 +477,7 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
             calcLogP();
             return logP;
         }
-        System.err.println("QUASI3 :" + logP);        
+//        System.err.println("QUASI3 :" + logP);        
         return logP;
     }
 
@@ -524,10 +528,28 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
 			final int nrOfPatterns, final int nrOfMatrices) {
 		
 		int n = accumulatedLogLeafScaleFactors.length;
-    	// TODO: deal with underflows of Math.exp
-        for (int k = 0; k < n; k++) {
-        	accumulatedLeafScaleFactors[k] = Math.exp(accumulatedLogLeafScaleFactors[k]);
-        }
+		if (m_fScale <= 1.00000000001) {
+			for (int k = 0; k < n; k++) {
+				accumulatedLeafScaleFactors[k] = Math.exp(accumulatedLogLeafScaleFactors[k]);
+			}
+		} else {
+			for (int k = 0; k < nrOfPatterns; k++) {
+				double max = accumulatedLogLeafScaleFactors[k];
+				int r = k;
+		        for (int l = 1; l < nrOfMatrices; l++) {
+		        	r += nrOfPatterns;
+		        	max = Math.max(max, accumulatedLogLeafScaleFactors[r]);
+		        }
+		        scale[k] = max;
+			}
+			int w = 0;
+	        for (int l = 1; l < nrOfMatrices; l++) {
+	        	for (int k = 0; k < nrOfPatterns; k++) {
+	        		accumulatedLeafScaleFactors[w] = Math.exp(accumulatedLogLeafScaleFactors[w] - scale[k]);
+	        		w++;
+	        	}
+			}
+		}
         
         int u = 0;
         int v = 0;
@@ -569,14 +591,14 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
                 sum += frequencies[i] * partials[v];
                 v++;
             }
-            outLogLikelihoods[k] = Math.log(sum) + likelihoodCore.getLogScalingFactor(k);
+            outLogLikelihoods[k] = Math.log(sum) + likelihoodCore.getLogScalingFactor(k) + scale[k];
         }
     }
 
 	
 	/**
      * Get the transition rates for the QS branches,
-     * i.e. the rate of no change, i.e. the diagonal entries in the rate matix
+     * i.e. the rate of no change, i.e. the diagonal entries in the rate matrix
      *
      * @param rates the matrix where the new rates should be stored
      *
@@ -901,7 +923,7 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
         System.arraycopy(accumulatedLogLeafScaleFactors, 0, storedAccumulatedLogLeafScaleFactors, 0, accumulatedLogLeafScaleFactors.length);
         System.arraycopy(leafIndex, 0, storedLeafIndex, 0, leafIndex.length);
         System.arraycopy(rates, 0, storedRates, 0, rates.length);
-
+        System.arraycopy(scale, 0, storedScale, 0, scale.length);
     }
 
     @Override
@@ -924,6 +946,7 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
         
         tmp = accumulatedLogLeafScaleFactors; accumulatedLogLeafScaleFactors = storedAccumulatedLogLeafScaleFactors; storedAccumulatedLogLeafScaleFactors = tmp;
         tmp = rates; rates = storedRates; storedRates = tmp;
+        tmp = scale; scale = storedScale; storedScale = tmp;
 
         int[] tmp2 = leafIndex; leafIndex = storedLeafIndex; storedLeafIndex = tmp2; 
     }
