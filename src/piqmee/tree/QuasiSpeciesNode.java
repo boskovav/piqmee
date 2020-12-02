@@ -462,4 +462,18 @@ public class QuasiSpeciesNode extends QuasiSpeciesNodeBaseClass {
 		return getParent().getHeight() - ((QuasiSpeciesNode)getTree().getNode(haploAboveName)).getAttachmentTimesList()[0];
 	}
 
+	public double getFirstBranchingTime() {
+		if (haploAboveName == -1) {
+			if (continuingHaploName != -1) {
+				return getParent().getHeight();
+			} else {
+				return getHeight();
+			}
+		}
+		if (isLeaf()) {
+			return attachmentTimesList[0];
+		}
+		return ((QuasiSpeciesNode)getTree().getNode(haploAboveName)).getAttachmentTimesList()[0];
+	}
+
 }
