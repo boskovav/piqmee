@@ -90,7 +90,6 @@ public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihoo
     private double [] currentFreqs;
     private double [] currentCategoryWeights;
     protected double[] m_branchLengths;
-    private boolean useScaleFactors = false;
     // private double [] scale;
 
     private int invariantCategory = -1;
@@ -263,10 +262,10 @@ public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihoo
             requirementFlags = requiredOrder.get(instanceCount % requiredOrder.size());
         }
 
-        if (scaling.get().equals(Scaling.always)) {
+        if (scalingInput.get().equals(Scaling.always)) {
         	this.rescalingScheme = PartialsRescalingScheme.ALWAYS;
         }
-        if (scaling.get().equals(Scaling.none)) {
+        if (scalingInput.get().equals(Scaling.none)) {
         	this.rescalingScheme = PartialsRescalingScheme.NONE;
         }
         
@@ -879,7 +878,7 @@ public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihoo
 //                logL = getAscertainmentCorrectedLogLikelihood(alignment,
 //                        patternLogLikelihoods, alignment.getWeights(), frequencies);
 //            } else 
-            	if (invariantCategory >= 0) {
+            if (invariantCategory >= 0) {
 //                beagle.getSiteLogLikelihoods(patternLogLikelihoods);
                 int [] patternWeights = alignment.getWeights();
                 proportionInvariant = siteModel.getProportionInvariant();
@@ -897,7 +896,7 @@ public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihoo
             }
             	
             if (useScaleFactors) {   
-            	logL += Math.log(m_fScale) * (treeInput.get().getNodeCount()-1) * alignment.getSiteCount();
+            	logL += -Math.log(m_fScale) * (treeInput.get().getNodeCount()-1) * alignment.getSiteCount();
             }
 
 
@@ -966,12 +965,11 @@ public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihoo
      * @param proportions the proportions of sites in each category
      * @param outPartials an array into which the partials will go
      */
-	protected void integratePartials(double[] inPartials, double[] proportions, double[] outPartials, 
+	protected void integratePartials(double[] inPartials, double[] proportions, double[] rootPartials, 
 			final int nrOfPatterns, final int nrOfMatrices) {
 		
-		int n = accumulatedLogLeafScaleFactors.length;
-    	// TODO: deal with underflows of Math.exp
-		boolean hasZero = false;
+		int n = accumulatedLogLeafScaleFactors.length;    	
+		boolean hasZero = false; // deals with underflows of Math.exp
 		if (!useScaleFactors) {
 			for (int k = 0; k < n; k++) {
 				accumulatedLeafScaleFactors[k] = Math.exp(accumulatedLogLeafScaleFactors[k]);
@@ -992,7 +990,7 @@ public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihoo
 		        scale[k] = max;
 			}
 			int w = 0;
-	        for (int l = 1; l < nrOfMatrices; l++) {
+	        for (int l = 0; l < nrOfMatrices; l++) {
 	        	for (int k = 0; k < nrOfPatterns; k++) {
 	        		accumulatedLeafScaleFactors[w] = Math.exp(accumulatedLogLeafScaleFactors[w] - scale[k]);
 	        		w++;
@@ -1008,7 +1006,8 @@ public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihoo
         for (int k = 0; k < nrOfPatterns; k++) {
 
             for (int i = 0; i < nStates; i++) {
-                outPartials[u] = inPartials[v] * proportions[0]  * accumulatedLeafScaleFactors[w];
+            	rootPartials[u] = inPartials[v] * proportions[0]  * accumulatedLeafScaleFactors[w]; // * Math.exp(scale[u]
+//                System.out.println(rootPartials[u] +"="+ inPartials[v] +" * "+ proportions[0]  +" * "+ accumulatedLeafScaleFactors[w]);
                 u++;
                 v++;
             }
@@ -1022,13 +1021,16 @@ public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihoo
             for (int k = 0; k < nrOfPatterns; k++) {
 
                 for (int i = 0; i < nStates; i++) {
-                    outPartials[u] += inPartials[v] * proportions[l] * accumulatedLeafScaleFactors[w];
+                	rootPartials[u] += inPartials[v] * proportions[l] * accumulatedLeafScaleFactors[w];
+//                    System.out.println(rootPartials[u] +"="+ inPartials[v] +" * "+ proportions[l]  +" * "+ accumulatedLeafScaleFactors[w]);
                     u++;
                     v++;
                 }
                 w++;
             }
+//            System.out.println();
         }
+//        System.out.println();
     }
     
 	public void calculateLogLikelihoods(double[] partials, double[] frequencies, double[] outLogLikelihoods,
@@ -1043,6 +1045,7 @@ public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihoo
                 v++;
             }
             outLogLikelihoods[k] = Math.log(sum) + scale[k];
+            // System.out.println(outLogLikelihoods[k] +"=" + Math.log(sum) + " " + scale[k]);
         }
     }
     
@@ -1171,7 +1174,7 @@ public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihoo
                     final double jointBranchRate = siteModel.getRateForCategory(i, node) * branchRate;
                     substitutionModel.getTransitionProbabilities(node, parent.getHeight(), firstBranchingTime, jointBranchRate, probabilities);
                     for (int j = 0; j < matrixSize; j++) {
-//                    	probabilities[j] *= m_fScale;
+                    	probabilities[j] *= m_fScale;
                     }
             		System.arraycopy(probabilities, 0, matrices, matrixSize * i, matrixSize);
                 }

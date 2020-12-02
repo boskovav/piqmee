@@ -37,7 +37,7 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
 	
 	
     public static enum Scaling {none, always, _default};
-    final public Input<Scaling> scaling = new Input<>("scaling", "type of scaling to use, one of " + Arrays.toString(Scaling.values()) + ". If not specified, the -beagle_scaling flag is used.", Scaling._default, Scaling.values());
+    final public Input<Scaling> scalingInput = new Input<>("scaling", "type of scaling to use, one of " + Arrays.toString(Scaling.values()) + ". If not specified, the -beagle_scaling flag is used.", Scaling._default, Scaling.values());
 
 
     /**
@@ -111,6 +111,8 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
     protected int nStates;
     
     protected int matrixSize;
+
+    protected boolean useScaleFactors = false;
 
     /**
      * flag to indicate ascertainment correction should be applied *
@@ -221,6 +223,7 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
         tmpevectimesevals = new double[nStates * nStates];
         getNoChangeRates(rates);
 
+    	useScaleFactors = scalingInput.get().equals(Scaling.always);
     }
 
     
@@ -466,7 +469,8 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
 //            traverse(tree.getRoot());
 //            calcLogP();
 //            return logP;
-        } else if (logP == Double.NEGATIVE_INFINITY && m_fScale < 10 && !scaling.get().equals(Scaling.none)) { // && !m_likelihoodCore.getUseScaling()) {
+        } else if (logP == Double.NEGATIVE_INFINITY && m_fScale < 10 && !scalingInput.get().equals(Scaling.none)) { // && !m_likelihoodCore.getUseScaling()) {
+        	useScaleFactors = true;
             m_nScale = 0;
             m_fScale *= 1.01;
             Log.warning.println("Turning on scaling to prevent numeric instability " + m_fScale);
@@ -512,6 +516,7 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
         } else {
             for (int i = 0; i < alignment.getPatternCount(); i++) {
                 logP += patternLogLikelihoods[i] * alignment.getPatternWeight(i);
+//            	System.out.println(patternLogLikelihoods[i] + " * "+ alignment.getPatternWeight(i) + " " + logP);
             }
         }
     }
@@ -527,12 +532,18 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
 	protected void integratePartials(double[] inPartials, double[] proportions, double[] outPartials, 
 			final int nrOfPatterns, final int nrOfMatrices) {
 		
-		int n = accumulatedLogLeafScaleFactors.length;
-		if (m_fScale <= 1.00000000001) {
+		int n = accumulatedLogLeafScaleFactors.length;    	
+		boolean hasZero = false; // deals with underflows of Math.exp
+		if (useScaleFactors) {
 			for (int k = 0; k < n; k++) {
 				accumulatedLeafScaleFactors[k] = Math.exp(accumulatedLogLeafScaleFactors[k]);
+				if (accumulatedLeafScaleFactors[k] == 0) {
+					hasZero = true;
+					break;
+				}
 			}
-		} else {
+		}
+		if (hasZero || useScaleFactors) {
 			for (int k = 0; k < nrOfPatterns; k++) {
 				double max = accumulatedLogLeafScaleFactors[k];
 				int r = k;
@@ -543,13 +554,14 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
 		        scale[k] = max;
 			}
 			int w = 0;
-	        for (int l = 1; l < nrOfMatrices; l++) {
+	        for (int l = 0; l < nrOfMatrices; l++) {
 	        	for (int k = 0; k < nrOfPatterns; k++) {
 	        		accumulatedLeafScaleFactors[w] = Math.exp(accumulatedLogLeafScaleFactors[w] - scale[k]);
 	        		w++;
 	        	}
 			}
 		}
+        
         
         int u = 0;
         int v = 0;
@@ -558,6 +570,7 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
 
             for (int i = 0; i < nStates; i++) {
                 outPartials[u] = inPartials[v] * proportions[0]  * accumulatedLeafScaleFactors[w];
+//                System.out.println(outPartials[u] +"="+ inPartials[v] +" * "+ proportions[0]  +" * "+ accumulatedLeafScaleFactors[w]);
                 u++;
                 v++;
             }
@@ -572,12 +585,15 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
 
                 for (int i = 0; i < nStates; i++) {
                     outPartials[u] += inPartials[v] * proportions[l] * accumulatedLeafScaleFactors[w];
+//                    System.out.println(outPartials[u] +"="+ inPartials[v] +" * "+ proportions[l]  +" * "+ accumulatedLeafScaleFactors[w]);
                     u++;
                     v++;
                 }
                 w++;
             }
+//            System.out.println();
         }
+//        System.out.println();
     }
     
 	public void calculateLogLikelihoods(double[] partials, double[] frequencies, double[] outLogLikelihoods,
@@ -592,6 +608,7 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
                 v++;
             }
             outLogLikelihoods[k] = Math.log(sum) + likelihoodCore.getLogScalingFactor(k) + scale[k];
+//            System.out.println(outLogLikelihoods[k] +"=" + Math.log(sum) + " " + likelihoodCore.getLogScalingFactor(k) + " " +scale[k]);
         }
     }
 
