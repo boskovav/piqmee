@@ -685,7 +685,6 @@ public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihoo
      */
     @Override
     public double calculateLogP() {
-
         if (patternLogLikelihoods == null) {
             patternLogLikelihoods = new double[patternCount];
         }
@@ -1129,8 +1128,6 @@ public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihoo
 	                k += nStates;
 	                // likelihoodCore.setNodeMatrix(nodeCount + nodeIndex, i, probabilities);
 	            }
-	            // TODO: delete following line
-	            // update |= Tree.IS_DIRTY;
 	            
 	            // this sets node partials at top of leaf clade at partial[nodeIndex]
 	            setLeafScaleForUpdate(nodeNum);
