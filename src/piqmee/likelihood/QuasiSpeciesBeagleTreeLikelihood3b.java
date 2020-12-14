@@ -89,6 +89,9 @@ public class QuasiSpeciesBeagleTreeLikelihood3b extends QuasiSpeciesTreeLikeliho
     private double [] currentCategoryWeights;
     protected double[] m_branchLengths;
 
+    protected double[] patternLogLikelihoods2;
+    protected double[] scaleFactors2;
+
     private int invariantCategory = -1;
     
 
@@ -112,6 +115,9 @@ public class QuasiSpeciesBeagleTreeLikelihood3b extends QuasiSpeciesTreeLikeliho
 
         int leafNodeCount = treeInput.get().getLeafNodeCount();
         patternLogLikelihoods = new double[patternCount];
+        patternLogLikelihoods2 = new double[patternCount];
+        scaleFactors2 =  new double[patternCount];
+
         m_fRootPartials = new double[patternCount * m_nStateCount];
         rawRootPartials = new double[patternCount * m_nStateCount * siteModel.getCategoryCount()];
         
@@ -849,8 +855,41 @@ public class QuasiSpeciesBeagleTreeLikelihood3b extends QuasiSpeciesTreeLikeliho
             }
 
             double[] rootFrequencies = substitutionModel.getFrequencies();
+
+            double logLScaled = 0, logLRaw = 0.0;
+            if (useScaleFactors) {   
+            	double[] sumLogLikelihoods = new double[1];
+
+            	beagle.calculateRootLogLikelihoods(new int[]{rootIndex}, new int[]{0}, new int[]{0},
+                    new int[]{cumulateScaleBufferIndex}, 1, sumLogLikelihoods);
+
+            	double [] p = new double[patternLogLikelihoods.length];
+                beagle.getSiteLogLikelihoods(p);
+
+                logLScaled = sumLogLikelihoods[0];
+            	
+                integratePartialsRaw(rawRootPartials, proportions, m_fRootPartials, patternLogLikelihoods2.length, proportions.length);
+                calculateLogLikelihoodsNoScale(m_fRootPartials, rootFrequencies, patternLogLikelihoods2, patternLogLikelihoods2.length);
+                
+            	if (invariantCategory >= 0) {
+	                for (int k : constantPattern) {
+	    	        	int i = k / m_nStateCount;
+	    	        	int j = k % m_nStateCount;
+	    	        	patternLogLikelihoods2[i] = (Math.log(Math.exp(patternLogLikelihoods2[i]) + proportionInvariant * frequencies[j]));
+	    	        }
+            	}
+        	
+	            logLRaw = 0.0;
+                int [] patternWeights = alignment.getWeights();
+	            for (int i = 0; i < patternCount; i++) {
+	            	scaleFactors2[i] = patternLogLikelihoods[i] - patternLogLikelihoods2[i];
+	                logLRaw += patternLogLikelihoods2[i] * patternWeights[i];
+	            }
+            }
+            
             calculateLogLikelihoods(m_fRootPartials, rootFrequencies, patternLogLikelihoods, patternLogLikelihoods.length);
 
+            
             logL = 0.0;
             if (ascertainedSitePatterns) {
                 logL = getAscertainmentCorrectedLogLikelihood(alignment,
@@ -868,7 +907,7 @@ public class QuasiSpeciesBeagleTreeLikelihood3b extends QuasiSpeciesTreeLikeliho
 //                logL = getAscertainmentCorrectedLogLikelihood(alignment,
 //                        patternLogLikelihoods, alignment.getWeights(), frequencies);
 //            } else 
-            	if (invariantCategory >= 0) {
+            if (invariantCategory >= 0) {
 //                beagle.getSiteLogLikelihoods(patternLogLikelihoods);
                 int [] patternWeights = alignment.getWeights();
                 proportionInvariant = siteModel.getProportionInvariant();
@@ -885,35 +924,7 @@ public class QuasiSpeciesBeagleTreeLikelihood3b extends QuasiSpeciesTreeLikeliho
 	            }
             }
             	
-            double logLScaled = 0, logLRaw = 0.0;
-            if (useScaleFactors) {   
-                int [] patternWeights = alignment.getWeights();
-            	double[] sumLogLikelihoods = new double[1];
 
-            	beagle.calculateRootLogLikelihoods(new int[]{rootIndex}, new int[]{0}, new int[]{0},
-                    new int[]{cumulateScaleBufferIndex}, 1, sumLogLikelihoods);
-
-            	double [] p = new double[patternLogLikelihoods.length];
-                beagle.getSiteLogLikelihoods(p);
-
-                logLScaled = sumLogLikelihoods[0];
-            	
-                integratePartialsRaw(rawRootPartials, proportions, m_fRootPartials, patternLogLikelihoods.length, proportions.length);
-                calculateLogLikelihoodsNoScale(m_fRootPartials, rootFrequencies, patternLogLikelihoods, patternLogLikelihoods.length);
-                
-            	if (invariantCategory >= 0) {
-	                for (int k : constantPattern) {
-	    	        	int i = k / m_nStateCount;
-	    	        	int j = k % m_nStateCount;
-	    	        	patternLogLikelihoods[i] = (Math.log(Math.exp(patternLogLikelihoods[i]) + proportionInvariant * frequencies[j]));
-	    	        }
-            	}
-        	
-	            logLRaw = 0.0;
-	            for (int i = 0; i < patternCount; i++) {
-	                logLRaw += patternLogLikelihoods[i] * patternWeights[i];
-	            }
-            }
             
 	        if (useScaleFactors) {   
 	            logL += logLScaled - logLRaw;
