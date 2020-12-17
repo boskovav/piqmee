@@ -901,7 +901,7 @@ public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihoo
 
             if (Double.isNaN(logL) || Double.isInfinite(logL)) {
             	m_fScale *= 1.1;
-            	Log.warning.println("BEAGLE UNDERFLOW: Turning on scaling to prevent numeric instability " + m_fScale);
+            	Log.warning.println(getClass().getName() + "UNDERFLOW: Turning on scaling to prevent numeric instability " + m_fScale);
 
                 everUnderflowed = true;
                 logL = Double.NEGATIVE_INFINITY;
