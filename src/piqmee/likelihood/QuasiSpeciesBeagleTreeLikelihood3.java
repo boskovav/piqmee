@@ -93,7 +93,6 @@ public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihoo
     // private double [] scale;
 
     private int invariantCategory = -1;
-    
 
     @Override
     public void initAndValidate() {
@@ -895,13 +894,13 @@ public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihoo
             }
             	
             if (useScaleFactors) {   
-            	logL += -Math.log(m_fScale) * (treeInput.get().getNodeCount()-1) * alignment.getSiteCount();
+            	logL += -Math.log(scaleFactor) * (treeInput.get().getNodeCount()-1) * alignment.getSiteCount();
             }
 
 
             if (Double.isNaN(logL) || Double.isInfinite(logL)) {
-            	m_fScale *= 1.1;
-            	Log.warning.println(getClass().getName() + "UNDERFLOW: Turning on scaling to prevent numeric instability " + m_fScale);
+            	scaleFactor *= 1.1;
+            	Log.warning.println(getClass().getName() + "UNDERFLOW: Turning on scaling to prevent numeric instability " + scaleFactor);
 
                 everUnderflowed = true;
                 logL = Double.NEGATIVE_INFINITY;
@@ -1171,7 +1170,7 @@ public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihoo
                     final double jointBranchRate = siteModel.getRateForCategory(i, node) * branchRate;
                     substitutionModel.getTransitionProbabilities(node, parent.getHeight(), firstBranchingTime, jointBranchRate, probabilities);
                     for (int j = 0; j < matrixSize; j++) {
-                    	probabilities[j] *= m_fScale;
+                    	probabilities[j] *= scaleFactor;
                     }
             		System.arraycopy(probabilities, 0, matrices, matrixSize * i, matrixSize);
                 }

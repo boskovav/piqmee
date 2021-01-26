@@ -45,7 +45,7 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
      */
     protected LikelihoodCore likelihoodCore;
     public LikelihoodCore getLikelihoodCore() {return likelihoodCore;}
-    protected QuasiSpeciesBeagleTreeLikelihood3 beagle;
+    protected QuasiSpeciesBeagleTreeLikelihood3 beagleLikelihood;
 
     /**
      * BEASTObject associated with inputs. Since none of the inputs are StateNodes, it
@@ -141,22 +141,23 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
         }
         else
             alignment = dataInput.get();
-        beagle = null;
-//        beagle = new QuasiSpeciesBeagleTreeLikelihood3();
-//        try {
-//      	beagle.initByName(
-//      		"data", dataInput.get(), "tree", treeInput.get(), "siteModel", siteModelInput.get(),
-//      		"branchRateModel", branchRateModelInput.get(), "useAmbiguities", useAmbiguities.get(),
-//      		"scaling", scaling.get().toString());
-//	        if (beagle.getBeagle() != null) {
-//	            //a Beagle instance was found, so we use it
-//	            return;
-//	        }
-//        } catch (Exception e) {
-//			// ignore
-//		}
-        // No Beagle instance was found, so we use the good old java likelihood core
-        beagle = null;
+        beagleLikelihood = null;
+    	if (!scalingInput.get().equals(Scaling.always)) {
+    		beagleLikelihood = new QuasiSpeciesBeagleTreeLikelihood3();
+        	try {
+        		beagleLikelihood.initByName(
+        				"data", dataInput.get(), "tree", treeInput.get(), "siteModel", siteModelInput.get(),
+        				"branchRateModel", branchRateModelInput.get(), "useAmbiguities", useAmbiguities.get(),
+        				"scaling", Scaling.none); // QuasiSpeciesBeagleTreeLikelihood3 scaling does not work properly
+        				// so we go back to this Java implementation if scaling is required
+            	if (beagleLikelihood.getBeagle() == null) {
+            		beagleLikelihood = null;
+            	}
+	        } catch (Exception e) {
+	            // No Beagle instance was found, so we use the good old java likelihood core
+	        	beagleLikelihood = null;
+	    	}
+		}
         // tolerance = toleranceInput.get();
         nodeCount = treeInput.get().getNodeCount();
         int leafNodeCount = treeInput.get().getLeafNodeCount();
@@ -435,19 +436,26 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
      *
      * @return the log likelihood.
      */
-    double m_fScale = 1.0;
+    double scaleFactor = 1.0;
+    double storedScaleFactor = 1.0;
     int m_nScale = 0;
     int X = 100;
 
     @Override
     public double calculateLogP() {
-        if (beagle != null) {
-            logP = beagle.calculateLogP();
-            return logP;
+        if (beagleLikelihood != null && scaleFactor == 1.0) {
+        	// only use BEAGLE implementation if not scaling
+            logP = beagleLikelihood.calculateLogP();
+            if (Double.isFinite(logP) || scalingInput.get().equals(Scaling.none)) {
+            	return logP;
+            }
+            hasDirt = Tree.IS_FILTHY;
+            getNoChangeRates(rates);
         }
 
-        if (siteModel.isDirtyCalculation())
+        if (siteModel.isDirtyCalculation()) {
             getNoChangeRates(rates);
+        }
         
         final TreeInterface tree = treeInput.get();
 
@@ -468,12 +476,12 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
 //            traverse(tree.getRoot());
 //            calcLogP();
 //            return logP;
-        } else if (logP == Double.NEGATIVE_INFINITY && m_fScale < 10 && !scalingInput.get().equals(Scaling.none)) { // && !m_likelihoodCore.getUseScaling()) {
+        } else if (logP == Double.NEGATIVE_INFINITY && scaleFactor < 10 && !scalingInput.get().equals(Scaling.none)) { // && !m_likelihoodCore.getUseScaling()) {
         	useScaleFactors = true;
             m_nScale = 0;
-            m_fScale *= 1.01;
-            Log.warning.println("Turning on scaling to prevent numeric instability " + m_fScale);
-            likelihoodCore.setUseScaling(m_fScale);
+            scaleFactor *= 1.01;
+            Log.warning.println("Turning on scaling to prevent numeric instability " + scaleFactor);
+            likelihoodCore.setUseScaling(scaleFactor);
             likelihoodCore.unstore();
             hasDirt = Tree.IS_FILTHY;
             traverse((QuasiSpeciesNode)tree.getRoot());
@@ -697,7 +705,7 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
                 final double jointBranchRate = siteModel.getRateForCategory(i, node) * branchRate;
                 substitutionModel.getTransitionProbabilities(node, parent.getHeight(), firstBranchingTime, jointBranchRate, probabilities);
                 for (int j = 0; j < matrixSize; j++) {
-                	probabilities[j] *= m_fScale;
+                	probabilities[j] *= scaleFactor;
                 }
                 likelihoodCore.setNodeMatrix(nodeIndex, i, probabilities);
             }
@@ -800,8 +808,10 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
     protected void accumulateLogLeafScale() {
 		final int n = accumulatedLogLeafScaleFactors.length;
 		int leafNodeCount = nodeCount / 2 + 1;
-		if (hasDirt == Tree.IS_FILTHY) { // || true) {
-			// recalc from sratch
+		
+		// perform delta calculation if tree is not filthy
+		if (hasDirt == Tree.IS_FILTHY) {
+			// recalc from scratch
 			Arrays.fill(accumulatedLogLeafScaleFactors, 0.0);
 			for (int j = 0; j < leafNodeCount; j++) {
 				double [] x = leafLogScaleFactors[leafIndex[j]][j];
@@ -832,8 +842,8 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
     
 	/* return copy of pattern log likelihoods for each of the patterns in the alignment */
 	public double [] getPatternLogLikelihoods() {
-		if (beagle != null) {
-			return beagle.getPatternLogLikelihoods();
+		if (beagleLikelihood != null && scaleFactor == 1.0) {
+			return beagleLikelihood.getPatternLogLikelihoods();
 		}
 		return patternLogLikelihoods.clone();
 	} // getPatternLogLikelihoods
@@ -845,8 +855,8 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
      */
     @Override
     protected boolean requiresRecalculation() {
-        if (beagle != null) {
-            return beagle.requiresRecalculation();
+        if (beagleLikelihood != null && scaleFactor == 1.0) {
+            return beagleLikelihood.requiresRecalculation();
         }
         hasDirt = Tree.IS_CLEAN;
         
@@ -873,8 +883,9 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
 
     @Override
     public void store() {
-        if (beagle != null) {
-            beagle.store();
+    	storedScaleFactor = scaleFactor;
+        if (beagleLikelihood  != null && scaleFactor == 1.0) {
+        	beagleLikelihood.store();
             super.store();
             return;
         }
@@ -893,8 +904,9 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
 
     @Override
     public void restore() {
-        if (beagle != null) {
-            beagle.restore();
+    	scaleFactor = storedScaleFactor;
+        if (beagleLikelihood != null && scaleFactor == 1.0) {
+        	beagleLikelihood.restore();
             super.restore();
             return;
         }
