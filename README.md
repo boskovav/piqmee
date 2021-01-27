@@ -1,7 +1,7 @@
 PIQMEE (Phylodynamic Inference of Quasispecies Molecular Evolution and Epidemiology)
 ======
 
-[![Build Status](https://travis-ci.org/boskovav/piqmee.svg?branch=master)](https://travis-ci.org/boskovav/piqmee)
+[![Test Status](https://github.com/boskovav/piqmee/workflows/PIQMEE%20tests/badge.svg)](https://github.com/boskovav/piqmee/actions?query=workflow%3A%PIQMEE+tests%22)
 
 PIQMEE is a [BEAST 2](http://www.beast2.org) package allowing for fast
 inference of phylodynamics from dataset containing many sequence duplicates.
