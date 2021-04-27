@@ -440,6 +440,7 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
     double storedScaleFactor = 1.0;
     int m_nScale = 0;
     int X = 100;
+    boolean startScaling = false;
 
     @Override
     public double calculateLogP() {
@@ -452,7 +453,7 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
             hasDirt = Tree.IS_FILTHY;
             getNoChangeRates(rates);
         }
-
+        
         if (siteModel.isDirtyCalculation()) {
             getNoChangeRates(rates);
         }
@@ -477,12 +478,14 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
 //            calcLogP();
 //            return logP;
         } else if (logP == Double.NEGATIVE_INFINITY && scaleFactor < 10 && !scalingInput.get().equals(Scaling.none)) { // && !m_likelihoodCore.getUseScaling()) {
+        	startScaling = true;
         	useScaleFactors = true;
             m_nScale = 0;
             scaleFactor *= 1.01;
             Log.warning.println("Turning on scaling to prevent numeric instability " + scaleFactor);
             likelihoodCore.setUseScaling(scaleFactor);
             likelihoodCore.unstore();
+            System.arraycopy(storedLeafIndex, 0, leafIndex, 0, leafIndex.length);
             hasDirt = Tree.IS_FILTHY;
             traverse((QuasiSpeciesNode)tree.getRoot());
             calcLogP();
@@ -500,6 +503,7 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
         final double[] proportions = siteModel.getCategoryProportions(root);
         
         likelihoodCore.getNodePartials(root.getNr(), rawRootPartials);
+
         integratePartials(rawRootPartials, proportions, m_fRootPartials, patternLogLikelihoods.length, proportions.length);
 
         if (constantPattern != null) { // && !SiteModel.g_bUseOriginal) {
@@ -832,7 +836,7 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
 				}
 			}
 		}
-		
+
 		
     }
     
@@ -884,6 +888,7 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
     @Override
     public void store() {
     	storedScaleFactor = scaleFactor;
+    	startScaling = false;
         if (beagleLikelihood  != null && scaleFactor == 1.0) {
         	beagleLikelihood.store();
             super.store();
@@ -905,6 +910,14 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
     @Override
     public void restore() {
     	scaleFactor = storedScaleFactor;
+    	if (startScaling) {
+    		startScaling = false;
+    		scaleFactor = 1.0;
+        	useScaleFactors = false;
+            m_nScale = 0;
+            Log.warning.println("Restoring: Turning off scaling");
+            likelihoodCore.setUseScaling(scaleFactor);
+    	}
         if (beagleLikelihood != null && scaleFactor == 1.0) {
         	beagleLikelihood.restore();
             super.restore();
