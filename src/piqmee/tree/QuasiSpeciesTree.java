@@ -16,6 +16,7 @@ import piqmee.distance.DifferenceCount;
 import beast.evolution.likelihood.GenericTreeLikelihood;
 
 import java.io.PrintStream;
+import java.lang.reflect.Array;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -1683,8 +1684,8 @@ public class QuasiSpeciesTree extends Tree {
                 // 2) if height could not break a tie -- try count of copies of the haplo
                 //  and merge with the one that has more copies
                 if (whichToMergeWith.size() > 1) {
-                    List<Integer> whichToMergeWithTmp = new ArrayList<>();
-                    System.arraycopy(whichToMergeWith,0,whichToMergeWithTmp,0,whichToMergeWith.size());
+                    List<Integer> whichToMergeWithTmp = Arrays.asList(new Integer[whichToMergeWith.size()]);
+                    Collections.copy(whichToMergeWithTmp,whichToMergeWith);
                     whichToMergeWith.clear();
                     whichToMergeWith.add(whichToMergeWithTmp.get(0));
                     Set tipsToCheckForCount1 =
@@ -1706,14 +1707,14 @@ public class QuasiSpeciesTree extends Tree {
                 // 3) if we could still not break a tie, throw an error
                 if (whichToMergeWith.size() > 1) {
                     StringBuilder toPrint = new StringBuilder(thisData.getTaxaNames().get(whichToMergeWith.get(0)));
-                    for (int nextTip : whichToMergeWith) {
+                    for (int nextTip : whichToMergeWith.subList(1,whichToMergeWith.size())) {
                         toPrint.append(", ").append(thisData.getTaxaNames().get(nextTip));
                     }
                     toPrint.append(" ");
                     throw new RuntimeException("We cannot resolve a tie when collapsing sequences with " +
-                            "ambiguous sites. There is more then one sequences that can be collapsed " +
-                            "with tip" + thisData.getTaxaNames().get(i) + "namely tips " + toPrint +
-                            " that have hamming distance 0 and is at the same distance in time");
+                            "ambiguous sites. There is more then one sequence that can be collapsed " +
+                            "with tip " + thisData.getTaxaNames().get(i) + ", namely tips " + toPrint +
+                            " that all have hamming distance 0 and are at the same distance in time.");
                 }
             }
             if (whichToMergeWith.size()==1) {
