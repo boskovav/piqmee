@@ -21,6 +21,10 @@ public class QuasiSpeciesTreeFromNewick extends QuasiSpeciesTree implements Stat
     public Input<Boolean> collapseIdenticalSequencesInput = new Input<>("collapseIdenticalSequences",
             "Should nodes that have identical sequences be collapsed to one haplotype? " +
                     "Default true.", true);
+    public Input<Boolean> collapseSequencesWithMissingDataInput = new Input<>("collapseSequencesIfIdenticalUpToMissingParts",
+            "Flag to indicate if sequences that have missing data (stretches of N's) should" +
+                    "be collapsed with a sequence that is identical to it up the missing data. Default false.",
+            false);
 
     public QuasiSpeciesTreeFromNewick() {
     }
@@ -43,6 +47,11 @@ public class QuasiSpeciesTreeFromNewick extends QuasiSpeciesTree implements Stat
         }
         if (data == null)
             throw new RuntimeException("The data input needs to be specified");
+
+        if (collapseSequencesWithMissingDataInput.get() && !collapseIdenticalSequencesInput.get())
+            throw new RuntimeException("It seems that you want to collapse sequences that have parts of missing data to" +
+                    "their closest resembling sequence. If this is the case, you need to set both " +
+                    "collapseIdenticalSequences and collapseSequencesIfIdenticalUpToMissingParts to true.");
 
         // read in the user input tree
         TreeParser inputTree = new TreeParser();

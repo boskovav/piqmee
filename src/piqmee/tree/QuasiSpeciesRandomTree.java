@@ -30,6 +30,10 @@ public class QuasiSpeciesRandomTree extends QuasiSpeciesTree implements StateNod
     public Input<Boolean> collapseIdenticalSequencesInput = new Input<>("collapseIdenticalSequences",
             "Should nodes that have identical sequences be collapsed to one haplotype? " +
                     "Default true.", true);
+    public Input<Boolean> collapseSequencesWithMissingDataInput = new Input<>("collapseSequencesIfIdenticalUpToMissingParts",
+            "Flag to indicate if sequences that have missing data (stretches of N's) should" +
+                    "be collapsed with a sequence that is identical to it up the missing data. Default false.",
+            false);
 
 
     public QuasiSpeciesRandomTree() {
@@ -54,6 +58,11 @@ public class QuasiSpeciesRandomTree extends QuasiSpeciesTree implements StateNod
         if (data == null)
             throw new RuntimeException("The data input needs to be specified");
 
+        if (collapseSequencesWithMissingDataInput.get() && !collapseIdenticalSequencesInput.get())
+            throw new RuntimeException("It seems that you want to collapse sequences that have parts of missing data to" +
+                    "their closest resembling sequence. If this is the case, you need to set both " +
+                    "collapseIdenticalSequences and collapseSequencesIfIdenticalUpToMissingParts to true.");
+
         // create a toy tree for calculation of distances
         RandomTree toyRandomTree = new RandomTree();
         toyRandomTree.setDateTrait(timeTraitSet);
@@ -64,13 +73,14 @@ public class QuasiSpeciesRandomTree extends QuasiSpeciesTree implements StateNod
         // get monophyletic constraints necessary to cluster identical sequences
         // specify monophyletic clusters from distance matrix
         List<MRCAPrior> monophyleticGroups = new ArrayList();
-        // Get the distances for the sequences:
-        double[][] distanceMatrix = getDistanceMatrix(data, toyRandomTree, collapseSequencesWithMissingDataInput.get());
+        // Get the distances for the sequences - order of taxa according to taxaNames array
+        double[][] distanceMatrix = getDistanceMatrix(data, false);
         // specify monophyletic constraints
         for (int i = 0; i < distanceMatrix.length; i++){
             List<Taxon> identical = new ArrayList<>();
             Taxon currentTaxon = new Taxon(data.getTaxaNames().get(i));
             identical.add(currentTaxon);
+            // do not even consider this taxon and taxa with identical seq if we have already included it previously
             for (int j = 0; j < i; j++){
                 if (distanceMatrix[j][i] == 0)
                     continue;

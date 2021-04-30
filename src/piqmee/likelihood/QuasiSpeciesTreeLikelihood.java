@@ -55,20 +55,20 @@ public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
     protected double[] patternLogLikelihoods;
     protected double[] rootPartials;
     protected double[] originPartials;
-    int nodeCount;
+    protected int nodeCount;
     int leafNodeCount;
     int matrixSize;
-    int nStates;
+    protected int nStates;
     Alignment alignment;
 
     /**
      * Memory for transition probabilities.
      */
-    double[] probabilities;
+    protected double[] probabilities;
     /**
      * Memory for substitution rates QS.
      */
-    double[] rates;
+    protected double[] rates;
     double[] storedRates;
     double[] tmpevectimesevals;
     /**
@@ -78,10 +78,10 @@ public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
     /**
      * dealing with proportion of site being invariant *
      */
-    double proportionInvariant = 0;
-    List<Integer> constantPattern = null;
+    protected double proportionInvariant = 0;
+    protected List<Integer> constantPattern = null;
 
-    Node toyNode = new Node();
+    protected Node toyNode = new Node();
 
 
     @Override
@@ -90,7 +90,7 @@ public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
         if (dataInput.get().getTaxonCount() != treeInput.get().getLeafNodeCount()) {
 //            throw new IllegalArgumentException("The number of nodes in the tree does not match the number of sequences");
             // subset the alignment to match the taxa in the tree
-            alignment = subset(dataInput,treeInput.get().getExternalNodes());
+            alignment = subset(dataInput, (QuasiSpeciesTree) treeInput.get());
         }
         else
             alignment = dataInput.get();
@@ -345,9 +345,9 @@ public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
      *
      * @return the log likelihood.
      */
-    double m_fScale = 1.01;
-    int m_nScale = 0;
-    int X = 100;
+    protected double m_fScale = 1.01;
+    protected int m_nScale = 0;
+    protected int X = 100;
 
     @Override
     public double calculateLogP() {
@@ -391,7 +391,7 @@ public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
         return logP;
     }
 
-    void calcLogP() {
+    protected void calcLogP() {
         logP = 0.0;
         if (useAscertainedSitePatterns) {
             final double ascertainmentCorrection = alignment.getAscertainmentCorrection(patternLogLikelihoods);
@@ -731,27 +731,21 @@ public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
      * unique sequence tree
      *
      * @param data  full alignment
-     * @param leafs leaf nodes of the unique-sequence tree
+     * @param tree  with leaf nodes being the unique sequences
      * @return subsetted alignment
      */
-    public Alignment subset(Input<Alignment> data, List<Node> leafs){
+    public Alignment subset(Input<Alignment> data, QuasiSpeciesTree tree){
         Alignment fullData = data.get();
-        int tipCount = leafs.size();
-        ArrayList sequences = new ArrayList(tipCount);
 
         Alignment subsetData;
+
+        // select alignment corresponding to this partition
+        Alignment toyAlignment = (Alignment) tree.getUniqueSequenceMapForLikelihoood(this.getID());
+
         // since taxonSet is not always ordered according to the sequences, we need to reorder the alignment
         // this filtered alignment part is just for beauti to not throw its toys
         if (fullData.sequenceInput.get().size() == 0 && fullData instanceof FilteredAlignment) {
-            // sort the alignment
-            Alignment fullsortedAlignment =
-                    new Alignment(((FilteredAlignment) fullData).alignmentInput.get().sequenceInput.get(), fullData.dataTypeInput.get());
-            // select sequences for subset
-            for (int i = 0; i < tipCount; i++){
-                sequences.add(leafs.get(i).getNr(),fullsortedAlignment.sequenceInput.get().get(fullsortedAlignment.getTaxonIndex(leafs.get(i).getID())));
-            }
-            // make a new filtered alignment with this subset
-            Alignment toyAlignment = new Alignment(sequences, fullData.dataTypeInput.get());
+            // make a new filtered alignment with the subset
             FilteredAlignment subsetDataFiltered = new FilteredAlignment();
             if (((FilteredAlignment) fullData).constantSiteWeightsInput.get() != null) {
                 subsetDataFiltered.initByName(
@@ -766,14 +760,8 @@ public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
             // set subsetData to this new Filtered alignment
             subsetData = subsetDataFiltered;
         } else {
-            // sort the alignment
-            Alignment fullsortedAlignment = new Alignment(fullData.sequenceInput.get(), fullData.dataTypeInput.get());
-            // select sequences for subset
-            for (int i = 0; i < tipCount; i++){
-                sequences.add(leafs.get(i).getNr(),fullsortedAlignment.sequenceInput.get().get(fullsortedAlignment.getTaxonIndex(leafs.get(i).getID())));
-            }
             // make a new alignment with this subset
-            subsetData = new Alignment(sequences, fullData.dataTypeInput.get());
+            subsetData = toyAlignment;
         }
 
         return subsetData;

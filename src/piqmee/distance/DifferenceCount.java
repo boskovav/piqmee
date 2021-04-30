@@ -15,8 +15,7 @@ public class DifferenceCount extends Distance.Base {
     /**
      * Calculate a pairwise distance
      */
-    @Override
-    public double pairwiseDistance(int taxon1, int taxon2) {
+    public double pairwiseDistance(int taxon1, int taxon2, boolean collapseIdenticalUptoMissingData) {
         int state1, state2;
         int[] pattern;
         double dist = 0;
@@ -24,9 +23,17 @@ public class DifferenceCount extends Distance.Base {
             pattern = patterns.getPattern(i);
             state1 = pattern[taxon1];
             state2 = pattern[taxon2];
+            // check if patterns represent a single character
             if (!dataType.isAmbiguousCode(state1) && !dataType.isAmbiguousCode(state2)
                 && state1 != state2) {
                     dist += patterns.getPatternWeight(i);
+            } else if (collapseIdenticalUptoMissingData){
+                int[] states1 = dataType.getStatesForCode(state1);
+                int[] states2 = dataType.getStatesForCode(state2);
+                if (!isAtLeastOneStateIdentical(states1,states2)) {
+                    // only a single character difference is enough for us to determine that sequences are not identical
+                    dist += patterns.getPatternWeight(i);
+                }
             }
         }
         return dist;  // / patterns.getSiteCount();

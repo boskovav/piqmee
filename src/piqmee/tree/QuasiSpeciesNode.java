@@ -180,7 +180,8 @@ public class QuasiSpeciesNode extends QuasiSpeciesNodeBaseClass {
     public void setFirstEntryAndSortAttachTimeList() {
         Arrays.sort(attachmentTimesList);
         // copy the largest bifurcation time, to indicate the haplo start time
-        attachmentTimesList[0] = attachmentTimesList[attachmentTimesList.length - 1];
+        if ( attachmentTimesList[0] == 0)
+            attachmentTimesList[0] = attachmentTimesList[attachmentTimesList.length - 1];
         //it is though possible there is no duplicate, correctly set the attachmentTimes[0] to nodeHeight
         if (attachmentTimesList.length == 1){
             attachmentTimesList[0] = this.getHeight();
@@ -196,6 +197,8 @@ public class QuasiSpeciesNode extends QuasiSpeciesNodeBaseClass {
      */
     public void sortAttachTimeList() {
         Arrays.sort(attachmentTimesList);
+        //if (attachmentTimesList.length > 1)
+        //    checkForDuplicates();
         // reverse the array to start with the largest value
         int totalLength = attachmentTimesList.length;
         for (int j = 0; j < totalLength/2; j++){
@@ -203,6 +206,30 @@ public class QuasiSpeciesNode extends QuasiSpeciesNodeBaseClass {
             attachmentTimesList[j] = attachmentTimesList[totalLength-1-j];
             attachmentTimesList[totalLength-1-j] = tmp;
         }
+    }
+
+    /**
+     * Checks for duplicates in the sorted list of attachment times of the haplotype associated with this tip
+     * If duplicate (except for last and one before last members of array) found, add 10^-10 to the higher one
+     *
+     */
+
+    public void checkForDuplicates() {
+        boolean resetLast = false;
+        if (attachmentTimesList[attachmentTimesList.length-1]==attachmentTimesList[attachmentTimesList.length-2])
+            resetLast = true;
+        // check each pair
+        for (int i = (attachmentTimesList.length - 2); i > 0 ; i--) {
+            if (attachmentTimesList[i] == attachmentTimesList[i - 1]){
+                if (attachmentTimesList[i] + 1e-10 > attachmentTimesList[i + 1]){
+                    attachmentTimesList[i] = (attachmentTimesList[i + 1] + attachmentTimesList[i - 1])/2;
+                } else
+                    attachmentTimesList[i] = attachmentTimesList[i] + 1e-10;
+            }
+        }
+        //make sure the largest two are the same
+        if (resetLast)
+            attachmentTimesList[attachmentTimesList.length-1]=attachmentTimesList[attachmentTimesList.length-2];
     }
 
     /**
