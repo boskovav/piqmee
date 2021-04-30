@@ -26,6 +26,7 @@
 package piqmee.likelihood;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import beagle.Beagle;
@@ -56,7 +57,7 @@ import piqmee.tree.QuasiSpeciesNode;
  */
 
 @Description("Uses Beagle library to calculate Tree likelihood")
-public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihood3 {
+public class QuasiSpeciesBeagleTreeLikelihood3b extends QuasiSpeciesTreeLikelihood3 {
     // This property is a comma-delimited list of resource numbers (0 == CPU) to
     // allocate each BEAGLE instance to. If less than the number of instances then
     // will wrap around.
@@ -82,17 +83,18 @@ public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihoo
     // boolean m_bUseAmbiguities, m_bUseTipLikelihoods;
     int m_nStateCount;
     int m_nNodeCount;
-    private double [] matrices;
-
     
     private double [] currentCategoryRates;
 //    private double [] storedCurrentCategoryRates;
     private double [] currentFreqs;
     private double [] currentCategoryWeights;
     protected double[] m_branchLengths;
-    // private double [] scale;
+
+    protected double[] patternLogLikelihoods2;
+    protected double[] logScaleFactors2, m_fRootPartials2;
 
     private int invariantCategory = -1;
+    
 
     @Override
     public void initAndValidate() {
@@ -110,11 +112,15 @@ public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihoo
 
         nStates = m_nStateCount;
         nodeCount = m_nNodeCount; 
-        matrixSize = nStates * nStates;
+        matrixSize = (nStates + 1) * (nStates + 1);
 
         int leafNodeCount = treeInput.get().getLeafNodeCount();
         patternLogLikelihoods = new double[patternCount];
+        patternLogLikelihoods2 = new double[patternCount];
+        logScaleFactors2 =  new double[patternCount];
+
         m_fRootPartials = new double[patternCount * m_nStateCount];
+        m_fRootPartials2 = new double[patternCount * m_nStateCount];
         rawRootPartials = new double[patternCount * m_nStateCount * siteModel.getCategoryCount()];
         
         leafIndex = new int[leafNodeCount];        
@@ -130,10 +136,8 @@ public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihoo
         storedRates = new double [m_nStateCount];
         tmpevectimesevals = new double[m_nStateCount * m_nStateCount];
         getNoChangeRates(rates);
-        
-    	matrices = new double[matrixSize * categoryCount];
-    	probabilities = new double[matrixSize];
-    	scale = new double[patternCount];
+
+        scale = new double[patternCount];
     	storedScale = new double[patternCount];
     }
 
@@ -500,10 +504,6 @@ public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihoo
     }
 
     void setUpSubstModel() {
-    	if (useScaleFactors) {
-    		return;
-    	}
-    	
         // we are currently assuming a no-category model...
         // TODO More efficient to update only the substitution model that changed, instead of all
         for (int i = 0; i < eigenCount; i++) {
@@ -641,11 +641,11 @@ public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihoo
         eigenBufferHelper.storeState();
         matrixBufferHelper.storeState();
 
-        if (useScaleFactors || useAutoScaling) { // Only store when actually used
+//        if (useScaleFactors || useAutoScaling) { // Only store when actually used
             scaleBufferHelper.storeState();
-//            System.arraycopy(scaleBufferIndices, 0, storedScaleBufferIndices, 0, scaleBufferIndices.length);
+            System.arraycopy(scaleBufferIndices, 0, storedScaleBufferIndices, 0, scaleBufferIndices.length);
 //            storedRescalingCount = rescalingCount;
-        }
+ //       }
         super.store();
         System.arraycopy(m_branchLengths, 0, storedBranchLengths, 0, m_branchLengths.length);
     }
@@ -658,19 +658,18 @@ public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihoo
         eigenBufferHelper.restoreState();
         matrixBufferHelper.restoreState();
 
-        if (useScaleFactors || useAutoScaling) {
+//        if (useScaleFactors || useAutoScaling) {
             scaleBufferHelper.restoreState();
-//            int[] tmp2 = storedScaleBufferIndices;
-//            storedScaleBufferIndices = scaleBufferIndices;
-//            scaleBufferIndices = tmp2;
+            int[] tmp2 = storedScaleBufferIndices;
+            storedScaleBufferIndices = scaleBufferIndices;
+            scaleBufferIndices = tmp2;
 //            rescalingCount = storedRescalingCount;
-        }
+//        }
 
-//        updateRestrictedNodePartials = true;
         super.restore();
-        //double[] tmp = m_branchLengths;
-        //m_branchLengths = storedBranchLengths;
-        //storedBranchLengths = tmp;
+        double[] tmp = m_branchLengths;
+        m_branchLengths = storedBranchLengths;
+        storedBranchLengths = tmp;
     }
 
     // **************************************************************
@@ -684,6 +683,7 @@ public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihoo
      */
     @Override
     public double calculateLogP() {
+
         if (patternLogLikelihoods == null) {
             patternLogLikelihoods = new double[patternCount];
         }
@@ -692,8 +692,8 @@ public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihoo
             matrixUpdateIndices = new int[eigenCount][m_nNodeCount];
             branchLengths = new double[eigenCount][m_nNodeCount];
             branchUpdateCount = new int[eigenCount];
-//            scaleBufferIndices = new int[internalNodeCount];
-//            storedScaleBufferIndices = new int[internalNodeCount];
+            scaleBufferIndices = new int[internalNodeCount];
+            storedScaleBufferIndices = new int[internalNodeCount];
         }
 
         if (operations == null) {
@@ -741,7 +741,7 @@ public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihoo
             setUpSubstModel();
         }
 
-        if (updateSiteModel && !useScaleFactors) {
+        if (updateSiteModel) {
             double[] categoryRates = siteModel.getCategoryRates(null);
             if (constantPattern != null) {
 	            double [] tmp = new double [categoryRates.length - 1];
@@ -808,19 +808,19 @@ public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihoo
             double[] frequencies = substitutionModel.getFrequencies();
 
             int cumulateScaleBufferIndex = Beagle.NONE;
-//            if (useScaleFactors) {
-//
-//                if (recomputeScaleFactors) {
-//                    scaleBufferHelper.flipOffset(internalNodeCount);
-//                    cumulateScaleBufferIndex = scaleBufferHelper.getOffsetIndex(internalNodeCount);
-//                    beagle.resetScaleFactors(cumulateScaleBufferIndex);
-//                    beagle.accumulateScaleFactors(scaleBufferIndices, internalNodeCount, cumulateScaleBufferIndex);
-//                } else {
-//                    cumulateScaleBufferIndex = scaleBufferHelper.getOffsetIndex(internalNodeCount);
-//                }
-//            } else if (useAutoScaling) {
-//                beagle.accumulateScaleFactors(scaleBufferIndices, internalNodeCount, Beagle.NONE);
-//            }
+            if (useScaleFactors) {
+
+                if (recomputeScaleFactors) {
+                    scaleBufferHelper.flipOffset(internalNodeCount);
+                    cumulateScaleBufferIndex = scaleBufferHelper.getOffsetIndex(internalNodeCount);
+                    beagle.resetScaleFactors(cumulateScaleBufferIndex);
+                    beagle.accumulateScaleFactors(scaleBufferIndices, internalNodeCount, cumulateScaleBufferIndex);
+                } else {
+                    cumulateScaleBufferIndex = scaleBufferHelper.getOffsetIndex(internalNodeCount);
+                }
+            } else if (useAutoScaling) {
+                beagle.accumulateScaleFactors(scaleBufferIndices, internalNodeCount, Beagle.NONE);
+            }
 
             // these could be set only when they change but store/restore would need to be considered
             
@@ -843,10 +843,11 @@ public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihoo
             
         	accumulateLogLeafScale();
         	
+        	
             final double[] proportions = siteModel.getCategoryProportions(root);
             beagle.getPartials(rootIndex, 
             		0, rawRootPartials);
-            integratePartials(rawRootPartials, proportions, m_fRootPartials, patternLogLikelihoods.length, proportions.length);
+            
 
             if (constantPattern != null) { // && !SiteModel.g_bUseOriginal) {
                 proportionInvariant = siteModel.getProportionInvariant();
@@ -857,8 +858,42 @@ public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihoo
             }
 
             double[] rootFrequencies = substitutionModel.getFrequencies();
+
+            //double logLScaled = 0, logLRaw = 0.0;
+            if (useScaleFactors) {   
+            	double[] sumLogLikelihoods = new double[1];
+
+            	beagle.calculateRootLogLikelihoods(new int[]{rootIndex}, new int[]{0}, new int[]{0},
+                    new int[]{cumulateScaleBufferIndex}, 1, sumLogLikelihoods);
+
+                beagle.getSiteLogLikelihoods(patternLogLikelihoods2);
+
+                //logLScaled = sumLogLikelihoods[0];
+            	
+                integratePartialsRaw(rawRootPartials, proportions, m_fRootPartials2, patternLogLikelihoods.length, proportions.length);
+                calculateLogLikelihoodsNoScale(m_fRootPartials2, rootFrequencies, patternLogLikelihoods, patternLogLikelihoods.length);
+                
+            	if (invariantCategory >= 0) {
+	                for (int k : constantPattern) {
+	    	        	int i = k / m_nStateCount;
+	    	        	int j = k % m_nStateCount;
+	    	        	patternLogLikelihoods[i] = (Math.log(Math.exp(patternLogLikelihoods[i]) + proportionInvariant * frequencies[j]));
+	    	        }
+            	}
+        	
+	            //logLRaw = 0.0;
+                //int [] patternWeights = alignment.getWeights();
+	            for (int i = 0; i < patternCount; i++) {
+	            	logScaleFactors2[i] = patternLogLikelihoods2[i] - patternLogLikelihoods[i];
+	                //logLRaw += patternLogLikelihoods2[i] * patternWeights[i];
+	            }
+            }
+//            System.err.println("\n" + Arrays.toString(logScaleFactors2));            
+
+            integratePartials(rawRootPartials, proportions, m_fRootPartials, patternLogLikelihoods.length, proportions.length);
             calculateLogLikelihoods(m_fRootPartials, rootFrequencies, patternLogLikelihoods, patternLogLikelihoods.length);
 
+            
             logL = 0.0;
             if (ascertainedSitePatterns) {
                 logL = getAscertainmentCorrectedLogLikelihood(alignment,
@@ -893,19 +928,19 @@ public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihoo
 	            }
             }
             	
-            if (useScaleFactors) {   
-            	logL += -Math.log(scaleFactor) * (treeInput.get().getNodeCount()-1) * alignment.getSiteCount();
-            }
+
+            
+	        //if (useScaleFactors) {   
+	        //    logL += logLScaled - logLRaw;
+            //}
 
 
             if (Double.isNaN(logL) || Double.isInfinite(logL)) {
-            	scaleFactor *= 1.1;
-            	Log.warning.println(getClass().getName() + "UNDERFLOW: Turning on scaling to prevent numeric instability " + scaleFactor);
-
                 everUnderflowed = true;
                 logL = Double.NEGATIVE_INFINITY;
 
                 if (firstRescaleAttempt && (rescalingScheme == PartialsRescalingScheme.DYNAMIC || rescalingScheme == PartialsRescalingScheme.DELAYED)) {
+System.out.println("BEAGLE UNDERFLOW: start scaling");            	
                     // we have had a potential under/over flow so attempt a rescaling                	
                 	useScaleFactors = true;
                     recomputeScaleFactors = true;
@@ -946,6 +981,7 @@ public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihoo
 //            updateNode[i] = false;
 //        }
 
+
         updateSubstitutionModel = false;
         updateSiteModel = false;
         //********************************************************************
@@ -955,8 +991,42 @@ public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihoo
         return logL;
     }
 
+    /** not taking accumulated scale factors in account **/
+	protected void integratePartialsRaw(double[] inPartials, double[] proportions, double[] outPartials, 
+			final int nrOfPatterns, final int nrOfMatrices) {
+		
+        
+        int u = 0;
+        int v = 0;
+        int w = 0;
+        for (int k = 0; k < nrOfPatterns; k++) {
+
+            for (int i = 0; i < nStates; i++) {
+                outPartials[u] = inPartials[v] * proportions[0];
+                u++;
+                v++;
+            }
+            w++;
+        }
+
+
+        for (int l = 1; l < nrOfMatrices; l++) {
+            u = 0;
+
+            for (int k = 0; k < nrOfPatterns; k++) {
+
+                for (int i = 0; i < nStates; i++) {
+                    outPartials[u] += inPartials[v] * proportions[l];
+                    u++;
+                    v++;
+                }
+                w++;
+            }
+        }
+    }
     
-    /**
+	
+	 /**
      * Integrates partials across categories.
      *
      * @param inPartials  the array of partials to be integrated
@@ -969,6 +1039,7 @@ public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihoo
 		int n = accumulatedLogLeafScaleFactors.length;    	
 		boolean hasZero = false; // deals with underflows of Math.exp
 		if (!useScaleFactors) {
+			Arrays.fill(scale, 0.0);
 			for (int k = 0; k < n; k++) {
 				accumulatedLeafScaleFactors[k] = Math.exp(accumulatedLogLeafScaleFactors[k]);
 				if (accumulatedLeafScaleFactors[k] == 0) {
@@ -995,9 +1066,7 @@ public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihoo
 	        	}
 			}
 		}
-        
-		
-        
+                
         int u = 0;
         int v = 0;
         int w = 0;
@@ -1030,7 +1099,7 @@ public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihoo
         }
 //        System.out.println();
     }
-    
+	
 	public void calculateLogLikelihoods(double[] partials, double[] frequencies, double[] outLogLikelihoods,
 			final int nrOfPatterns) {
         int v = 0;
@@ -1042,12 +1111,26 @@ public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihoo
                 sum += frequencies[i] * partials[v];
                 v++;
             }
-            outLogLikelihoods[k] = Math.log(sum) + scale[k];
+            outLogLikelihoods[k] = Math.log(sum)  + scale[k] + logScaleFactors2[k];
             // System.out.println(outLogLikelihoods[k] +"=" + Math.log(sum) + " " + scale[k]);
         }
     }
-    
 
+	public void calculateLogLikelihoodsNoScale(double[] partials, double[] frequencies, double[] outLogLikelihoods,
+			final int nrOfPatterns) {
+        int v = 0;
+        for (int k = 0; k < nrOfPatterns; k++) {
+
+            double sum = 0.0;
+            for (int i = 0; i < nStates; i++) {
+
+                sum += frequencies[i] * partials[v];
+                v++;
+            }
+            outLogLikelihoods[k] = Math.log(sum);
+            // System.out.println(outLogLikelihoods[k] +"=" + Math.log(sum) + " " + scale[k]);
+        }
+    }
 //    protected void getPartials(int number, double[] partials) {
 //        int cumulativeBufferIndex = Beagle.NONE;
 //        /* No need to rescale partials */
@@ -1127,6 +1210,8 @@ public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihoo
 	                k += nStates;
 	                // likelihoodCore.setNodeMatrix(nodeCount + nodeIndex, i, probabilities);
 	            }
+	            // TODO: delete following line
+	            // update |= Tree.IS_DIRTY;
 	            
 	            // this sets node partials at top of leaf clade at partial[nodeIndex]
 	            setLeafScaleForUpdate(nodeNum);
@@ -1150,33 +1235,18 @@ public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihoo
             }
 
             // then set which matrix to update
-            if (!useScaleFactors) {
-	            final int eigenIndex = 0;// = m_substitutionModel.getBranchIndex(node);
-	            final int updateCount = branchUpdateCount[eigenIndex];
-	            matrixUpdateIndices[eigenIndex][updateCount] = matrixBufferHelper.getOffsetIndex(nodeNum);
-	
-	//            if (!m_substitutionModel.canReturnDiagonalization()) {
-	//            	m_substitutionModel.getTransitionProbabilities(node, parent.getHeight(), node.getHeight(), branchRate, m_fProbabilities);
-	//            	int matrixIndex = matrixBufferHelper.getOffsetIndex(nodeNum);
-	//            	beagle.setTransitionMatrix(matrixIndex, m_fProbabilities, 1);
-	//            }
-	
-	            branchLengths[eigenIndex][updateCount] = branchTime;
-	            branchUpdateCount[eigenIndex]++;
-            } else {
-            	Node parent = node.getParent();
-            	double firstBranchingTime = ((QuasiSpeciesNode)node).getFirstBranchingTime();
-                for (int i = 0; i < siteModel.getCategoryCount(); i++) {
-                    final double jointBranchRate = siteModel.getRateForCategory(i, node) * branchRate;
-                    substitutionModel.getTransitionProbabilities(node, parent.getHeight(), firstBranchingTime, jointBranchRate, probabilities);
-                    for (int j = 0; j < matrixSize; j++) {
-                    	probabilities[j] *= scaleFactor;
-                    }
-            		System.arraycopy(probabilities, 0, matrices, matrixSize * i, matrixSize);
-                }
-                
-                beagle.setTransitionMatrix(matrixBufferHelper.getOffsetIndex(nodeNum), matrices, 1.0);
-            }
+            final int eigenIndex = 0;// = m_substitutionModel.getBranchIndex(node);
+            final int updateCount = branchUpdateCount[eigenIndex];
+            matrixUpdateIndices[eigenIndex][updateCount] = matrixBufferHelper.getOffsetIndex(nodeNum);
+
+//            if (!m_substitutionModel.canReturnDiagonalization()) {
+//            	m_substitutionModel.getTransitionProbabilities(node, parent.getHeight(), node.getHeight(), branchRate, m_fProbabilities);
+//            	int matrixIndex = matrixBufferHelper.getOffsetIndex(nodeNum);
+//            	beagle.setTransitionMatrix(matrixIndex, m_fProbabilities, 1);
+//            }
+
+            branchLengths[eigenIndex][updateCount] = branchTime;
+            branchUpdateCount[eigenIndex]++;
 
             update |= Tree.IS_DIRTY;
         }
@@ -1201,39 +1271,41 @@ public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihoo
                 if (flip) {
                     // first flip the partialBufferHelper
                     partialBufferHelper.flipOffset(nodeNum);
+//System.err.println("Flip: " + nodeNum + " => " + partialBufferHelper.getOffsetIndex(nodeNum));                    
                 }
 
                 final int[] operations = this.operations[operationListCount];
 
                 operations[x] = partialBufferHelper.getOffsetIndex(nodeNum);
 
-//                if (useScaleFactors) {
-//                    // get the index of this scaling buffer
-//                    int n = nodeNum - tipCount;
-//
-//                    if (recomputeScaleFactors) {
-//                        // flip the indicator: can take either n or (internalNodeCount + 1) - n
-//                        scaleBufferHelper.flipOffset(n);
-//
-//                        // store the index
-//                        scaleBufferIndices[n] = scaleBufferHelper.getOffsetIndex(n);
-//
-//                        operations[x + 1] = scaleBufferIndices[n]; // Write new scaleFactor
-//                        operations[x + 2] = Beagle.NONE;
-//
-//                    } else {
-//                        operations[x + 1] = Beagle.NONE;
-//                        operations[x + 2] = scaleBufferIndices[n]; // Read existing scaleFactor
-//                  }
-//
-//                } else {
-//
-//                    if (useAutoScaling) {
-//                        scaleBufferIndices[nodeNum - tipCount] = partialBufferHelper.getOffsetIndex(nodeNum);
-//                    }
+                if (useScaleFactors) {
+                    // get the index of this scaling buffer
+                    int n = nodeNum - tipCount;
+
+                    if (recomputeScaleFactors) {
+                        // flip the indicator: can take either n or (internalNodeCount + 1) - n
+                        scaleBufferHelper.flipOffset(n);
+
+                        // store the index
+                        scaleBufferIndices[n] = scaleBufferHelper.getOffsetIndex(n);
+//System.err.println("Scale: " + nodeNum + " => " + scaleBufferHelper.getOffsetIndex(n));                    
+
+                        operations[x + 1] = scaleBufferIndices[n]; // Write new scaleFactor
+                        operations[x + 2] = Beagle.NONE;
+
+                    } else {
+                        operations[x + 1] = Beagle.NONE;
+                        operations[x + 2] = scaleBufferIndices[n]; // Read existing scaleFactor
+                    }
+
+                } else {
+
+                    if (useAutoScaling) {
+                        scaleBufferIndices[nodeNum - tipCount] = partialBufferHelper.getOffsetIndex(nodeNum);
+                    }
                     operations[x + 1] = Beagle.NONE; // Not using scaleFactors
                     operations[x + 2] = Beagle.NONE;
-//                }
+                }
 
                 operations[x + 3] = partialBufferHelper.getOffsetIndex(child1.getNr()); // source node 1
                 operations[x + 4] = matrixBufferHelper.getOffsetIndex(child1.getNr()); // source matrix 1
@@ -1259,8 +1331,8 @@ public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihoo
     private int[][] matrixUpdateIndices;
     private double[][] branchLengths;
     private int[] branchUpdateCount;
-//    private int[] scaleBufferIndices;
-//    private int[] storedScaleBufferIndices;
+    private int[] scaleBufferIndices;
+    private int[] storedScaleBufferIndices;
 
     private int[][] operations;
     private int operationListCount;
@@ -1278,6 +1350,7 @@ public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihoo
 
     private PartialsRescalingScheme rescalingScheme = DEFAULT_RESCALING_SCHEME;
     private int rescalingFrequency = RESCALE_FREQUENCY;
+    protected boolean useScaleFactors = false;
     private boolean useAutoScaling = false;
     private boolean recomputeScaleFactors = false;
     private boolean everUnderflowed = false;

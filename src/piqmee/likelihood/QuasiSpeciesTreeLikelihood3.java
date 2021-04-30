@@ -45,7 +45,7 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
      */
     protected LikelihoodCore likelihoodCore;
     public LikelihoodCore getLikelihoodCore() {return likelihoodCore;}
-    protected QuasiSpeciesBeagleTreeLikelihood3 beagle;
+    protected QuasiSpeciesBeagleTreeLikelihood3 beagleLikelihood;
 
     /**
      * BEASTObject associated with inputs. Since none of the inputs are StateNodes, it
@@ -141,23 +141,23 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
         }
         else
             alignment = dataInput.get();
-        beagle = null;
-//        beagle = new BeagleTreeLikelihood();
-//        try {
-//	        beagle.initByName(
-//                    "data", alignment, "tree", treeInput.get(), "siteModel", siteModelInput.get(),
-//                    "branchRateModel", branchRateModelInput.get(), "useAmbiguities", m_useAmbiguities.get(), 
-//                    "useTipLikelihoods", m_useTipLikelihoods.get(),"scaling", scaling.get().toString(),
-//                    "tolerance", toleranceInput.get());
-//	        if (beagle.getBeagle() != null) {
-//	            //a Beagle instance was found, so we use it
-//	            return;
-//	        }
-//        } catch (Exception e) {
-//			// ignore
-//		}
-        // No Beagle instance was found, so we use the good old java likelihood core
-        beagle = null;
+        beagleLikelihood = null;
+    	if (!scalingInput.get().equals(Scaling.always)) {
+    		beagleLikelihood = new QuasiSpeciesBeagleTreeLikelihood3();
+        	try {
+        		beagleLikelihood.initByName(
+        				"data", dataInput.get(), "tree", treeInput.get(), "siteModel", siteModelInput.get(),
+        				"branchRateModel", branchRateModelInput.get(), "useAmbiguities", useAmbiguities.get(),
+        				"scaling", Scaling.none); // QuasiSpeciesBeagleTreeLikelihood3 scaling does not work properly
+        				// so we go back to this Java implementation if scaling is required
+            	if (beagleLikelihood.getBeagle() == null) {
+            		beagleLikelihood = null;
+            	}
+	        } catch (Exception e) {
+	            // No Beagle instance was found, so we use the good old java likelihood core
+	        	beagleLikelihood = null;
+	    	}
+		}
         // tolerance = toleranceInput.get();
         nodeCount = treeInput.get().getNodeCount();
         int leafNodeCount = treeInput.get().getLeafNodeCount();
@@ -436,19 +436,27 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
      *
      * @return the log likelihood.
      */
-    double m_fScale = 1.0;
+    double scaleFactor = 1.0;
+    double storedScaleFactor = 1.0;
     int m_nScale = 0;
     int X = 100;
+    boolean startScaling = false;
 
     @Override
     public double calculateLogP() {
-        if (beagle != null) {
-            logP = beagle.calculateLogP();
-            return logP;
-        }
-
-        if (siteModel.isDirtyCalculation())
+        if (beagleLikelihood != null && scaleFactor == 1.0) {
+        	// only use BEAGLE implementation if not scaling
+            logP = beagleLikelihood.calculateLogP();
+            if (Double.isFinite(logP) || scalingInput.get().equals(Scaling.none)) {
+            	return logP;
+            }
+            hasDirt = Tree.IS_FILTHY;
             getNoChangeRates(rates);
+        }
+        
+        if (siteModel.isDirtyCalculation()) {
+            getNoChangeRates(rates);
+        }
         
         final TreeInterface tree = treeInput.get();
 
@@ -469,13 +477,15 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
 //            traverse(tree.getRoot());
 //            calcLogP();
 //            return logP;
-        } else if (logP == Double.NEGATIVE_INFINITY && m_fScale < 10 && !scalingInput.get().equals(Scaling.none)) { // && !m_likelihoodCore.getUseScaling()) {
+        } else if (logP == Double.NEGATIVE_INFINITY && scaleFactor < 10 && !scalingInput.get().equals(Scaling.none)) { // && !m_likelihoodCore.getUseScaling()) {
+        	startScaling = true;
         	useScaleFactors = true;
             m_nScale = 0;
-            m_fScale *= 1.01;
-            Log.warning.println("Turning on scaling to prevent numeric instability " + m_fScale);
-            likelihoodCore.setUseScaling(m_fScale);
+            scaleFactor *= 1.01;
+            Log.warning.println("Turning on scaling to prevent numeric instability " + scaleFactor);
+            likelihoodCore.setUseScaling(scaleFactor);
             likelihoodCore.unstore();
+            System.arraycopy(storedLeafIndex, 0, leafIndex, 0, leafIndex.length);
             hasDirt = Tree.IS_FILTHY;
             traverse((QuasiSpeciesNode)tree.getRoot());
             calcLogP();
@@ -493,6 +503,7 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
         final double[] proportions = siteModel.getCategoryProportions(root);
         
         likelihoodCore.getNodePartials(root.getNr(), rawRootPartials);
+
         integratePartials(rawRootPartials, proportions, m_fRootPartials, patternLogLikelihoods.length, proportions.length);
 
         if (constantPattern != null) { // && !SiteModel.g_bUseOriginal) {
@@ -534,7 +545,7 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
 		
 		int n = accumulatedLogLeafScaleFactors.length;    	
 		boolean hasZero = false; // deals with underflows of Math.exp
-		if (useScaleFactors) {
+		if (!useScaleFactors) {
 			for (int k = 0; k < n; k++) {
 				accumulatedLeafScaleFactors[k] = Math.exp(accumulatedLogLeafScaleFactors[k]);
 				if (accumulatedLeafScaleFactors[k] == 0) {
@@ -648,114 +659,63 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
 
         final int nodeIndex = node.getNr();
 
-        final double branchRate = branchRateModel.getRateForBranch(node);
-
-
-        // get the branch length, if the node is a tip, the total branch length above is the sum of the
-        // branch lengths from the origin/attachment time to tip
-        final double totalBranchTime;
-        if (node.isLeaf())
-            totalBranchTime = node.getTotalBranchLengths();
-        else if (node.isRoot())
-//            totalBranchTime = originHeight - node.getHeight();
-            totalBranchTime = 0.0;
-        else
-            totalBranchTime = node.getLengthWithoutHaplo();
-
-        final double branchTime =  totalBranchTime * branchRate;
-
-        // also check if the haplotype starts just above the node
-        //  if YES, then have to split the branch into part that evolves normally and a part that does not evolve
-        //  Note that we create a new variable since the QS can also start directly above the tip and we want the
-        //    tip node to hold the probability of no change in the QS sequence for the whole duration of the QS
-        //  For the relaxed clock model, this also means we need to create a new "branch rate category" for when haplo
-        //    starts just above the tip by splitting the rate for the branch before and after the the haplo start
-
-        // Update the transition probability for the partial branches (internal node to QS start)
-        int haploNr = node.getHaploAboveName();
-        if (haploNr != -1) {
-            double firstBranchingTime = ((QuasiSpeciesNode) tree.getNode(haploNr)).getAttachmentTimesList()[0];
-            toyNode.setNr(nodeCount+haploNr);
-            double partBranchRate = 0.0;
-            double partBranchTime = 0.0;
-            if (node.isRoot()){
-                partBranchRate = 1;
-                partBranchTime = (node.getLength() - (firstBranchingTime - node.getHeight())) * partBranchRate;
-            } else {
-            	// TODO: verify that this is the right branch time (as logged by relaxed clock logger)
-                partBranchRate = branchRateModel.getRateForBranch(toyNode);
-                partBranchTime = (node.getLength() - (firstBranchingTime - node.getHeight())) * partBranchRate;
-            }
-            // TODO: if only the attachment list changed, no need to recalc partials
-            // TODO: then  partBranchTime == branchLengths[nodeCount + haploNr], but extra condition
-            // TODO: needed to detect this situation (operators tend to mark nodes as IS_FILTHY when 
-            // TODO: operating on attachment list)
-            if (update != Tree.IS_CLEAN || partBranchTime != branchLengths[nodeCount + haploNr]) {
-            	branchLengths[nodeCount + haploNr] = partBranchTime;
-                final Node parent = node.getParent();
-                likelihoodCore.setNodeMatrixForUpdate(haploNr);
-                for (int i = 0; i < siteModel.getCategoryCount(); i++) {
-                    final double jointBranchRate = siteModel.getRateForCategory(i, toyNode) * partBranchRate;
-                    if (parent != null)
-                        substitutionModel.getTransitionProbabilities(null, parent.getHeight(), firstBranchingTime, jointBranchRate, probabilities);
-                    else
-                        substitutionModel.getTransitionProbabilities(null, firstBranchingTime, firstBranchingTime, jointBranchRate, probabilities);
-                    likelihoodCore.setNodeMatrix(haploNr, i, probabilities);
-                }
-                update |= Tree.IS_DIRTY;
-            }
+        double branchRate = branchRateModel.getRateForBranch(node);
+        final double branchTime = ((QuasiSpeciesNode)node).getLengthWithoutHaplo() * branchRate;
+        
+        if (node.isLeaf()) {
+        	// TODO: VERIFY THAT WE HAVE THE RIGHT BRANCH TIME (AS LOGGED BY RELAXED CLOCK LOGGER)
+            toyNode.setNr(nodeCount + nodeIndex);
+            branchRate = branchRateModel.getRateForBranch(toyNode);
+        	
+            double totalBranchTime = ((QuasiSpeciesNode)node).getTotalBranchLengths() * branchRate;            
+        	if  (update != Tree.IS_CLEAN  || totalBranchTime != branchLengths[nodeCount + nodeIndex]) {
+	        	
+        		branchLengths[nodeCount + nodeIndex] = totalBranchTime;
+	            // likelihoodCore.setNodeMatrixForUpdate(nodeCount + nodeIndex);
+	        	int k = 0;
+	            for (int i = 0; i < siteModel.getCategoryCount(); i++) {
+	                final double jointBranchRate = siteModel.getRateForCategory(i, node);
+	                // fill the transition probability matrix with move probabilities
+	                // Arrays.fill(probabilities, 0);
+	                for (int j = 0; j < nStates; j++) {
+	                    logProbabilities[j + k] = totalBranchTime * jointBranchRate * rates[j];
+	                    // probabilities[j + k] = Math.exp(totalBranchTime * jointBranchRate * rates[j]);
+	                }
+	                k += nStates;
+	                // likelihoodCore.setNodeMatrix(nodeCount + nodeIndex, i, probabilities);
+	            }
+	            
+	            // this sets node partials at top of leaf clade at partial[nodeIndex]
+	            setLeafScaleForUpdate(nodeIndex);
+	
+	        	calculateLogLeafScale(nodeIndex, logProbabilities);
+        	}
         }
-        // First update the transition probability matrix(ices) for this branch
-        // Update the transition probability for the branches that do not evolve
-        // if the node is at tip, it holds the probability that the sequence does not change from the tip to the start of the haplo
-        if (node.isLeaf() && (update != Tree.IS_CLEAN  || branchTime != branchLengths[nodeIndex])){
-        	// TODO: verify that we have the right branch time (as logged by relaxed clock logger)
+        
+        
+        
+        if (!node.isRoot() && (update != Tree.IS_CLEAN || Math.abs(branchTime - branchLengths[nodeIndex]) > 0)) {
         	branchLengths[nodeIndex] = branchTime;
-            // likelihoodCore.setNodeMatrixForUpdate(nodeCount + nodeIndex);
-        	int k = 0;
-            for (int i = 0; i < siteModel.getCategoryCount(); i++) {
-                final double jointBranchRate = siteModel.getRateForCategory(i, node) * branchRate;
-                // fill the transition probability matrix with move probabilities
-                // Arrays.fill(probabilities, 0);
-                for (int j = 0; j < nStates; j++) {
-                    logProbabilities[j + k] = totalBranchTime * jointBranchRate * rates[j];
-                    // probabilities[j * (nStates + 1)] = Math.exp(totalBranchTime * jointBranchRate * rates[j]);
-                }
-                k += nStates;
-                // likelihoodCore.setNodeMatrix(nodeCount + nodeIndex, i, probabilities);
+            if (branchTime < 0.0) {
+            	double branchRate2 = branchRateModel.getRateForBranch(node);
+                throw new RuntimeException("Negative branch length: " + branchTime + " " + branchRate2);
             }
-            // TODO: delete following line
-            update |= Tree.IS_DIRTY;
-            
-            // this sets node partials at top of leaf clade at partial[nodeIndex]
-            setLeafScaleForUpdate(nodeIndex);
 
-        	calculateLogLeafScale(nodeIndex, logProbabilities);
-        }
-        //Update the transition probability matrix(ices) for all other branches
-        //if (!node.isRoot() && (update != Tree.IS_CLEAN || branchTime != m_StoredBranchLengths[nodeIndex])) {
-        else if (!node.isRoot() && !node.isLeaf() && (update != Tree.IS_CLEAN || branchTime != branchLengths[nodeIndex])) {
-        	branchLengths[nodeIndex] = branchTime;
-            final Node parent = node.getParent();
             likelihoodCore.setNodeMatrixForUpdate(nodeIndex);
+
+        	Node parent = node.getParent();
+        	double firstBranchingTime = ((QuasiSpeciesNode)node).getFirstBranchingTime();
             for (int i = 0; i < siteModel.getCategoryCount(); i++) {
                 final double jointBranchRate = siteModel.getRateForCategory(i, node) * branchRate;
-                substitutionModel.getTransitionProbabilities(node, parent.getHeight(), node.getHeight(), jointBranchRate, probabilities);
+                substitutionModel.getTransitionProbabilities(node, parent.getHeight(), firstBranchingTime, jointBranchRate, probabilities);
+                for (int j = 0; j < matrixSize; j++) {
+                	probabilities[j] *= scaleFactor;
+                }
                 likelihoodCore.setNodeMatrix(nodeIndex, i, probabilities);
             }
+
             update |= Tree.IS_DIRTY;
-        }
-        //Update the transition probability matrix(ices) for root-origin branch
-        else if (node.isRoot() && (update != Tree.IS_CLEAN || branchTime != branchLengths[nodeIndex])) {
-        	branchLengths[nodeIndex] = branchTime;
-            likelihoodCore.setNodeMatrixForUpdate(nodeIndex);
-            for (int i = 0; i < siteModel.getCategoryCount(); i++) {
-                final double jointBranchRate = siteModel.getRateForCategory(i, node) * branchRate;
-                substitutionModel.getTransitionProbabilities(node, node.getHeight(), node.getHeight(), jointBranchRate, probabilities);
-                likelihoodCore.setNodeMatrix(nodeIndex, i, probabilities);
-            }
-            update |= Tree.IS_DIRTY;
-        }
+        }        
 
 
         // If the node is internal, update the partial likelihoods.
@@ -852,8 +812,10 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
     protected void accumulateLogLeafScale() {
 		final int n = accumulatedLogLeafScaleFactors.length;
 		int leafNodeCount = nodeCount / 2 + 1;
-		if (hasDirt == Tree.IS_FILTHY) { // || true) {
-			// recalc from sratch
+		
+		// perform delta calculation if tree is not filthy
+		if (hasDirt == Tree.IS_FILTHY) {
+			// recalc from scratch
 			Arrays.fill(accumulatedLogLeafScaleFactors, 0.0);
 			for (int j = 0; j < leafNodeCount; j++) {
 				double [] x = leafLogScaleFactors[leafIndex[j]][j];
@@ -874,7 +836,7 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
 				}
 			}
 		}
-		
+
 		
     }
     
@@ -884,8 +846,8 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
     
 	/* return copy of pattern log likelihoods for each of the patterns in the alignment */
 	public double [] getPatternLogLikelihoods() {
-		if (beagle != null) {
-			return beagle.getPatternLogLikelihoods();
+		if (beagleLikelihood != null && scaleFactor == 1.0) {
+			return beagleLikelihood.getPatternLogLikelihoods();
 		}
 		return patternLogLikelihoods.clone();
 	} // getPatternLogLikelihoods
@@ -897,8 +859,8 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
      */
     @Override
     protected boolean requiresRecalculation() {
-        if (beagle != null) {
-            return beagle.requiresRecalculation();
+        if (beagleLikelihood != null && scaleFactor == 1.0) {
+            return beagleLikelihood.requiresRecalculation();
         }
         hasDirt = Tree.IS_CLEAN;
         
@@ -925,8 +887,10 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
 
     @Override
     public void store() {
-        if (beagle != null) {
-            beagle.store();
+    	storedScaleFactor = scaleFactor;
+    	startScaling = false;
+        if (beagleLikelihood  != null && scaleFactor == 1.0) {
+        	beagleLikelihood.store();
             super.store();
             return;
         }
@@ -945,8 +909,17 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
 
     @Override
     public void restore() {
-        if (beagle != null) {
-            beagle.restore();
+    	scaleFactor = storedScaleFactor;
+    	if (startScaling) {
+    		startScaling = false;
+    		scaleFactor = 1.0;
+        	useScaleFactors = false;
+            m_nScale = 0;
+            Log.warning.println("Restoring: Turning off scaling");
+            likelihoodCore.setUseScaling(scaleFactor);
+    	}
+        if (beagleLikelihood != null && scaleFactor == 1.0) {
+        	beagleLikelihood.restore();
             super.restore();
             return;
         }
