@@ -740,7 +740,13 @@ public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
         Alignment subsetData;
 
         // select alignment corresponding to this partition
-        Alignment toyAlignment = (Alignment) tree.getUniqueSequenceMapForLikelihoood(this.getID());
+        // this is for testing only
+        Alignment toyAlignment;
+        if (tree.getUniqueSequenceMapForLikelihoood(this.getID())==null){
+            toyAlignment = (Alignment) tree.getUniqueSequenceMapForLikelihoood("none");
+        } else
+        // this is for real data
+            toyAlignment = (Alignment) tree.getUniqueSequenceMapForLikelihoood(this.getID());
 
         // since taxonSet is not always ordered according to the sequences, we need to reorder the alignment
         // this filtered alignment part is just for beauti to not throw its toys

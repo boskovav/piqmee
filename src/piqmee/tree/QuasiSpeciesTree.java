@@ -207,27 +207,35 @@ public class QuasiSpeciesTree extends Tree {
             // check if getNr() always returns the same >>> Node number is guaranteed not to change during an MCMC run.
             //      written in the Node class)
             // assigns to each unique haplotype an array of size haplotypeCount
-            double[] tempqstimes = new double[((QuasiSpeciesNode) node).getHaplotypeCountsFromTips()];
+            int attachmentTimesListLength = ((QuasiSpeciesNode) node).getHaplotypeCountsFromTips();
+
+            double[] tempqstimes = new double[attachmentTimesListLength];
             double[] temptiptimes = ((QuasiSpeciesNode) node).getTipTimesList();
             int[] temptiptimescount = ((QuasiSpeciesNode) node).getTipTimesCountList();
 
             // Assign the first entry to be the same as the first split
             // this one is marking the start of the haplotype
             if (tempqstimes.length > 1) {
-                // check if the tree has more than one tip
-                if (this.getLeafNodeCount() > 1) {
-                    double maxtiptime = temptiptimes[temptiptimes.length - 1];
-                    double maxtime = node.getParent().getHeight();
-                    QuasiSpeciesNode checkThis = (QuasiSpeciesNode) node;
-                    while (checkThis.getHeight() < maxtiptime) {
-                        checkThis = (QuasiSpeciesNode) checkThis.getParent();
-                        maxtime = checkThis.getHeight();
-                    }
-                    initAttachmentTimesHelper(tempqstimes, temptiptimes, temptiptimescount, maxtime, attachmentTimesListOld);
-                } // or there is just one sequence possibly sampled through time
-                else
+                // check if we need to initialize things at all
+                Arrays.sort(attachmentTimesListOld);
+                if (attachmentTimesListOld.length == tempqstimes.length && attachmentTimesListOld[1] > 0) {
+                    tempqstimes = attachmentTimesListOld;
+                } else {
+                    // check if the tree has more than one tip
+                    if (this.getLeafNodeCount() > 1) {
+                        double maxtiptime = temptiptimes[temptiptimes.length - 1];
+                        double maxtime = node.getParent().getHeight();
+                        QuasiSpeciesNode checkThis = (QuasiSpeciesNode) node;
+                        while (checkThis.getHeight() < maxtiptime) {
+                            checkThis = (QuasiSpeciesNode) checkThis.getParent();
+                            maxtime = checkThis.getHeight();
+                        }
+                        initAttachmentTimesHelper(tempqstimes, temptiptimes, temptiptimescount, maxtime, attachmentTimesListOld);
+                    } // or there is just one sequence possibly sampled through time
+                    else
 //                    initAttachmentTimesHelper(tempqstimes,temptiptimes,temptiptimescount,originInput.get().getValue(),attachmentTimesListOld);
-                    initAttachmentTimesHelper(tempqstimes, temptiptimes, temptiptimescount, attachmentTimesListOld[0], attachmentTimesListOld);
+                        initAttachmentTimesHelper(tempqstimes, temptiptimes, temptiptimescount, attachmentTimesListOld[0], attachmentTimesListOld);
+                }
             } else
                 tempqstimes[0] = node.getHeight();
 
@@ -1013,7 +1021,12 @@ public class QuasiSpeciesTree extends Tree {
             }
         }
 
-        int n = ((Alignment) uniqueSequenceMapForLikelihood.get(thisDataLikelihood.getID())).getTaxonCount();
+        int n = 0;
+        if (thisDataLikelihood == null)
+            // this is for testing only
+            n = ((Alignment) uniqueSequenceMapForLikelihood.get("none")).getTaxonCount();
+        else
+            n = ((Alignment) uniqueSequenceMapForLikelihood.get(thisDataLikelihood.getID())).getTaxonCount();
 
         Log.info("Found " + n + " unique sequences out of " + data.getTaxaNames().size() + " sequences");
         if (n > 1000) {
@@ -1027,7 +1040,11 @@ public class QuasiSpeciesTree extends Tree {
 
         // & if required
         // 3) collapse those sequences which have ambiguous sites to closest identical sequence
-        uniqueSequenceSummary = collapseSeqWithAmbiguousSites(uniqueHaploTree, uniqueSequenceSummary, thisDataLikelihood.getID(), IDtoNr);
+        if (thisDataLikelihood == null)
+            // this is for testing only
+            uniqueSequenceSummary = collapseSeqWithAmbiguousSites(uniqueHaploTree, uniqueSequenceSummary, "none", IDtoNr);
+        else
+            uniqueSequenceSummary = collapseSeqWithAmbiguousSites(uniqueHaploTree, uniqueSequenceSummary, thisDataLikelihood.getID(), IDtoNr);
         if (collapseSequencesWithMissingData) {
             Log.info("Collapsing the " + n + " unique sequences sequences further. Looking to collapse those with missing data.");
             uniqueSequenceSummary = collapseSeqWithAmbiguousSites(uniqueHaploTree, uniqueSequenceSummary, thisDataLikelihood.getID(), IDtoNr);
@@ -1035,11 +1052,17 @@ public class QuasiSpeciesTree extends Tree {
             uniqueSequenceMapForLikelihood = (HashMap) uniqueSequenceSummary.get(1);
 
             int newn = ((Alignment) uniqueSequenceMapForLikelihood.get(thisDataLikelihood.getID())).getTaxonCount();
-            Log.info("The original " + n + " unique sequences have been collapsed to " + newn + " sequences.");
+            Log.info("The original " + n + " unique sequences have been further collapsed to " + newn + " sequences.");
 
             initTree(uniqueHaploTree, collapseIdentical, collapseSequencesWithMissingData, pointersToRepresentativeTipID, IDtoNr);
         } else {
-            if (((Alignment) uniqueSequenceMapForLikelihood.get(thisDataLikelihood.getID())).getTaxonCount() > n) {
+            if (    // this is for testing only
+                    (thisDataLikelihood == null &&
+                    ((Alignment) uniqueSequenceMapForLikelihood.get("none")).getTaxonCount() > n)
+                    ||
+                    // this is for real data
+                    (thisDataLikelihood != null &&
+                            ((Alignment) uniqueSequenceMapForLikelihood.get(thisDataLikelihood.getID())).getTaxonCount() > n)) {
                 throw new RuntimeException("The data set contains sequences with missing data. There is however one sequence" +
                         "that is identical up to missing parts to another sequence and you chose not to collapse them together." +
                         "Such analyses using PIQMEE are currently not possible. Please use regular BDSKY model, or collapse " +
@@ -1054,9 +1077,6 @@ public class QuasiSpeciesTree extends Tree {
             setHaploCounts(node, ((QuasiSpeciesNode) node).getHaplotypeCountsFromTips());
         }
 
-
-        // TODO 2.4.2021
-        // get distance estimates when neglecting parts of sequences with missing data (i.e. seq of N)
         distMat = getDistanceMatrix(data, true);
         ArrayList uniqueSequenceSummaryFinal = getUniqueSequencesFromMatrix(distanceMatrix, data);
         pointersToRepresentativeTipID = (HashMap) uniqueSequenceSummary.get(0);
@@ -1094,7 +1114,13 @@ public class QuasiSpeciesTree extends Tree {
             }
         }
 
-        int n = ((Alignment) uniqueSequenceMapForLikelihood.get(thisDataLikelihood.getID())).getTaxonCount();
+        int n = 0;
+        if (thisDataLikelihood == null)
+            // this is for testing only
+            n = ((Alignment) uniqueSequenceMapForLikelihood.get("none")).getTaxonCount();
+        else
+            n = ((Alignment) uniqueSequenceMapForLikelihood.get(thisDataLikelihood.getID())).getTaxonCount();
+
 
         Log.info("Found " + n + " unique sequences out of " + data.getTaxaNames().size() + " sequences");
         if (n > 1000) {
@@ -1107,6 +1133,11 @@ public class QuasiSpeciesTree extends Tree {
 
         // & if required
         // 3) collapse those sequences which have ambiguous sites to closest identical sequence
+        if (thisDataLikelihood == null)
+            // this is for testing only
+            uniqueSequenceSummary = collapseSeqWithAmbiguousSites(fullTree, uniqueSequenceSummary, "none", IDtoNr);
+        else
+            uniqueSequenceSummary = collapseSeqWithAmbiguousSites(fullTree, uniqueSequenceSummary, thisDataLikelihood.getID(), IDtoNr);
         if (collapseSequencesWithMissingData) {
             Log.info("Collapsing the " + n + " unique sequences sequences further. Looking to collapse those with missing data.");
             uniqueSequenceSummary = collapseSeqWithAmbiguousSites(fullTree, uniqueSequenceSummary, thisDataLikelihood.getID(), IDtoNr);
@@ -1117,6 +1148,19 @@ public class QuasiSpeciesTree extends Tree {
             Log.info("The original " + n + " unique sequences have been further collapsed to " + newn + " sequences.");
 
             initTree(fullTree, collapseIdentical, collapseSequencesWithMissingData, pointersToRepresentativeTipID, IDtoNr);
+        }  else {
+            if (    // this is for testing only
+                    (thisDataLikelihood == null &&
+                    ((Alignment) uniqueSequenceMapForLikelihood.get("none")).getTaxonCount() > n)
+                    ||
+                    //this is for real data
+                    (thisDataLikelihood != null &&
+                            ((Alignment) uniqueSequenceMapForLikelihood.get(thisDataLikelihood.getID())).getTaxonCount() > n)) {
+                throw new RuntimeException("The data set contains sequences with missing data. There is however one sequence" +
+                        "that is identical up to missing parts to another sequence and you chose not to collapse them together." +
+                        "Such analyses using PIQMEE are currently not possible. Please use regular BDSKY model, or collapse " +
+                        "sequences up to missing parts adding changing option 'collapseSequencesIfIdenticalUpToMissingParts' to 'true'");
+            }
         }
 
         // remove all entries put from the fullTree
@@ -1126,9 +1170,6 @@ public class QuasiSpeciesTree extends Tree {
             setHaploCounts(node, ((QuasiSpeciesNode) node).getHaplotypeCountsFromTips());
         }
 
-
-        // TODO 2.4.2021
-        // get distance estimates when neglecting parts of sequences with missing data (i.e. seq of N)
         distMat = getDistanceMatrix(data, true);
         ArrayList uniqueSequenceSummaryFinal = getUniqueSequencesFromMatrix(distanceMatrix, data);
         pointersToRepresentativeTipID = (HashMap) uniqueSequenceSummary.get(0);
@@ -1542,6 +1583,10 @@ public class QuasiSpeciesTree extends Tree {
                 uniqueSequences.put(likelihood.getID(),new Alignment(sequences, odata.dataTypeInput.get()));
             }
         }
+
+        // for testing only
+        if (outputset.size() == 0)
+            uniqueSequences.put("none",data);
 
         // compile all to output of the method
         ArrayList output = new ArrayList(2);
