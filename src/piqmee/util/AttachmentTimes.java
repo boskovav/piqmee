@@ -27,6 +27,8 @@ public class AttachmentTimes extends CalculationNode implements Function, Loggab
 
     private String haplotype;
 
+    private int haploNodeNr = -1;
+
     private QuasiSpeciesNode haploNode;
 
     public AttachmentTimes() { };
@@ -37,25 +39,30 @@ public class AttachmentTimes extends CalculationNode implements Function, Loggab
         haplotype = haplotypeInput.get();
         for (Node node : qsTree.getExternalNodes()){
             if (haplotype.equals(node.getID().toString())){
-                haploNode = (QuasiSpeciesNode) node;
+                haploNodeNr = node.getNr();
             }
+        }
+        // check if the tip name has been found in the tree
+        if (haploNodeNr < 0) {
+            throw new RuntimeException("Tip "+haplotype+" could not be found. " +
+                    "Maybe it was collapsed with another sequence?");
         }
     }
 
     @Override
     public int getDimension() {
-        return haploNode.getAttachmentTimesList().length;
+        return ((QuasiSpeciesNode) qsTree.getNode(haploNodeNr)).getAttachmentTimesList().length;
     }
 
     @Override
     public double getArrayValue() {
-        return haploNode.getAttachmentTimesList()[0];
+        return ((QuasiSpeciesNode) qsTree.getNode(haploNodeNr)).getAttachmentTimesList()[0];
     }
 
     @Override
     public double getArrayValue(int iDim) {
         if (iDim < getDimension()) {
-            return haploNode.getAttachmentTimesList()[iDim];
+            return ((QuasiSpeciesNode) qsTree.getNode(haploNodeNr)).getAttachmentTimesList()[iDim];
         } else
             return Double.NaN;
     }
@@ -64,10 +71,11 @@ public class AttachmentTimes extends CalculationNode implements Function, Loggab
     public void init(PrintStream out){
 
         String idString = qsTree.getID();
+        haploNode = (QuasiSpeciesNode) qsTree.getNode(haploNodeNr);
         int maxtime = haploNode.getAttachmentTimesList().length;
         for (int time = 0; time < maxtime; time++) {
             String haploname = haploNode.getID();
-            out.print(idString + "." + haploname + "." + time + "\t");
+            out.print(idString + "_" + haploname + "_" + time + "\t");
         }
     }
 
