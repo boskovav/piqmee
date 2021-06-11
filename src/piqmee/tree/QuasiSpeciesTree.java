@@ -1046,18 +1046,10 @@ public class QuasiSpeciesTree extends Tree {
         if (thisDataLikelihood == null)
             // this is for testing only
             uniqueSequenceSummaryNonAmbig = collapseSeqWithAmbiguousSites(uniqueHaploTree, uniqueSequenceSummary, "none", IDtoNr);
-//            uniqueSequenceSummary = collapseSeqWithAmbiguousSites(uniqueHaploTree, uniqueSequenceSummary, "none", IDtoNr);
         else
             uniqueSequenceSummaryNonAmbig = collapseSeqWithAmbiguousSites(uniqueHaploTree, uniqueSequenceSummary, thisDataLikelihood.getID(), IDtoNr);
-//            uniqueSequenceSummary = collapseSeqWithAmbiguousSites(uniqueHaploTree, uniqueSequenceSummary, thisDataLikelihood.getID(), IDtoNr);
         if (collapseSequencesWithMissingData) {
             Log.info("Collapsing the " + n + " unique sequences sequences further. Looking to collapse those with missing data.");
-//            uniqueSequenceSummary = collapseSeqWithAmbiguousSites(uniqueHaploTree, uniqueSequenceSummary, thisDataLikelihood.getID(), IDtoNr);
-//            uniqueSequenceSummary = collapseSeqWithAmbiguousSites(uniqueHaploTree, uniqueSequenceSummary, thisDataLikelihood.getID(), IDtoNr);
-//            pointersToRepresentativeTipID = (HashMap) uniqueSequenceSummary.get(0);
-//            uniqueSequenceMapForLikelihood = (HashMap) uniqueSequenceSummary.get(1);
-
-
             pointersToRepresentativeTipID = (HashMap) uniqueSequenceSummaryNonAmbig.get(0);
             uniqueSequenceMapForLikelihood = (HashMap) uniqueSequenceSummaryNonAmbig.get(1);
 
@@ -1069,19 +1061,18 @@ public class QuasiSpeciesTree extends Tree {
             if (    // this is for testing only
                     (thisDataLikelihood == null &&
                     ((Alignment) ((HashMap) uniqueSequenceSummaryNonAmbig.get(1)).get("none")).getTaxonCount() < n)
-//                            ((Alignment) ((HashMap) uniqueSequenceSummary.get(1)).get("none")).getTaxonCount() < n)
-
                             ||
                     // this is for real data
                     (thisDataLikelihood != null &&
                             ((Alignment) ((HashMap) uniqueSequenceSummaryNonAmbig.get(1)).get(thisDataLikelihood.getID())).getTaxonCount() < n)) {
-//                            ((Alignment) ((HashMap) uniqueSequenceSummary.get(1)).get(thisDataLikelihood.getID())).getTaxonCount() < n)) {
-
 
                 // check which taxa have disappeared = have been merged & their count before merge
                     double count = 0;
-
-                    Map<String, List<String>> sequenceMap = getUniqueSequences((Alignment) uniqueSequenceMapForLikelihood.get(thisDataLikelihood.getID()));
+                    Map<String, List<String>> sequenceMap;
+                    if (thisDataLikelihood == null)
+                        sequenceMap = getUniqueSequences((Alignment) uniqueSequenceMapForLikelihood.get("none"));
+                    else
+                        sequenceMap = getUniqueSequences((Alignment) uniqueSequenceMapForLikelihood.get(thisDataLikelihood.getID()));
                     String[] uniqueSequences = sequenceMap.keySet().toArray(new String[]{});
                     boolean[] ambiguousSequences = whichSequencesAreAmbiguous(uniqueSequences);
 
@@ -1170,33 +1161,57 @@ public class QuasiSpeciesTree extends Tree {
 
         // & if required
         // 3) collapse those sequences which have ambiguous sites to closest identical sequence
+        ArrayList uniqueSequenceSummaryNonAmbig = new ArrayList();
         if (thisDataLikelihood == null)
             // this is for testing only
-            uniqueSequenceSummary = collapseSeqWithAmbiguousSites(fullTree, uniqueSequenceSummary, "none", IDtoNr);
+            uniqueSequenceSummaryNonAmbig = collapseSeqWithAmbiguousSites(fullTree, uniqueSequenceSummary, "none", IDtoNr);
         else
-            uniqueSequenceSummary = collapseSeqWithAmbiguousSites(fullTree, uniqueSequenceSummary, thisDataLikelihood.getID(), IDtoNr);
+            uniqueSequenceSummaryNonAmbig = collapseSeqWithAmbiguousSites(fullTree, uniqueSequenceSummary, thisDataLikelihood.getID(), IDtoNr);
         if (collapseSequencesWithMissingData) {
             Log.info("Collapsing the " + n + " unique sequences sequences further. Looking to collapse those with missing data.");
-            uniqueSequenceSummary = collapseSeqWithAmbiguousSites(fullTree, uniqueSequenceSummary, thisDataLikelihood.getID(), IDtoNr);
-            pointersToRepresentativeTipID = (HashMap) uniqueSequenceSummary.get(0);
-            uniqueSequenceMapForLikelihood = (HashMap) uniqueSequenceSummary.get(1);
+            pointersToRepresentativeTipID = (HashMap) uniqueSequenceSummaryNonAmbig.get(0);
+            uniqueSequenceMapForLikelihood = (HashMap) uniqueSequenceSummaryNonAmbig.get(1);
 
             int newn = ((Alignment) uniqueSequenceMapForLikelihood.get(thisDataLikelihood.getID())).getTaxonCount();
             Log.info("The original " + n + " unique sequences have been further collapsed to " + newn + " sequences.");
 
             initTree(fullTree, collapseIdentical, collapseSequencesWithMissingData, pointersToRepresentativeTipID, IDtoNr);
-        }  else {
+        } else {
             if (    // this is for testing only
                     (thisDataLikelihood == null &&
-                    ((Alignment) uniqueSequenceMapForLikelihood.get("none")).getTaxonCount() > n)
-                    ||
-                    //this is for real data
-                    (thisDataLikelihood != null &&
-                            ((Alignment) uniqueSequenceMapForLikelihood.get(thisDataLikelihood.getID())).getTaxonCount() > n)) {
-                throw new RuntimeException("The data set contains sequences with missing data. There is however one sequence" +
-                        "that is identical up to missing parts to another sequence and you chose not to collapse them together." +
-                        "Such analyses using PIQMEE are currently not possible. Please use regular BDSKY model, or collapse " +
-                        "sequences up to missing parts adding changing option 'collapseSequencesIfIdenticalUpToMissingParts' to 'true'");
+                            ((Alignment) ((HashMap) uniqueSequenceSummaryNonAmbig.get(1)).get("none")).getTaxonCount() < n)
+                            ||
+                            // this is for real data
+                            (thisDataLikelihood != null &&
+                                    ((Alignment) ((HashMap) uniqueSequenceSummaryNonAmbig.get(1)).get(thisDataLikelihood.getID())).getTaxonCount() < n)) {
+
+                // check which taxa have disappeared = have been merged & their count before merge
+                double count = 0;
+
+                Map<String, List<String>> sequenceMap;
+                if (thisDataLikelihood == null)
+                    sequenceMap = getUniqueSequences((Alignment) uniqueSequenceMapForLikelihood.get("none"));
+                else
+                    sequenceMap = getUniqueSequences((Alignment) uniqueSequenceMapForLikelihood.get(thisDataLikelihood.getID()));
+                String[] uniqueSequences = sequenceMap.keySet().toArray(new String[]{});
+                boolean[] ambiguousSequences = whichSequencesAreAmbiguous(uniqueSequences);
+
+                for (int taxonNr = 0; taxonNr < ambiguousSequences.length; taxonNr++){
+                    if ( ambiguousSequences[taxonNr] ){
+                        String taxon = (String) (sequenceMap.get(uniqueSequences[taxonNr]).get(0));
+                        Set duplicates = getKeysByValue(pointersToRepresentativeTipID, (String) pointersToRepresentativeTipID.get(taxon));
+                        // if number of sequences identical to searched taxon is already >2 no need to get actual count
+                        if (duplicates.size() > 1 ){
+                            count = 2;
+                        }
+                        if (count > 1)
+                            throw new RuntimeException("The data set contains sequences with missing data and there is (at least) one sequence" +
+                                    "with missing data, present at least 2 copies, that is identical up to missing parts to another sequence. " +
+                                    "You  however chose not to collapse them together. Such analyses using PIQMEE are currently not possible. " +
+                                    "Please use regular BDSKY model, or collapse sequences up to missing parts changing option " +
+                                    "'collapseSequencesIfIdenticalUpToMissingParts' to 'true'");
+                    }
+                }
             }
         }
 
