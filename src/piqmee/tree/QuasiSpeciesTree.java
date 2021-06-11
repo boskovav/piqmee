@@ -204,6 +204,7 @@ public class QuasiSpeciesTree extends Tree {
         // for those nodes where haplotype arises, change the haploAboveNode to haplotype's (corresponding tip node) number
         //  and for nodes below up to the tip set continuingHaploName to the same haplotype's (tip)
         for (Node node : this.getExternalNodes()) {
+            ((QuasiSpeciesNode) node).sortAttachTimeList();
             double[] attachmentTimesListOld = ((QuasiSpeciesNode) node).getAttachmentTimesList();
             // check if getNr() always returns the same >>> Node number is guaranteed not to change during an MCMC run.
             //      written in the Node class)
@@ -218,8 +219,8 @@ public class QuasiSpeciesTree extends Tree {
             // this one is marking the start of the haplotype
             if (tempqstimes.length > 1) {
                 // check if we need to initialize things at all
-                Arrays.sort(attachmentTimesListOld);
-                if (attachmentTimesListOld.length == tempqstimes.length && attachmentTimesListOld[1] > 0) {
+                if (attachmentTimesListOld.length == tempqstimes.length
+                        && attachmentTimesListOld[attachmentTimesListOld.length-2] > 0) {
                     tempqstimes = attachmentTimesListOld;
                 } else {
                     // check if the tree has more than one tip
