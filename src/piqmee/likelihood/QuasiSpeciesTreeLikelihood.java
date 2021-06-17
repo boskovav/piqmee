@@ -348,6 +348,7 @@ public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
     double m_fScale = 1.01;
     int m_nScale = 0;
     int X = 100;
+    boolean startScaling = false;
 
     @Override
     public double calculateLogP() {
@@ -378,6 +379,7 @@ public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
             calcLogP();
             return logP;
         } else if (logP == Double.NEGATIVE_INFINITY && m_fScale < 10 && !scaling.get().equals(Scaling.none)) { // && !m_likelihoodCore.getUseScaling()) {
+            startScaling = true;
             m_nScale = 0;
             m_fScale *= 1.01;
             Log.warning.println("Turning on scaling to prevent numeric instability " + m_fScale);
@@ -435,6 +437,7 @@ public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
 
     @Override
     public void store() {
+        startScaling = false;
         if (beagle != null) {
             beagle.store();
             super.store();
@@ -450,6 +453,14 @@ public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
 
     @Override
     public void restore() {
+        if (startScaling) {
+            startScaling = false;
+            m_fScale = 1.0;
+            m_nScale = 0;
+            Log.warning.println("Restoring: Turning off scaling");
+            likelihoodCore.setUseScaling(m_fScale);
+        }
+
         if (beagle != null) {
             beagle.restore();
             super.restore();
