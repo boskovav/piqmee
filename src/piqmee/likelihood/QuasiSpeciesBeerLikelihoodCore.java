@@ -799,12 +799,12 @@ public class QuasiSpeciesBeerLikelihoodCore extends BeerLikelihoodCore {
                                                                                       partials3, w, v, state1, state2);
                             // child 1 has a state but child2's QS has a gap or unknown sequence
                             } else if (state1 < nrOfStates){
-                                calculateStatesPartialsPruningHelperQSPartialsQSbelowTipUnknownState(matricesQS1,
+                                calculateStatesPartialsPruningHelperQSPartialsQSbelowQSPartialsUnknownState(matricesQS1,
                                                                                                      partials2, matrices2aboveQSstart,
                                                                                                      partials3, w, v, state1);
                             // child 1 has a gap or unknown state but child2's QS has a state
                             } else if (state2 < nrOfStates){
-                                calculateStatesPartialsPruningHelperQSPartialsQSbelowQSPartialsUnknownState(matricesQS1,
+                                calculateStatesPartialsPruningHelperQSPartialsQSbelowTipUnknownState(matricesQS1,
                                                                                                             partials2, matrices2aboveQSstart,
                                                                                                             partials3, w, v, state2);
                             // both children have a gap or unknown state
@@ -833,7 +833,7 @@ public class QuasiSpeciesBeerLikelihoodCore extends BeerLikelihoodCore {
 
                             // child 1 has a state
                             if (state1 < nrOfStates){
-                                calculateStatesPartialsPruningHelperQSPartialsQSbelowTipUnknownState(matricesQS1,
+                                calculateStatesPartialsPruningHelperQSPartialsQSbelowQSPartialsUnknownState(matricesQS1,
                                                                                                      partials2, matrices2,
                                                                                                      partials3, w, v, state1);
                             // child1 has a gap or unknown state
@@ -1149,7 +1149,7 @@ public class QuasiSpeciesBeerLikelihoodCore extends BeerLikelihoodCore {
      * @param partials3                         probability vector at parent node (of length nrOfStates * nrOfPatterns)
      * @param state1                            state at child 1
      */
-    protected void calculateStatesPartialsPruningHelperQSPartialsQSbelowTipUnknownState(
+    protected void calculateStatesPartialsPruningHelperQSPartialsQSbelowQSPartialsUnknownState(
             double[] matricesQS1,
             double[] partials2, double[] matrices2aboveQSstartOrMatrices2,
             double[] partials3, int w, int v, int state1) {
@@ -1180,7 +1180,7 @@ public class QuasiSpeciesBeerLikelihoodCore extends BeerLikelihoodCore {
      * @param partials3             probability vector at parent node (of length nrOfStates * nrOfPatterns)
      * @param state2                state at child 2
      */
-    protected void calculateStatesPartialsPruningHelperQSPartialsQSbelowQSPartialsUnknownState(
+    protected void calculateStatesPartialsPruningHelperQSPartialsQSbelowTipUnknownState(
             double[] matricesQS1,
             double[] partials2, double[] matrices2aboveQSstart,
             double[] partials3, int w, int v, int state2) {

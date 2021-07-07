@@ -662,11 +662,7 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
         double branchRate = branchRateModel.getRateForBranch(node);
         final double branchTime = ((QuasiSpeciesNode)node).getLengthWithoutHaplo() * branchRate;
         
-        if (node.isLeaf()) {
-        	// TODO: VERIFY THAT WE HAVE THE RIGHT BRANCH TIME (AS LOGGED BY RELAXED CLOCK LOGGER)
-            toyNode.setNr(nodeCount + nodeIndex);
-            branchRate = branchRateModel.getRateForBranch(toyNode);
-        	
+        if (node.isLeaf()) {        	
             double totalBranchTime = ((QuasiSpeciesNode)node).getTotalBranchLengths() * branchRate;            
         	if  (update != Tree.IS_CLEAN  || totalBranchTime != branchLengths[nodeCount + nodeIndex]) {
 	        	
@@ -690,12 +686,16 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
 	
 	        	calculateLogLeafScale(nodeIndex, logProbabilities);
         	}
+        	// TODO: VERIFY THAT WE HAVE THE RIGHT BRANCH TIME (AS LOGGED BY RELAXED CLOCK LOGGER)
+            toyNode.setNr(nodeCount + nodeIndex);
+            branchRate = branchRateModel.getRateForBranch(toyNode);
         }
         
         
         
         if (!node.isRoot() && (update != Tree.IS_CLEAN || Math.abs(branchTime - branchLengths[nodeIndex]) > 0)) {
-        	branchLengths[nodeIndex] = branchTime;
+
+            branchLengths[nodeIndex] = branchTime;
             if (branchTime < 0.0) {
             	double branchRate2 = branchRateModel.getRateForBranch(node);
                 throw new RuntimeException("Negative branch length: " + branchTime + " " + branchRate2);
@@ -708,9 +708,9 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
             for (int i = 0; i < siteModel.getCategoryCount(); i++) {
                 final double jointBranchRate = siteModel.getRateForCategory(i, node) * branchRate;
                 substitutionModel.getTransitionProbabilities(node, parent.getHeight(), firstBranchingTime, jointBranchRate, probabilities);
-                for (int j = 0; j < matrixSize; j++) {
-                	probabilities[j] *= scaleFactor;
-                }
+//                for (int j = 0; j < matrixSize; j++) {
+//                	probabilities[j] *= scaleFactor;
+//                }
                 likelihoodCore.setNodeMatrix(nodeIndex, i, probabilities);
             }
 
