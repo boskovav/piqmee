@@ -1707,7 +1707,7 @@ public class QuasiSpeciesTree extends Tree {
         for (int i = 0; i < distanceMatrix.length; i++) {
             tips.clear();
             // check if sequence contains ambiguous sites, or arose from merging sequence with ambiguous sites
-            boolean containsAmbiguousSites = !whichSequencesAreAmbiguous(new String[] {thisData.getSequenceAsString(thisData.getTaxaNames().get(i))})[0];
+            boolean containsAmbiguousSites = whichSequencesAreAmbiguous(new String[] {thisData.getSequenceAsString(thisData.getTaxaNames().get(i))})[0];
             boolean fromMergingSeqWithAmbigSites = false;
             if (sequencesFromMerging.contains(thisData.getTaxaNames().get(i)))
                 fromMergingSeqWithAmbigSites = true;
@@ -1717,8 +1717,6 @@ public class QuasiSpeciesTree extends Tree {
             //heights.clear();
             for (int j = 0; j < distanceMatrix.length; j++) {
                 if (distanceMatrix[i][j] == 0 && i!=j) {
-//            for (int j = i+1; j < distanceMatrix.length; j++) {
-//                if (distanceMatrix[i][j] == 0) {
                     tips.add(j);
                     //int tipNrInOrigDataset = IDtoNr.get(thisData.getTaxaNames().get(i));
                     //heights.add(this.getNode(tipNrInOrigDataset).getHeight());
