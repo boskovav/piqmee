@@ -1975,15 +1975,36 @@ public class QuasiSpeciesTree extends Tree {
                 intersectionsequence.set(i, seq1state);
             } else if (seq2state < type.getStateCount()) {
                 intersectionsequence.set(i, seq2state);
+            } else if (seq1state==seq2state) {
+                intersectionsequence.set(i, seq1state);
             } else {
-
+                    // check intersection of two sequences if codes are ambiguous and not the same
+                    List<Integer> intersectionstate1and2 = new ArrayList<>();
+                    int[] states1 = type.getStatesForCode(seq1state);
+                    int[] states2 = type.getStatesForCode(seq2state);
+                    for (int state1 : states1) {
+                        for (int state2 : states2) {
+                            if (state1==state2)
+                                intersectionstate1and2.add(state1);
+                            continue;
+                        }
+                    }
+                    int[] ints = intersectionstate1and2.stream().mapToInt(Integer::intValue).toArray();
+                    int intersectionstate1and2code = -1;
+                    for (int j = 0; j < ((DataType.Base) type).mapCodeToStateSet.length; j++){
+                        int[] statecode = ((DataType.Base) type).mapCodeToStateSet[j];
+                        if (Arrays.equals(ints,statecode)) {
+                            intersectionstate1and2code = j;
+                        }
+                    }
+                    intersectionsequence.set(i, intersectionstate1and2code);
             }
 
-            for (int j = 0; j < type.getStateCount(); j++) {
-                if (sequence1.substring(i, i + 1).equalsIgnoreCase(type.getCharacter(j))) {
-                    break;
-                }
-            }
+//            for (int j = 0; j < type.getStateCount(); j++) {
+//                if (sequence1.substring(i, i + 1).equalsIgnoreCase(type.getCharacter(j))) {
+//                    break;
+//                }
+//            }
         }
         return type.encodingToString(intersectionsequence);
     }
