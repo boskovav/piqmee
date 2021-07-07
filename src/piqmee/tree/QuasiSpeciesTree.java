@@ -11,6 +11,7 @@ import beast.evolution.datatype.DataType;
 import beast.evolution.tree.Node;
 import beast.evolution.tree.TraitSet;
 import beast.evolution.tree.Tree;
+import beast.util.Randomizer;
 import beast.util.TreeParser;
 import piqmee.distance.DifferenceCount;
 import beast.evolution.likelihood.GenericTreeLikelihood;
@@ -1680,12 +1681,19 @@ public class QuasiSpeciesTree extends Tree {
 
         // quickly check if all sequences are unique reciprocally, if not throw an error for now
         //      --> this should always be the case
-        if (! checkIfDistMatrixContainsDistance0Cliques(distanceMatrix)){
-            Log.info("When we do allow for collapsing of sequences that are identical even if we take " +
+        if ( checkIfDistMatrixContainsDistance0Cliques(distanceMatrix)){
+            Log.info("When we do allow for collapsing of sequences that are identical if we take " +
                     "ambiguous sites into account, we have several possibilities of how this collapsing " +
                     "could be done. We will break any ties by closeness of sequences in time. " +
+                    "If that is not possible, we will break ties by count of duplicates, i.e. the sequence " +
+                    "with most copies will be the one to which the sequence with missing data will be collapsed. " +
+                    "If after that, we still have a tie, we will randomly select one of the candidate sequences " +
+                    "to collapse with." +
                     "If you are unhappy about this merging decision, please first merge the sequences with " +
                     "ambiguous sites yourself, then use this new alignment as input for PIQMEE.");
+        } else {
+            throw new RuntimeException("Error 1695 in QuasiSpeciesTree class. Possibly your set of sequences" +
+                    "contains ambiguous sites and cannot be easily collapsed.");
         }
 
         // from that matrix --- heuristically, merge sequences with distance = 0
@@ -1762,10 +1770,15 @@ public class QuasiSpeciesTree extends Tree {
                         toPrint.append(", ").append(thisData.getTaxaNames().get(nextTip));
                     }
                     toPrint.append(" ");
-                    throw new RuntimeException("We cannot resolve a tie when collapsing sequences with " +
+                    Log.info("We cannot resolve a tie when collapsing sequences with " +
                             "ambiguous sites. There is more then one sequence that can be collapsed " +
                             "with tip " + thisData.getTaxaNames().get(i) + ", namely tips " + toPrint +
-                            " that all have hamming distance 0 and are at the same distance in time.");
+                            " that all have hamming distance 0 and are at the same distance in time." +
+                            " We will now randomly select one of these to merge " + thisData.getTaxaNames().get(i) + " with.");
+                    int randomSelect = Randomizer.nextInt(whichToMergeWith.size()-1);
+                    Integer selected = whichToMergeWith.get(randomSelect);
+                    whichToMergeWith.clear();
+                    whichToMergeWith.add(selected);
                 }
             }
             if (whichToMergeWith.size()==1) {
