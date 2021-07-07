@@ -94,20 +94,22 @@ public class QuasiSpeciesTreeLikelihood extends GenericTreeLikelihood {
         }
         else
             alignment = dataInput.get();
-        beagle = null;
-        beagle = new QuasiSpeciesBeagleTreeLikelihood();
-        try {
-            beagle.initByName(
-                    "data", dataInput.get(), "tree", treeInput.get(), "siteModel", siteModelInput.get(),
-                    "branchRateModel", branchRateModelInput.get(), "useAmbiguities", useAmbiguities.get(),
-                    "useTipLikelihoods", useTipLikelihoods.get(),"scaling", scaling.get().toString());
-            if (beagle.beagle != null) {
-                //a Beagle instance was found, so we use it
-                return;
-            }
-        } catch (Exception e) {
-            // ignore
-        }
+        // TODO: beagle disabled for QuasiSpeciesTreeLikelihood, since it is dependent on QuasiSpeciesTreeLikelihood2, which may not work properly
+        // TODO: If beagle is to be used, use QuasiSpeciesTreeLikelihood3
+//        beagle = null;
+//        beagle = new QuasiSpeciesBeagleTreeLikelihood();
+//        try {
+//            beagle.initByName(
+//                    "data", dataInput.get(), "tree", treeInput.get(), "siteModel", siteModelInput.get(),
+//                    "branchRateModel", branchRateModelInput.get(), "useAmbiguities", useAmbiguities.get(),
+//                    "useTipLikelihoods", useTipLikelihoods.get(),"scaling", scaling.get().toString());
+//            if (beagle.beagle != null) {
+//                //a Beagle instance was found, so we use it
+//                return;
+//            }
+//        } catch (Exception e) {
+//            // ignore
+//        }
         // No Beagle instance was found, so we use the good old java likelihood core
         beagle = null;
 
