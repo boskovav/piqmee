@@ -1680,8 +1680,10 @@ public class QuasiSpeciesTree extends Tree {
         double[][] distanceMatrix = getDistanceMatrixForAlignment(thisData, true);
 
         // quickly check if all sequences are unique reciprocally, if not throw an error for now
-        //      --> this should always be the case
-        if ( checkIfDistMatrixContainsDistance0Cliques(distanceMatrix)){
+        //      --> it should always be the case that the sequence similarity is reciprocal (matrix is reciprocal)
+        //           but it can be, that one sequence can be identical up to missing parts with several sequences
+        //           which themselves are not identical up to missing parts
+        if (! checkIfDistMatrixContainsDistance0Cliques(distanceMatrix)){
             Log.info("When we do allow for collapsing of sequences that are identical if we take " +
                     "ambiguous sites into account, we have several possibilities of how this collapsing " +
                     "could be done. We will break any ties by closeness of sequences in time. " +
@@ -1691,9 +1693,6 @@ public class QuasiSpeciesTree extends Tree {
                     "to collapse with." +
                     "If you are unhappy about this merging decision, please first merge the sequences with " +
                     "ambiguous sites yourself, then use this new alignment as input for PIQMEE.");
-        } else {
-            throw new RuntimeException("Error 1695 in QuasiSpeciesTree class. Possibly your set of sequences" +
-                    "contains ambiguous sites and cannot be easily collapsed.");
         }
 
         // from that matrix --- heuristically, merge sequences with distance = 0
@@ -1703,12 +1702,23 @@ public class QuasiSpeciesTree extends Tree {
         //    that has more copies
         //  if a tie still exists -> throw an error
         ArrayList tips = new ArrayList();
+        List<String> sequencesFromMerging = new ArrayList<>();
         //ArrayList heights = new ArrayList();
         for (int i = 0; i < distanceMatrix.length; i++) {
             tips.clear();
+            // check if sequence contains ambiguous sites, or arose from merging sequence with ambiguous sites
+            boolean containsAmbiguousSites = !whichSequencesAreAmbiguous(new String[] {thisData.getSequenceAsString(thisData.getTaxaNames().get(i))})[0];
+            boolean fromMergingSeqWithAmbigSites = false;
+            if (sequencesFromMerging.contains(thisData.getTaxaNames().get(i)))
+                fromMergingSeqWithAmbigSites = true;
+            if (!containsAmbiguousSites && !fromMergingSeqWithAmbigSites) {
+                continue;
+            }
             //heights.clear();
-            for (int j = i+1; j < distanceMatrix.length; j++) {
-                if (distanceMatrix[i][j] == 0) {
+            for (int j = 0; j < distanceMatrix.length; j++) {
+                if (distanceMatrix[i][j] == 0 && i!=j) {
+//            for (int j = i+1; j < distanceMatrix.length; j++) {
+//                if (distanceMatrix[i][j] == 0) {
                     tips.add(j);
                     //int tipNrInOrigDataset = IDtoNr.get(thisData.getTaxaNames().get(i));
                     //heights.add(this.getNode(tipNrInOrigDataset).getHeight());
@@ -1797,6 +1807,12 @@ public class QuasiSpeciesTree extends Tree {
                     taxon1ID = thisData.getTaxaNames().get(whichToMergeWith.get(0));
                     rowToChange = whichToMergeWith.get(0);
                 }
+                // add tipID to array of sequences that arose from merging
+                if (sequencesFromMerging.contains(taxon2ID))
+                    sequencesFromMerging.remove(taxon2ID);
+                if (!sequencesFromMerging.contains(taxon1ID))
+                        sequencesFromMerging.add(taxon1ID);
+
                 // get a merged sequences
                 String mergedSequence = findSequenceIntersection(
                         thisData.getSequenceAsString(taxon1ID), thisData.getSequenceAsString(taxon2ID),
