@@ -1,23 +1,28 @@
 package beast.app.piqmee.beauti;
 
-import beast.app.beauti.BeautiDoc;
-import beast.app.beauti.BeautiPanelConfig;
-import beast.app.beauti.TipDatesInputEditor;
-import beast.app.draw.InputEditor;
-import beast.core.BEASTInterface;
-import beast.core.Input;
-import beast.evolution.alignment.TaxonSet;
-import beast.evolution.tree.TraitSet;
-import beast.app.beauti.GuessPatternDialog;
+import beastfx.app.inputeditor.BeautiDoc;
+import beastfx.app.inputeditor.BeautiPanelConfig;
+import beastfx.app.inputeditor.TipDatesInputEditor;
+import beastfx.app.util.FXUtils;
+import javafx.scene.control.Button;
+import javafx.scene.control.TableView;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import beastfx.app.inputeditor.InputEditor;
+import beast.base.core.BEASTInterface;
+import beast.base.core.Input;
+import beast.base.evolution.alignment.TaxonSet;
+import beast.base.evolution.tree.TraitSet;
+import beastfx.app.inputeditor.GuessPatternDialog;
 
-import java.awt.event.ActionEvent;
+//import java.awt.event.ActionEvent;
 import java.util.List;
-import javax.swing.Box;
-import javax.swing.JButton;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.table.AbstractTableModel;
-import beast.evolution.tree.Tree;
+//import javax.swing.Box;
+//import javax.swing.JButton;
+//import javax.swing.JScrollPane;
+//import javax.swing.JTable;
+//import javax.swing.table.AbstractTableModel;
+import beast.base.evolution.tree.Tree;
 import piqmee.tree.QuasiSpeciesTree;
 
 
@@ -44,7 +49,7 @@ public class HaplotypeCountsTraitSetInputEditor extends TipDatesInputEditor {
     @Override
     public void init(Input<?> input, BEASTInterface plugin, int itemNr, ExpandOption bExpandOption, boolean bAddButtons) {
 
-        if (plugin.getClass().getName().equals("beast.app.beauti.BeautiPanelConfig") && !((BeautiPanelConfig) plugin).getName().equals("Sequence Counts")){
+        if (plugin.getClass().getName().equals("beastfx.app.inputeditor.BeautiPanelConfig") && !((BeautiPanelConfig) plugin).getName().equals("Sequence Counts")){
             super.init(input, plugin, itemNr, bExpandOption, bAddButtons);
         } else {
 
@@ -58,9 +63,9 @@ public class HaplotypeCountsTraitSetInputEditor extends TipDatesInputEditor {
             traitSet.setID("haplotypeCounts.t:" + BeautiDoc.parsePartition(tree.getID()));
             taxonSet = traitSet.taxaInput.get();
             tableModel = new HaplotypeCountsTraitTableModel(traitSet);
-            JTable table = new JTable(tableModel);
-            JButton guessButton = new JButton("Guess");
-            guessButton.addActionListener((ActionEvent e) -> {
+            TableView table = new TableView(tableModel);
+            Button guessButton = new Button("Guess");
+            guessButton.setOnAction(e -> {
                 GuessPatternDialog dlg = new GuessPatternDialog(null, ".*(\\d\\d\\d\\d).*");
 
                 String traitString = "";
@@ -94,8 +99,8 @@ public class HaplotypeCountsTraitSetInputEditor extends TipDatesInputEditor {
                 refreshPanel();
             });
 
-            JButton clearButton = new JButton("Clear");
-            clearButton.addActionListener((ActionEvent e) -> {
+            Button clearButton = new Button("Clear");
+            clearButton.setOnAction(e -> {
                 StringBuilder traitStringBuilder = new StringBuilder();
                 for (String taxonName : taxonSet.asStringList()) {
                     if (traitStringBuilder.length() > 0)
@@ -111,16 +116,16 @@ public class HaplotypeCountsTraitSetInputEditor extends TipDatesInputEditor {
                 refreshPanel();
             });
 
-            Box boxVert = Box.createVerticalBox();
+            VBox boxVert = FXUtils.newVBox();
 
-            Box boxHoriz = Box.createHorizontalBox();
-            boxHoriz.add(Box.createHorizontalGlue());
-            boxHoriz.add(guessButton);
-            boxHoriz.add(clearButton);
-            boxVert.add(boxHoriz);
-            boxVert.add(new JScrollPane(table));
+            HBox boxHoriz = FXUtils.newHBox();
+            // boxHoriz.add(Box.createHorizontalGlue());
+            boxHoriz.getChildren().add(guessButton);
+            boxHoriz.getChildren().add(clearButton);
+            boxVert.getChildren().add(boxHoriz);
+            boxVert.getChildren().add(table);
 
-            add(boxVert);
+            getChildren().add(boxVert);
         }
     }
 

@@ -1,19 +1,19 @@
 package test.piqmee.likelihood;
 
-import beast.evolution.alignment.Alignment;
-import beast.evolution.likelihood.TreeLikelihood;
-import beast.evolution.sitemodel.SiteModel;
+import beast.base.evolution.alignment.Alignment;
+import beast.base.evolution.likelihood.TreeLikelihood;
+import beast.base.evolution.sitemodel.SiteModel;
 import piqmee.evolution.branchratemodel.QuasiSpeciesUCRelaxedClockModel;
-import beast.evolution.substitutionmodel.JukesCantor;
-import beast.evolution.tree.Tree;
-import beast.util.TreeParser;
+import beast.base.evolution.substitutionmodel.JukesCantor;
+import beast.base.evolution.tree.Tree;
+import beast.base.evolution.tree.TreeParser;
 import org.junit.Test;
 import piqmee.likelihood.QuasiSpeciesTreeLikelihood;
 import piqmee.tree.QuasiSpeciesNode;
 import piqmee.tree.QuasiSpeciesTree;
 import test.beast.BEASTTestCase;
 import test.piqmee.QuasiSpeciesTestCase;
-import beast.math.distributions.LogNormalDistributionModel;
+import beast.base.inference.distribution.LogNormalDistributionModel;
 import test.piqmee.branchratemodel.UCRelaxedClockModel_setCategories;
 
 import static org.junit.Assert.assertEquals;

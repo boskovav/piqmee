@@ -1,7 +1,7 @@
 package piqmee.tree;
 
-import beast.core.Description;
-import beast.evolution.tree.Node;
+import beast.base.core.Description;
+import beast.base.evolution.tree.Node;
 
 /**
  * @author Veronika Boskova created on 30/09/2020.

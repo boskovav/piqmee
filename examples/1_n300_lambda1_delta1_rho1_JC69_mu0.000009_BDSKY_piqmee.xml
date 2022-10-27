@@ -1,15 +1,15 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?><beast beautitemplate='piqmee' beautistatus='' namespace="beast.core:beast.evolution.alignment:beast.evolution.tree.coalescent:beast.core.util:beast.evolution.nuc:beast.evolution.operators:beast.evolution.sitemodel:beast.evolution.substitutionmodel:beast.evolution.likelihood" required="BEAST v2.5.1" version="2.5">
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><beast beautitemplate='piqmee' beautistatus='' namespace="beast.pkgmgmt:beast.base.core:beast.base.inference:beast.base.evolution.alignment:beast.base.evolution.tree.coalescent:beast.base.util:beast.base.math:beast.evolution.nuc:beast.base.evolution.operator:beast.base.inference.operator:beast.base.evolution.sitemodel:beast.base.evolution.substitutionmodel:beast.base.evolution.likelihood" required="BEAST v2.5.1" version="2.5">
 
-    <map name="Uniform" >beast.math.distributions.Uniform</map>
-    <map name="Exponential" >beast.math.distributions.Exponential</map>
-    <map name="LogNormal" >beast.math.distributions.LogNormalDistributionModel</map>
-    <map name="Normal" >beast.math.distributions.Normal</map>
-    <map name="Beta" >beast.math.distributions.Beta</map>
-    <map name="Gamma" >beast.math.distributions.Gamma</map>
-    <map name="LaplaceDistribution" >beast.math.distributions.LaplaceDistribution</map>
-    <map name="prior" >beast.math.distributions.Prior</map>
-    <map name="InverseGamma" >beast.math.distributions.InverseGamma</map>
-    <map name="OneOnX" >beast.math.distributions.OneOnX</map>
+    <map name="Uniform" >beast.base.inference.distribution.Uniform</map>
+    <map name="Exponential" >beast.base.inference.distribution.Exponential</map>
+    <map name="LogNormal" >beast.base.inference.distribution.LogNormalDistributionModel</map>
+    <map name="Normal" >beast.base.inference.distribution.Normal</map>
+    <map name="Beta" >beast.base.inference.distribution.Beta</map>
+    <map name="Gamma" >beast.base.inference.distribution.Gamma</map>
+    <map name="LaplaceDistribution" >beast.base.inference.distribution.LaplaceDistribution</map>
+    <map name="prior" >beast.base.inference.distribution.Prior</map>
+    <map name="InverseGamma" >beast.base.inference.distribution.InverseGamma</map>
+    <map name="OneOnX" >beast.base.inference.distribution.OneOnX</map>
     
     <!-- alignment and taxa -->
     <data id="alignment" dataType="nucleotide">
@@ -84,7 +84,7 @@
     </data>
     
     <!-- traits -->
-    <trait id="times" spec="beast.evolution.tree.TraitSet" traitname="date-forward">
+    <trait id="times" spec="beast.base.evolution.tree.TraitSet" traitname="date-forward">
 t1=91.9154,
 t4=91.9154,
 t23=91.9154,
@@ -122,7 +122,7 @@ t296=81.9154
         <taxa id="TaxonSet" spec="TaxonSet" alignment="@alignment"/>
     </trait>
     
-    <haploCountTraitSet id="counts" spec="beast.evolution.tree.TraitSet" traitname="qscounts">
+    <haploCountTraitSet id="counts" spec="beast.base.evolution.tree.TraitSet" traitname="qscounts">
 t1=29,
 t4=17,
 t23=2,
@@ -168,27 +168,27 @@ t296=1
 <parameter name="rho" dimension="6" id="rho" value="0.17921146953405 0.224215246636771 0.29940119760479 0.359712230215827 0.609756097560976 1" lower="0.0" upper="1.0"/>
         <parameter name="samplingProportion" id="samplingProportion" value="0.0"/>
         <parameter name="rhoSamplingTimes" value="10 8 6 4 2 0"/>
-        <reverseTimeArrays spec="beast.core.parameter.BooleanParameter" value="false false false true false"/>
+        <reverseTimeArrays spec="beast.base.inference.parameter.BooleanParameter" value="false false false true false"/>
     </BirthDeathSkylineModel>
     
-    <RPNcalculator spec="beast.math.statistic.RPNcalculator" id="growth-rate" expression="reproductiveNumber becomeUninfectiousRate * becomeUninfectiousRate -">
+    <RPNcalculator spec="beast.base.inference.util.RPNcalculator" id="growth-rate" expression="reproductiveNumber becomeUninfectiousRate * becomeUninfectiousRate -">
         <parameter idref="becomeUninfectiousRate"/>
         <parameter idref="reproductiveNumber"/>
     </RPNcalculator>
-    <RPNcalculator spec="beast.math.statistic.RPNcalculator" id="birthRho" expression="reproductiveNumber becomeUninfectiousRate * rho *">
+    <RPNcalculator spec="beast.base.inference.util.RPNcalculator" id="birthRho" expression="reproductiveNumber becomeUninfectiousRate * rho *">
         <parameter idref="becomeUninfectiousRate"/>
         <parameter idref="reproductiveNumber"/>
         <parameter idref="rho"/>
     </RPNcalculator>
-    <RPNcalculator spec="beast.math.statistic.RPNcalculator" id="birth" expression="reproductiveNumber becomeUninfectiousRate *"> <!-- s/(d+s) -->
+    <RPNcalculator spec="beast.base.inference.util.RPNcalculator" id="birth" expression="reproductiveNumber becomeUninfectiousRate *"> <!-- s/(d+s) -->
         <parameter idref="becomeUninfectiousRate"/>
         <parameter idref="reproductiveNumber"/>
     </RPNcalculator>
-    <RPNcalculator spec="beast.math.statistic.RPNcalculator" id="sampling" expression="becomeUninfectiousRate samplingProportion *">
+    <RPNcalculator spec="beast.base.inference.util.RPNcalculator" id="sampling" expression="becomeUninfectiousRate samplingProportion *">
         <parameter idref="becomeUninfectiousRate"/>
         <parameter idref="samplingProportion"/>
     </RPNcalculator>
-    <RPNcalculator spec="beast.math.statistic.RPNcalculator" id="death" expression="becomeUninfectiousRate 1 samplingProportion - *"> <!-- b*S0/(d+s) -->
+    <RPNcalculator spec="beast.base.inference.util.RPNcalculator" id="death" expression="becomeUninfectiousRate 1 samplingProportion - *"> <!-- b*S0/(d+s) -->
         <parameter idref="becomeUninfectiousRate"/>
         <parameter idref="samplingProportion"/>
     </RPNcalculator>
@@ -212,22 +212,22 @@ t296=1
 <parameter id="clockRate" name="stateNode" value="0.000009"/>
     </state>
 
-    <distribution id="posterior" spec="util.CompoundDistribution">
-        <distribution id="prior" spec="util.CompoundDistribution">
-            <distribution id="BDTreelikelihood" spec="util.CompoundDistribution">
+    <distribution id="posterior" spec="beast.base.inference.CompoundDistribution">
+        <distribution id="prior" spec="beast.base.inference.CompoundDistribution">
+            <distribution id="BDTreelikelihood" spec="beast.base.inference.CompoundDistribution">
                 <distribution idref="BirthDeathSky"/>
             </distribution>
             <prior id="originPriorContemp" name="distribution" x="@origin">
-                <distr spec="beast.math.distributions.Uniform" lower="0.0" upper="100000.0" offset="0.0"/>
+                <distr spec="beast.base.inference.distribution.Uniform" lower="0.0" upper="100000.0" offset="0.0"/>
             </prior>
             <prior id="reproductiveNumberPriorContemp" name="distribution" x="@reproductiveNumber">
-                <distr spec="beast.math.distributions.Uniform" lower="0.0" upper="1000.0" offset="0.0"/>
+                <distr spec="beast.base.inference.distribution.Uniform" lower="0.0" upper="1000.0" offset="0.0"/>
             </prior>
             <prior id="becomeUninfectiousRatePriorContemp" name="distribution" x="@becomeUninfectiousRate">
-                <distr spec="beast.math.distributions.Uniform" lower="0.0" upper="200000.0" offset="0.0"/>
+                <distr spec="beast.base.inference.distribution.Uniform" lower="0.0" upper="200000.0" offset="0.0"/>
             </prior>
             <prior id="ClockPrior" name="distribution" x="@clockRate">
-                <distr spec="beast.math.distributions.Uniform" lower="0.0" upper="10000.0" offset="0.0"/>
+                <distr spec="beast.base.inference.distribution.Uniform" lower="0.0" upper="10000.0" offset="0.0"/>
             </prior>
             <prior id="GammaShapePrior" name="distribution" x="@gammaShape">
                 <Exponential name="distr">
@@ -235,14 +235,14 @@ t296=1
                 </Exponential>
             </prior>
         </distribution>
-        <distribution id="likelihood" spec="util.CompoundDistribution">
+        <distribution id="likelihood" spec="beast.base.inference.CompoundDistribution">
             <distribution id="treeLikelihood" spec="piqmee.likelihood.QuasiSpeciesTreeLikelihood" data="@alignment" tree="@Tree">
                 <siteModel id="SiteModel" spec="SiteModel" gammaCategoryCount="4" shape="@gammaShape">
                     <parameter id="mutationRate" estimate="false" name="mutationRate" value="1.0"/>
                     <parameter id="proportionInvariant" estimate="false" lower="0.0" name="proportionInvariant" upper="1.0" value="0.0"/>
                     <substModel id="JC69" spec="JukesCantor"/>
                 </siteModel>
-                <branchRateModel id="StrictClock" spec="beast.evolution.branchratemodel.StrictClockModel" clock.rate="@clockRate"/>
+                <branchRateModel id="StrictClock" spec="beast.base.evolution.branchratemodel.StrictClockModel" clock.rate="@clockRate"/>
             </distribution>
         </distribution>
     </distribution>
@@ -305,7 +305,7 @@ t296=1
         <log idref="likelihood"/>
         <log idref="prior"/>
         <log idref="BDTreelikelihood"/>
-        <log id="QSTreeHeight" spec="beast.evolution.tree.TreeHeightLogger" tree="@Tree"/>
+        <log id="QSTreeHeight" spec="beast.base.evolution.tree.TreeHeightLogger" tree="@Tree"/>
         <log id="TreeHeight" spec="piqmee.util.AbsoluteTreeHeight" quasiSpeciesTree="@Tree"/>
         <log idref="clockRate"/>
         <log idref="gammaShape"/>
@@ -331,7 +331,7 @@ t296=1
     </logger>
 
 <logger id="treelog" fileName="./1_n300_lambda1_delta1_rho1_JC69_mu0.000009_BDSKY.trees" logEvery="100000" mode="tree">
-        <log id="TreeWithMetaDataLogger" spec="beast.evolution.tree.TreeWithMetaDataLogger" tree="@Tree"/>
+        <log id="TreeWithMetaDataLogger" spec="beast.base.evolution.TreeWithMetaDataLogger" tree="@Tree"/>
     </logger>
 
 </run>

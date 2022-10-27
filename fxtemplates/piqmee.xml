@@ -16,65 +16,65 @@
                  :piqmee.distributions'
        templateinfo='template for birth-death skyline model with duplicate sequences (Quasi-species model)'>
 
-    <map name='connect' reserved='true'>beast.app.beauti.BeautiConnector</map>
-    <map name='subtemplate' reserved='true'>beast.app.beauti.BeautiSubTemplate</map>
-    <map name='Uniform'>beast.math.distributions.Uniform</map>
-    <map name='Normal'>beast.math.distributions.Normal</map>
-    <map name='OneOnX'>beast.math.distributions.OneOnX</map>
-    <map name='LogNormal'>beast.math.distributions.LogNormalDistributionModel</map>
-    <map name='Exponential'>beast.math.distributions.Exponential</map>
-    <map name='Gamma'>beast.math.distributions.Gamma</map>
-    <map name='Beta'>beast.math.distributions.Beta</map>
-    <map name='LaplaceDistribution'>beast.math.distributions.LaplaceDistribution</map>
-    <map name='InverseGamma'>beast.math.distributions.InverseGamma</map>
-    <map name='prior'>beast.math.distributions.Prior</map>
+    <map name='connect' reserved='true'>beastfx.app.inputeditor.BeautiConnector</map>
+    <map name='subtemplate' reserved='true'>beastfx.app.inputeditor.BeautiSubTemplate</map>
+    <map name='Uniform'>beast.base.inference.distribution.Uniform</map>
+    <map name='Normal'>beast.base.inference.distribution.Normal</map>
+    <map name='OneOnX'>beast.base.inference.distribution.OneOnX</map>
+    <map name='LogNormal'>beast.base.inference.distribution.LogNormalDistributionModel</map>
+    <map name='Exponential'>beast.base.inference.distribution.Exponential</map>
+    <map name='Gamma'>beast.base.inference.distribution.Gamma</map>
+    <map name='Beta'>beast.base.inference.distribution.Beta</map>
+    <map name='LaplaceDistribution'>beast.base.inference.distribution.LaplaceDistribution</map>
+    <map name='InverseGamma'>beast.base.inference.distribution.InverseGamma</map>
+    <map name='prior'>beast.base.inference.distribution.Prior</map>
 
     <beauticonfig spec='BeautiConfig'
-        inputLabelMap='beast.core.MCMC.operator=Operators,
-	                   beast.core.MCMC.logger=Loggers,
-			           beast.evolution.sitemodel.SiteModel.mutationRate =Substitution Rate'
-        inlinePlugins ='beast.core.MCMC.distribution,
-                        beast.evolution.sitemodel.SiteModel.substModel,
-                        beast.evolution.tree.coalescent.ExponentialGrowth,
-                        beast.evolution.tree.coalescent.ConstantPopulation,
-                        beast.evolution.tree.coalescent.Coalescent,
-                        beast.core.State.stateNode'
-        collapsedPlugins ='beast.core.MCMC.logger'
-        suppressPlugins = 'beast.core.MCMC.operator,
-    		               beast.core.MCMC.operatorschedule,
-    		               beast.core.OperatorSchedule.subschedule,
-    		               beast.core.OperatorSchedule.operatorPattern,
-    		               beast.core.OperatorSchedule.operator,
-	                       beast.core.MCMC.state,
-	                       beast.core.MCMC.distribution,
-	                       beast.core.MCMC.init,
-                           beast.evolution.substitutionmodel.WAG.rates,
-                           beast.evolution.substitutionmodel.WAG.frequencies,
-                           beast.evolution.substitutionmodel.JTT.rates,
-                           beast.evolution.substitutionmodel.JTT.frequencies,
-                           beast.evolution.substitutionmodel.Blosum62.rates,
-                           beast.evolution.substitutionmodel.Blosum62.frequencies,
-                           beast.evolution.substitutionmodel.Dayhoff.rates,
-                           beast.evolution.substitutionmodel.Dayhoff.frequencies,
-                           beast.evolution.substitutionmodel.CPREV.rates,
-                           beast.evolution.substitutionmodel.CPREV.frequencies,
-                           beast.evolution.substitutionmodel.MTREV.rates,
-                           beast.evolution.substitutionmodel.MTREV.frequencies,
-                           beast.evolution.substitutionmodel.GTR.rates,
-                           beast.evolution.substitutionmodel.JukesCantor.frequencies,
-                           beast.math.distributions.Prior.x,
-                           beast.math.distributions.MRCAPrior.tree,
-                           beast.math.distributions.MRCAPrior.monophyletic,
-                           beast.math.distributions.MRCAPrior.taxonset,
-                           beast.evolution.branchratemodel.UCRelaxedClockModel.tree,
-                           beast.evolution.branchratemodel.UCRelaxedClockModel.rateCategories,
-                           beast.evolution.branchratemodel.UCRelaxedClockModel.distr,
-                           beast.evolution.branchratemodel.RandomLocalClockModel.tree,
-                           beast.evolution.branchratemodel.RandomLocalClockModel.meanRate,
-                           beast.evolution.branchratemodel.RandomLocalClockModel.indicators,
-                           beast.evolution.operators.ScaleOperator.indicator,
-                           beast.core.Operator.weight,
-                           beast.core.Logger.model,
+        inputLabelMap='beast.base.inference.MCMC.operator=Operators,
+	                   beast.base.inference.MCMC.logger=Loggers,
+			           beast.base.evolution.sitemodel.SiteModel.mutationRate =Substitution Rate'
+        inlinePlugins ='beast.base.inference.MCMC.distribution,
+                        beast.base.evolution.sitemodel.SiteModel.substModel,
+                        beast.base.evolution.tree.coalescent.ExponentialGrowth,
+                        beast.base.evolution.tree.coalescent.ConstantPopulation,
+                        beast.base.evolution.tree.coalescent.Coalescent,
+                        beast.base.inference.State.stateNode'
+        collapsedPlugins ='beast.base.inference.MCMC.logger'
+        suppressPlugins = 'beast.base.inference.MCMC.operator,
+    		               beast.base.inference.MCMC.operatorschedule,
+    		               beast.base.inference.OperatorSchedule.subschedule,
+    		               beast.base.inference.OperatorSchedule.operatorPattern,
+    		               beast.base.inference.OperatorSchedule.operator,
+	                       beast.base.inference.MCMC.state,
+	                       beast.base.inference.MCMC.distribution,
+	                       beast.base.inference.MCMC.init,
+                           beast.base.evolution.substitutionmodel.WAG.rates,
+                           beast.base.evolution.substitutionmodel.WAG.frequencies,
+                           beast.base.evolution.substitutionmodel.JTT.rates,
+                           beast.base.evolution.substitutionmodel.JTT.frequencies,
+                           beast.base.evolution.substitutionmodel.Blosum62.rates,
+                           beast.base.evolution.substitutionmodel.Blosum62.frequencies,
+                           beast.base.evolution.substitutionmodel.Dayhoff.rates,
+                           beast.base.evolution.substitutionmodel.Dayhoff.frequencies,
+                           beast.base.evolution.substitutionmodel.CPREV.rates,
+                           beast.base.evolution.substitutionmodel.CPREV.frequencies,
+                           beast.base.evolution.substitutionmodel.MTREV.rates,
+                           beast.base.evolution.substitutionmodel.MTREV.frequencies,
+                           beast.base.evolution.substitutionmodel.GTR.rates,
+                           beast.base.evolution.substitutionmodel.JukesCantor.frequencies,
+                           beast.base.inference.distribution.Prior.x,
+                           beast.base.evolution.tree.MRCAPrior.tree,
+                           beast.base.evolution.tree.MRCAPrior.monophyletic,
+                           beast.base.evolution.tree.MRCAPrior.taxonset,
+                           beast.base.evolution.branchratemodel.UCRelaxedClockModel.tree,
+                           beast.base.evolution.branchratemodel.UCRelaxedClockModel.rateCategories,
+                           beast.base.evolution.branchratemodel.UCRelaxedClockModel.distr,
+                           beast.base.evolution.branchratemodel.RandomLocalClockModel.tree,
+                           beast.base.evolution.branchratemodel.RandomLocalClockModel.meanRate,
+                           beast.base.evolution.branchratemodel.RandomLocalClockModel.indicators,
+                           beast.base.evolution.operator.ScaleOperator.indicator,
+                           beast.base.inference.Operator.weight,
+                           beast.base.inference.Logger.model,
                            piqmee.tree.QuasiSpeciesTree,
 	                       piqmee.tree.QuasiSpeciesTree.trait,
                            piqmee.tree.QuasiSpeciesTree.taxa,
@@ -119,7 +119,7 @@
                            piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.treeIntervals,
                            piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.forceRateChange,
                            piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.conditionOnSurvival,
-                           beast.math.distributions.MarkovChainDistribution.parameter,
+                           beast.base.inference.distribution.MarkovChainDistribution.parameter,
                            piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.reverseTimeArrays,
                            piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.originIsRootEdge,
                            piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.rhoSamplingTimes,
@@ -162,7 +162,7 @@
         <panel spec='BeautiPanelConfig' panelname="Partitions" tiptext="Data Partitions"
             path='distribution/distribution[id="likelihood"]/distribution/data'
             hasPartitions="none" icon='2220.png.x' forceExpansion='FALSE'
-            type='beast.evolution.alignment.Alignment'/>
+            type='beast.base.evolution.alignment.Alignment'/>
 
 		<panel spec='BeautiPanelConfig' panelname="Tip Dates" tiptext="Specify times at which taxa were sampled"
             path='tree'
@@ -195,7 +195,7 @@
 		<panel spec='BeautiPanelConfig' panelname="Priors" tiptext="Other priors"
             path='distribution/distribution[id="prior"]/distribution'
             hasPartitions="none" icon='7.png.x' forceExpansion='TRUE_START_COLLAPSED'
-            type='beast.core.Distribution'/>
+            type='beast.base.inference.Distribution'/>
 
 		<panel spec='BeautiPanelConfig' panelname="Operators" tiptext="MCMC Operator details"
             path='operator'
@@ -209,10 +209,10 @@
 		<alignmentProvider id="Import Alignment" spec='BeautiAlignmentProvider' template='@StandardPartitionTemplate'/>
 
 
-        <partitiontemplate id='StandardPartitionTemplate' spec='BeautiSubTemplate' class='beast.evolution.likelihood.TreeLikelihood' mainid='mcmc'>
+        <partitiontemplate id='StandardPartitionTemplate' spec='BeautiSubTemplate' class='beast.base.evolution.likelihood.TreeLikelihood' mainid='mcmc'>
 <![CDATA[
 
-            <taxonset id='taxonSet.$(n)' spec='beast.evolution.alignment.TaxonSet' alignment='@$(n)'/>
+            <taxonset id='taxonSet.$(n)' spec='beast.base.evolution.alignment.TaxonSet' alignment='@$(n)'/>
 
             <!-- Quasi-species tree -->
 
@@ -254,7 +254,7 @@
             <!-- Parameter priors -->
 
 	        <prior id='ClockPrior.c:$(n)' x='@clockRate.c:$(n)'>
-	            <distr spec="beast.math.distributions.Uniform" upper='Infinity'/>
+	            <distr spec="beast.base.inference.distribution.Uniform" upper='Infinity'/>
 	        </prior>
 
 	        <prior id='MutationRatePrior.s:$(n)' x='@mutationRate.s:$(n)'>
@@ -262,33 +262,33 @@
 	        </prior>
 
             <prior id='GammaShapePrior.s:$(n)' x='@gammaShape.s:$(n)'>
-                <distr spec="beast.math.distributions.Exponential" mean="1.0"/>
+                <distr spec="beast.base.inference.distribution.Exponential" mean="1.0"/>
             </prior>
 
             <prior id='PropInvariantPrior.s:$(n)' x='@proportionInvariant.s:$(n)'>
-                <distr spec="beast.math.distributions.Uniform" lower='0' upper='1'/>
+                <distr spec="beast.base.inference.distribution.Uniform" lower='0' upper='1'/>
             </prior>
 
 	        <prior  id='originPrior.t:$(n)' x="@origin.t:$(n)">
-		        <distr spec='beast.math.distributions.Uniform' lower="0." upper="Infinity"/>
+		        <distr spec='beast.base.inference.distribution.Uniform' lower="0." upper="Infinity"/>
 	        </prior>
 
 	        <prior id="samplingProportionPrior.t:$(n)" x="@samplingProportion.t:$(n)">
-		        <distr spec="beast.math.distributions.Beta" offset="0.">
+		        <distr spec="beast.base.inference.distribution.Beta" offset="0.">
 			        <parameter name="alpha" value="1." estimate="false"/>
 			        <parameter name="beta" value="1." estimate="false"/>
 		        </distr>
 	        </prior>
 
 	        <prior id="becomeUninfectiousRatePrior.t:$(n)" x="@becomeUninfectiousRate.t:$(n)">
-		        <distr spec='beast.math.distributions.LogNormalDistributionModel' offset="0.0" meanInRealSpace="false">
+		        <distr spec='beast.base.inference.distribution.LogNormalDistributionModel' offset="0.0" meanInRealSpace="false">
 			        <parameter name="M" value="0." estimate="false"/>
 			        <parameter name="S" value="1." estimate="false"/>
 		        </distr>
 	        </prior>
 
 	        <prior id="reproductiveNumberPrior.t:$(n)" x="@reproductiveNumber.t:$(n)">
-		        <distr spec='beast.math.distributions.LogNormalDistributionModel' offset="0.0" meanInRealSpace="false">
+		        <distr spec='beast.base.inference.distribution.LogNormalDistributionModel' offset="0.0" meanInRealSpace="false">
 			        <parameter name="M" value="0." estimate="false"/>
 			        <parameter name="S" value="1." estimate="false"/>
 		        </distr>
@@ -296,17 +296,17 @@
 
             <!-- RPN calculator -->
 
-	        <RPNcalculator spec="beast.math.statistic.RPNcalculator" id="birth.t:$(n)" expression="reproductiveNumber.t:$(n) becomeUninfectiousRate.t:$(n) *"> <!-- s/(d+s) -->
+	        <RPNcalculator spec="beast.base.inference.util.RPNcalculator" id="birth.t:$(n)" expression="reproductiveNumber.t:$(n) becomeUninfectiousRate.t:$(n) *"> <!-- s/(d+s) -->
 		        <parameter idref="becomeUninfectiousRate.t:$(n)"/>
 		        <parameter idref="reproductiveNumber.t:$(n)"/>
 	        </RPNcalculator>
 
-	        <RPNcalculator spec="beast.math.statistic.RPNcalculator" id="sampling.t:$(n)" expression="becomeUninfectiousRate.t:$(n) samplingProportion.t:$(n) *">
+	        <RPNcalculator spec="beast.base.inference.util.RPNcalculator" id="sampling.t:$(n)" expression="becomeUninfectiousRate.t:$(n) samplingProportion.t:$(n) *">
 		        <parameter idref="becomeUninfectiousRate.t:$(n)"/>
 		        <parameter idref="samplingProportion.t:$(n)"/>
 	        </RPNcalculator>
 
-	        <RPNcalculator spec="beast.math.statistic.RPNcalculator" id="death.t:$(n)" expression="becomeUninfectiousRate.t:$(n) 1 samplingProportion.t:$(n) - *"> <!-- b*S0/(d+s) -->
+	        <RPNcalculator spec="beast.base.inference.util.RPNcalculator" id="death.t:$(n)" expression="becomeUninfectiousRate.t:$(n) 1 samplingProportion.t:$(n) - *"> <!-- b*S0/(d+s) -->
 		        <parameter idref="becomeUninfectiousRate.t:$(n)"/>
 		        <parameter idref="samplingProportion.t:$(n)"/>
 	        </RPNcalculator>
@@ -349,14 +349,14 @@
 
             <!-- Tree log -->
 
-            <logger id='treelog.t:$(n)' spec='beast.core.Logger' logEvery="1000" fileName="$(filebase).$(tree).trees" mode='tree'>
-	            <log id='TreeWithMetaDataLogger.t:$(n)' spec='beast.evolution.tree.TreeWithMetaDataLogger' tree='@Tree.t:$(n)'>
+            <logger id='treelog.t:$(n)' spec='beast.base.inference.Logger' logEvery="1000" fileName="$(filebase).$(tree).trees" mode='tree'>
+	            <log id='TreeWithMetaDataLogger.t:$(n)' spec='beast.base.evolution.TreeWithMetaDataLogger' tree='@Tree.t:$(n)'>
 	            </log>
             </logger>
 
             <!-- Trace log elements -->
 
-            <log id="QSTreeHeight.t:$(n)" spec="beast.evolution.tree.TreeHeightLogger" tree="@Tree.t:$(n)"/>
+            <log id="QSTreeHeight.t:$(n)" spec="beast.base.evolution.tree.TreeHeightLogger" tree="@Tree.t:$(n)"/>
             <log id="TreeHeight.t:$(n)" spec="piqmee.util.AbsoluteTreeHeight" quasiSpeciesTree="@Tree.t:$(n)"/>
 
 ]]>
@@ -366,7 +366,7 @@
             <connect method="beast.app.beauti.StateNodeInitialiserListInputEditor.customConnector"/>
             <connect srcID='Tree.t:$(n)'            targetID='state'        inputName='stateNode'     if='inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'/>
             <connect srcID='treeLikelihood.$(n)'    targetID='likelihood'   inputName='distribution'  if="isInitializing"/>
-            <connect method="beast.app.beauti.SiteModelInputEditor.customConnector"/>
+            <connect method="beastfx.app.inputeditor.SiteModelInputEditor.customConnector"/>
 
             <!-- CONNECT: Priors -->
             <!-- Tree prior priors-->

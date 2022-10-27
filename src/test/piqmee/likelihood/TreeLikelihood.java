@@ -31,24 +31,24 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-import beast.core.Description;
-import beast.core.Input;
-import beast.core.State;
-import beast.core.util.Log;
-import beast.evolution.alignment.Alignment;
-import beast.evolution.branchratemodel.BranchRateModel;
-import beast.evolution.branchratemodel.StrictClockModel;
+import beast.base.core.Description;
+import beast.base.core.Input;
+import beast.base.inference.State;
+import beast.base.core.Log;
+import beast.base.evolution.alignment.Alignment;
+import beast.base.evolution.branchratemodel.BranchRateModel;
+import beast.base.evolution.branchratemodel.StrictClockModel;
 //import beast.evolution.likelihood.*;
-import beast.evolution.sitemodel.SiteModel;
-import beast.evolution.substitutionmodel.SubstitutionModel;
-import beast.evolution.tree.Node;
-import beast.evolution.tree.Tree;
-import beast.evolution.tree.TreeInterface;
+import beast.base.evolution.sitemodel.SiteModel;
+import beast.base.evolution.substitutionmodel.SubstitutionModel;
+import beast.base.evolution.tree.Node;
+import beast.base.evolution.tree.Tree;
+import beast.base.evolution.tree.TreeInterface;
 
 
-import beast.evolution.likelihood.GenericTreeLikelihood;
-import beast.evolution.likelihood.BeagleTreeLikelihood;
-import beast.evolution.likelihood.BeerLikelihoodCore4;
+import beast.base.evolution.likelihood.GenericTreeLikelihood;
+import beast.base.evolution.likelihood.BeagleTreeLikelihood;
+import beast.base.evolution.likelihood.BeerLikelihoodCore4;
 import test.piqmee.likelihood.*;
 
 @Description("Calculates the probability of sequence data on a beast.tree given a site and substitution model using " +
@@ -60,10 +60,10 @@ public class TreeLikelihood extends GenericTreeLikelihood {
     final public Input<Boolean> m_useTipLikelihoods = new Input<>("useTipLikelihoods", "flag to indicate that partial likelihoods are provided at the tips", false);
     final public Input<String> implementationInput = new Input<>("implementation", "name of class that implements this treelikelihood potentially more efficiently. "
             + "This class will be tried first, with the TreeLikelihood as fallback implementation. "
-            + "When multi-threading, multiple objects can be created.", "beast.evolution.likelihood.BeagleTreeLikelihood");
+            + "When multi-threading, multiple objects can be created.", "beast.base.evolution.likelihood.BeagleTreeLikelihood");
 
     public static enum Scaling {none, always, _default};
-    final public Input<beast.evolution.likelihood.TreeLikelihood.Scaling> scaling = new Input<>("scaling", "type of scaling to use, one of " + Arrays.toString(beast.evolution.likelihood.TreeLikelihood.Scaling.values()) + ". If not specified, the -beagle_scaling flag is used.", beast.evolution.likelihood.TreeLikelihood.Scaling._default, beast.evolution.likelihood.TreeLikelihood.Scaling.values());
+    final public Input<beast.base.evolution.likelihood.TreeLikelihood.Scaling> scaling = new Input<>("scaling", "type of scaling to use, one of " + Arrays.toString(beast.base.evolution.likelihood.TreeLikelihood.Scaling.values()) + ". If not specified, the -beagle_scaling flag is used.", beast.base.evolution.likelihood.TreeLikelihood.Scaling._default, beast.base.evolution.likelihood.TreeLikelihood.Scaling.values());
 
 
     /**
@@ -374,7 +374,7 @@ public class TreeLikelihood extends GenericTreeLikelihood {
 //            traverse(tree.getRoot());
 //            calcLogP();
 //            return logP;
-        } else if (logP == Double.NEGATIVE_INFINITY && m_fScale < 10 && !scaling.get().equals(beast.evolution.likelihood.TreeLikelihood.Scaling.none)) { // && !m_likelihoodCore.getUseScaling()) {
+        } else if (logP == Double.NEGATIVE_INFINITY && m_fScale < 10 && !scaling.get().equals(beast.base.evolution.likelihood.TreeLikelihood.Scaling.none)) { // && !m_likelihoodCore.getUseScaling()) {
             m_nScale = 0;
             m_fScale *= 1.01;
             Log.warning.println("Turning on scaling to prevent numeric instability " + m_fScale);

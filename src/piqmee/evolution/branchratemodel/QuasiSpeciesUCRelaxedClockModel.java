@@ -1,16 +1,19 @@
 package piqmee.evolution.branchratemodel;
 
-import beast.core.Description;
-import beast.core.Input;
-import beast.core.parameter.IntegerParameter;
-import beast.core.parameter.RealParameter;
-import beast.core.util.Log;
-import beast.evolution.branchratemodel.BranchRateModel;
-import beast.evolution.branchratemodel.UCRelaxedClockModel;
-import beast.evolution.tree.Node;
-import beast.evolution.tree.Tree;
-import beast.math.distributions.ParametricDistribution;
-import beast.util.Randomizer;
+import beast.base.core.Description;
+import beast.base.core.Function;
+import beast.base.core.Input;
+import beast.base.inference.parameter.IntegerParameter;
+import beast.base.inference.parameter.RealParameter;
+import beast.base.inference.util.InputUtil;
+import beast.base.core.Log;
+import beast.base.evolution.branchratemodel.BranchRateModel;
+import beast.base.evolution.branchratemodel.UCRelaxedClockModel;
+import beast.base.evolution.tree.Node;
+import beast.base.evolution.tree.Tree;
+import beast.base.inference.CalculationNode;
+import beast.base.inference.distribution.ParametricDistribution;
+import beast.base.util.Randomizer;
 import org.apache.commons.math.MathException;
 import piqmee.tree.QuasiSpeciesNode;
 
@@ -32,7 +35,7 @@ public class QuasiSpeciesUCRelaxedClockModel extends BranchRateModel.Base {
     final public Input<Tree> treeInput = new Input<>("tree", "the tree this relaxed clock is associated with.", Input.Validate.REQUIRED);
     final public Input<Boolean> normalizeInput = new Input<>("normalize", "Whether to normalize the average rate (default false).", false);
 
-    RealParameter meanRate;
+    Function meanRate;
 
     int LATTICE_SIZE_FOR_DISCRETIZED_RATES = 100;
 
@@ -144,7 +147,7 @@ public class QuasiSpeciesUCRelaxedClockModel extends BranchRateModel.Base {
             renormalize = false;
         }
 
-        return getRawRate(node) * scaleFactor * meanRate.getValue();
+        return getRawRate(node) * scaleFactor * meanRate.getArrayValue();
     }
 
     /**
@@ -305,7 +308,7 @@ public class QuasiSpeciesUCRelaxedClockModel extends BranchRateModel.Base {
             return true;
         }
 
-        if (meanRate.somethingIsDirty()) {
+        if (InputUtil.isDirty(meanRateInput)) {
             return true;
         }
 

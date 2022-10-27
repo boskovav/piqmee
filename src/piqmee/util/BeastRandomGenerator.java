@@ -1,6 +1,6 @@
 package piqmee.util;
 
-import beast.util.Randomizer;
+import beast.base.util.Randomizer;
 
 /**
  * @author Veronika Boskova created on 24/10/17

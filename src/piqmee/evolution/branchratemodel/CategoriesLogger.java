@@ -1,9 +1,13 @@
 package piqmee.evolution.branchratemodel;
 
-import beast.core.*;
-import beast.evolution.branchratemodel.BranchRateModel;
-import beast.evolution.likelihood.GenericTreeLikelihood;
-import beast.evolution.tree.Tree;
+import beast.base.core.BEASTObject;
+import beast.base.core.Description;
+import beast.base.core.Function;
+import beast.base.core.Input;
+import beast.base.core.Loggable;
+import beast.base.evolution.branchratemodel.BranchRateModel;
+import beast.base.evolution.likelihood.GenericTreeLikelihood;
+import beast.base.evolution.tree.Tree;
 import piqmee.tree.QuasiSpeciesNode;
 
 import java.io.PrintStream;

@@ -1,10 +1,10 @@
 package test.piqmee.distributions;
 
 import static org.junit.Assert.assertEquals;
-import beast.core.Description;
-import beast.core.parameter.RealParameter;
-import beast.evolution.tree.Tree;
-import beast.util.TreeParser;
+import beast.base.core.Description;
+import beast.base.inference.parameter.RealParameter;
+import beast.base.evolution.tree.Tree;
+import beast.base.evolution.tree.TreeParser;
 import org.junit.Test;
 
 import piqmee.distributions.BirthDeathSkylineModel;

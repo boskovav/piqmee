@@ -1,7 +1,7 @@
 package test.piqmee.likelihood;
 
 
-import beast.evolution.likelihood.GenericTreeLikelihood;
+import beast.base.evolution.likelihood.GenericTreeLikelihood;
 import piqmee.likelihood.QuasiSpeciesTreeLikelihood3;
 
 public class QuasiSpeciesTreeLikelihoodTests3 extends QuasiSpeciesTreeLikelihoodTests2 {

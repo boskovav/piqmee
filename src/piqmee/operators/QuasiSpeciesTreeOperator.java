@@ -1,13 +1,13 @@
 package piqmee.operators;
 
-import beast.core.Description;
-import beast.core.Input;
-import beast.core.Operator;
-import beast.evolution.tree.Node;
-import beast.util.Randomizer;
+import beast.base.core.Description;
+import beast.base.core.Input;
+import beast.base.inference.Operator;
+import beast.base.evolution.tree.Node;
+import beast.base.util.Randomizer;
 import piqmee.tree.QuasiSpeciesTree;
 import piqmee.tree.QuasiSpeciesNode;
-import beast.core.parameter.RealParameter;
+import beast.base.inference.parameter.RealParameter;
 
 import java.util.ArrayList;
 import java.util.List;

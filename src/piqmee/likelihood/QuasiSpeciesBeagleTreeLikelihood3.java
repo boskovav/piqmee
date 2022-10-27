@@ -34,15 +34,15 @@ import beagle.BeagleFlag;
 import beagle.BeagleInfo;
 import beagle.InstanceDetails;
 import beagle.ResourceDetails;
-import beast.core.CalculationNode;
-import beast.core.Description;
-import beast.core.util.Log;
-import beast.evolution.alignment.Alignment;
-import beast.evolution.branchratemodel.StrictClockModel;
-import beast.evolution.sitemodel.SiteModel;
-import beast.evolution.substitutionmodel.EigenDecomposition;
-import beast.evolution.tree.Node;
-import beast.evolution.tree.Tree;
+import beast.base.inference.CalculationNode;
+import beast.base.core.Description;
+import beast.base.core.Log;
+import beast.base.evolution.alignment.Alignment;
+import beast.base.evolution.branchratemodel.StrictClockModel;
+import beast.base.evolution.sitemodel.SiteModel;
+import beast.base.evolution.substitutionmodel.EigenDecomposition;
+import beast.base.evolution.tree.Node;
+import beast.base.evolution.tree.Tree;
 import piqmee.tree.QuasiSpeciesNode;
 
 
@@ -61,7 +61,7 @@ public class QuasiSpeciesBeagleTreeLikelihood3 extends QuasiSpeciesTreeLikelihoo
     // allocate each BEAGLE instance to. If less than the number of instances then
     // will wrap around.
     // note: to use a different device, say device 2, start beast with
-    // java -Dbeagle.resource.order=2 beast.app.BeastMCMC
+    // java -Dbeagle.resource.order=2 beastfx.app.beast.BeastMCMC
     private static final String RESOURCE_ORDER_PROPERTY = "beagle.resource.order";
     private static final String PREFERRED_FLAGS_PROPERTY = "beagle.preferred.flags";
     private static final String REQUIRED_FLAGS_PROPERTY = "beagle.required.flags";

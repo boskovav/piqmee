@@ -1,7 +1,11 @@
 package piqmee.util;
 
-import beast.core.*;
-import beast.evolution.tree.Node;
+import beast.base.core.Description;
+import beast.base.core.Function;
+import beast.base.core.Input;
+import beast.base.core.Loggable;
+import beast.base.evolution.tree.Node;
+import beast.base.inference.CalculationNode;
 import piqmee.tree.QuasiSpeciesNode;
 import piqmee.tree.QuasiSpeciesTree;
 
@@ -66,7 +70,7 @@ public class AbsoluteTreeHeight extends CalculationNode implements Function, Log
     }
 
     @Override
-    public void log(int nSample, PrintStream out) {
+    public void log(long nSample, PrintStream out) {
         double absoluteHeight = qsTree.getRoot().getHeight();
         for (Node node : qsTree.getExternalNodes()){
             double[] attachmentTimes = ((QuasiSpeciesNode) node).getAttachmentTimesList();

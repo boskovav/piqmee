@@ -1,7 +1,11 @@
 package piqmee.util;
 
-import beast.core.*;
-import beast.evolution.tree.Node;
+import beast.base.core.Description;
+import beast.base.core.Function;
+import beast.base.core.Input;
+import beast.base.core.Loggable;
+import beast.base.evolution.tree.Node;
+import beast.base.inference.CalculationNode;
 import piqmee.tree.QuasiSpeciesTree;
 import piqmee.tree.QuasiSpeciesNode;
 
@@ -69,7 +73,7 @@ public class AttachmentTimesAll extends CalculationNode implements Function, Log
     }
 
     @Override
-    public void log(int nSample, PrintStream out) {
+    public void log(long nSample, PrintStream out) {
         // print all haplo names
         for (Node node : qsTree.getExternalNodes()) {
             double[] attachmentTimes = ((QuasiSpeciesNode) node).getAttachmentTimesList();

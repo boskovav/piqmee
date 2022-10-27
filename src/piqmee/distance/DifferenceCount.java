@@ -1,7 +1,7 @@
 package piqmee.distance;
 
-import beast.core.Description;
-import beast.evolution.alignment.distance.Distance;
+import beast.base.core.Description;
+import beast.base.evolution.distance.Distance;
 
 /**
  *  @author Veronika Boskova created on 03/03/17

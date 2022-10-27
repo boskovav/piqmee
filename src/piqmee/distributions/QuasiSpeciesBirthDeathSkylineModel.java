@@ -1,11 +1,11 @@
 package piqmee.distributions;
 
 
-import beast.core.Citation;
-import beast.core.Description;
-import beast.core.util.Log;
-import beast.evolution.tree.Node;
-import beast.evolution.tree.TreeInterface;
+import beast.base.core.Citation;
+import beast.base.core.Description;
+import beast.base.core.Log;
+import beast.base.evolution.tree.Node;
+import beast.base.evolution.tree.TreeInterface;
 import piqmee.tree.QuasiSpeciesNode;
 import piqmee.tree.QuasiSpeciesTree;
 

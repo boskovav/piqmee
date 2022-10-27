@@ -1,7 +1,7 @@
 package piqmee.classiclikelihood;
 
-import beast.core.Description;
-import beast.evolution.likelihood.BeerLikelihoodCore;
+import beast.base.core.Description;
+import beast.base.evolution.likelihood.BeerLikelihoodCore;
 
 /**
  *  @author Veronika Boskova created on 03/03/17

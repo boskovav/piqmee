@@ -1,19 +1,22 @@
 package piqmee.tree;
 
-import beast.app.beauti.BeautiDoc;
-import beast.core.*;
-import beast.core.util.Log;
-import beast.evolution.alignment.Alignment;
-import beast.evolution.alignment.FilteredAlignment;
-import beast.evolution.alignment.Sequence;
-import beast.evolution.alignment.distance.Distance;
-import beast.evolution.datatype.DataType;
-import beast.evolution.tree.Node;
-import beast.evolution.tree.TraitSet;
-import beast.evolution.tree.Tree;
-import beast.util.TreeParser;
+import beastfx.app.inputeditor.BeautiDoc;
+import beast.base.core.BEASTInterface;
+import beast.base.core.Input;
+import beast.base.core.Log;
+import beast.base.evolution.alignment.Alignment;
+import beast.base.evolution.alignment.FilteredAlignment;
+import beast.base.evolution.alignment.Sequence;
+import beast.base.evolution.distance.Distance;
+import beast.base.evolution.datatype.DataType;
+import beast.base.evolution.tree.Node;
+import beast.base.evolution.tree.TraitSet;
+import beast.base.evolution.tree.Tree;
+import beast.base.evolution.tree.TreeParser;
+import beast.base.inference.StateNode;
+import beast.base.inference.StateNodeInitialiser;
 import piqmee.distance.DifferenceCount;
-import beast.evolution.likelihood.GenericTreeLikelihood;
+import beast.base.evolution.likelihood.GenericTreeLikelihood;
 
 import java.io.PrintStream;
 import java.util.*;
@@ -540,7 +543,8 @@ public class QuasiSpeciesTree extends Tree {
      *
      */
     @Override
-    protected final void initArrays() {
+	public
+    final void initArrays() {
         // initialise tree-as-array representation + its stored variant
         m_nodes = new QuasiSpeciesNode[nodeCount];
         listNodes((QuasiSpeciesNode)root, (QuasiSpeciesNode[]) m_nodes);
@@ -1923,7 +1927,7 @@ public class QuasiSpeciesTree extends Tree {
      *
      */
     @Override
-    public void log(int i, PrintStream printStream) {
+    public void log(long i, PrintStream printStream) {
         printStream.print("tree STATE_"+i+" = ");
         printStream.print(toString());
         printStream.print(";");

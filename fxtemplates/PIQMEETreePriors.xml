@@ -1,5 +1,5 @@
 <beast version='2.0'
-       namespace='beast.app.beauti:beast.core:beast.evolution.branchratemodel:beast.evolution.speciation:beast.evolution.tree.coalescent:beast.core.util:beast.evolution.nuc:beast.evolution.operators:beast.evolution.sitemodel:beast.evolution.substitutionmodel:beast.evolution.likelihood:beast.evolution:beast.math.distributions'>
+       namespace='beast.app.beauti:beast.pkgmgmt:beast.base.core:beast.base.inference:beast.base.evolution.branchratemodel:beast.base.evolution.speciation:beast.base.evolution.tree.coalescent:beast.base.util:beast.base.math:beast.evolution.nuc:beast.base.evolution.operator:beast.base.inference.operator:beast.base.evolution.sitemodel:beast.base.evolution.substitutionmodel:beast.base.evolution.likelihood:beast.evolution:beast.base.math.distributions'>
 
     <!-- tree priors -->
     <mergewith point='piqmeeTreePriorTemplates'>
@@ -26,7 +26,7 @@
 	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.forceRateChange,
 	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.conditionOnSurvival,
     piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.conditionOnRhoSampling,
-	beast.math.distributions.MarkovChainDistribution.parameter,
+	beast.base.inference.distribution.MarkovChainDistribution.parameter,
 	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.reverseTimeArrays,
 	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.originIsRootEdge,
 	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.rhoSamplingTimes,
@@ -48,43 +48,43 @@
 		<samplingProportion spec='parameter.RealParameter' id="samplingProportion.t:$(n)" value="0.01" lower="0." upper="1." dimension ="1"/>
 	</plugin>
 
-	<distribution  id='originPrior.t:$(n)' x="@origin.t:$(n)" spec="beast.math.distributions.Prior">
-	    <distr spec='beast.math.distributions.Uniform' lower="0." upper="Infinity"/>
+	<distribution  id='originPrior.t:$(n)' x="@origin.t:$(n)" spec="beast.base.inference.distribution.Prior">
+	    <distr spec='beast.base.inference.distribution.Uniform' lower="0." upper="Infinity"/>
 	</distribution>
 
-	<distribution id="samplingProportionPrior.t:$(n)" x="@samplingProportion.t:$(n)" spec="beast.math.distributions.Prior">
-	    <distr spec="beast.math.distributions.Beta" offset="0.">
+	<distribution id="samplingProportionPrior.t:$(n)" x="@samplingProportion.t:$(n)" spec="beast.base.inference.distribution.Prior">
+	    <distr spec="beast.base.inference.distribution.Beta" offset="0.">
 	        <parameter name="alpha" value="1." estimate="false"/>
 	        <parameter name="beta" value="1." estimate="false"/>
 	    </distr>
 	</distribution>
 
-	<distribution id="becomeUninfectiousRatePrior.t:$(n)" x="@becomeUninfectiousRate.t:$(n)" spec="beast.math.distributions.Prior">
-	    <distr spec='beast.math.distributions.LogNormalDistributionModel' offset="0.0" meanInRealSpace="false">
+	<distribution id="becomeUninfectiousRatePrior.t:$(n)" x="@becomeUninfectiousRate.t:$(n)" spec="beast.base.inference.distribution.Prior">
+	    <distr spec='beast.base.inference.distribution.LogNormalDistributionModel' offset="0.0" meanInRealSpace="false">
 	        <parameter name="M" value="0." estimate="false"/>
 	        <parameter name="S" value="1." estimate="false"/>
 	    </distr>
 	</distribution>
 
-	<distribution id="reproductiveNumberPrior.t:$(n)" x="@reproductiveNumber.t:$(n)" spec="beast.math.distributions.Prior">
-	    <distr spec='beast.math.distributions.LogNormalDistributionModel' offset="0.0" meanInRealSpace="false">
+	<distribution id="reproductiveNumberPrior.t:$(n)" x="@reproductiveNumber.t:$(n)" spec="beast.base.inference.distribution.Prior">
+	    <distr spec='beast.base.inference.distribution.LogNormalDistributionModel' offset="0.0" meanInRealSpace="false">
 	        <parameter name="M" value="0." estimate="false"/>
 			<parameter name="S" value="1." estimate="false"/>
 	    </distr>
     </distribution>
 
     <!-- RPN calculator -->
-    <RPNcalculator spec="beast.math.statistic.RPNcalculator" id="birth.t:$(n)" expression="reproductiveNumber.t:$(n) becomeUninfectiousRate.t:$(n) *"> <!-- s/(d+s) -->
+    <RPNcalculator spec="beast.base.inference.util.RPNcalculator" id="birth.t:$(n)" expression="reproductiveNumber.t:$(n) becomeUninfectiousRate.t:$(n) *"> <!-- s/(d+s) -->
         <parameter idref="becomeUninfectiousRate.t:$(n)"/>
         <parameter idref="reproductiveNumber.t:$(n)"/>
     </RPNcalculator>
 
-    <RPNcalculator spec="beast.math.statistic.RPNcalculator" id="sampling.t:$(n)" expression="becomeUninfectiousRate.t:$(n) samplingProportion.t:$(n) *">
+    <RPNcalculator spec="beast.base.inference.util.RPNcalculator" id="sampling.t:$(n)" expression="becomeUninfectiousRate.t:$(n) samplingProportion.t:$(n) *">
         <parameter idref="becomeUninfectiousRate.t:$(n)"/>
         <parameter idref="samplingProportion.t:$(n)"/>
     </RPNcalculator>
 
-    <RPNcalculator spec="beast.math.statistic.RPNcalculator" id="death.t:$(n)" expression="becomeUninfectiousRate.t:$(n) 1 samplingProportion.t:$(n) - *"> <!-- b*S0/(d+s) -->
+    <RPNcalculator spec="beast.base.inference.util.RPNcalculator" id="death.t:$(n)" expression="becomeUninfectiousRate.t:$(n) 1 samplingProportion.t:$(n) - *"> <!-- b*S0/(d+s) -->
         <parameter idref="becomeUninfectiousRate.t:$(n)"/>
         <parameter idref="samplingProportion.t:$(n)"/>
     </RPNcalculator>
@@ -178,7 +178,7 @@
 	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.forceRateChange,
 	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.conditionOnSurvival,
 	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.conditionOnRhoSampling,
-	beast.math.distributions.MarkovChainDistribution.parameter,
+	beast.base.inference.distribution.MarkovChainDistribution.parameter,
 	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.reverseTimeArrays,
 	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.originIsRootEdge,
 	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.rhoSamplingTimes,
@@ -201,43 +201,43 @@
 		<rho spec='parameter.RealParameter' id="rhoContemp.t:$(n)" value="0.01" lower="0." upper="1."/>
 	</plugin>
 
-	<distribution  id='originPriorContemp.t:$(n)' x="@originContemp.t:$(n)" spec="beast.math.distributions.Prior">
-	    <distr spec='beast.math.distributions.Uniform' lower="0." upper="Infinity"/>
+	<distribution  id='originPriorContemp.t:$(n)' x="@originContemp.t:$(n)" spec="beast.base.inference.distribution.Prior">
+	    <distr spec='beast.base.inference.distribution.Uniform' lower="0." upper="Infinity"/>
 	</distribution>
 
-	<distribution id="rhoPriorContemp.t:$(n)" x="@rhoContemp.t:$(n)" spec="beast.math.distributions.Prior">
-		<distr spec="beast.math.distributions.Beta" offset="0.">
+	<distribution id="rhoPriorContemp.t:$(n)" x="@rhoContemp.t:$(n)" spec="beast.base.inference.distribution.Prior">
+		<distr spec="beast.base.inference.distribution.Beta" offset="0.">
 			<parameter name="alpha" value="1." estimate="false"/>
 			<parameter name="beta" value="1." estimate="false"/>
 		</distr>
 	</distribution>
 
-	<distribution id="becomeUninfectiousRatePriorContemp.t:$(n)" x="@becomeUninfectiousRateContemp.t:$(n)" spec="beast.math.distributions.Prior">
-	    <distr spec='beast.math.distributions.LogNormalDistributionModel' offset="0.0" meanInRealSpace="false">
+	<distribution id="becomeUninfectiousRatePriorContemp.t:$(n)" x="@becomeUninfectiousRateContemp.t:$(n)" spec="beast.base.inference.distribution.Prior">
+	    <distr spec='beast.base.inference.distribution.LogNormalDistributionModel' offset="0.0" meanInRealSpace="false">
 	        <parameter name="M" value="0." estimate="false"/>
 	        <parameter name="S" value="1." estimate="false"/>
 	    </distr>
 	</distribution>
 
-	<distribution id="reproductiveNumberPriorContemp.t:$(n)" x="@reproductiveNumberContemp.t:$(n)" spec="beast.math.distributions.Prior">
-	    <distr spec='beast.math.distributions.LogNormalDistributionModel' offset="0.0" meanInRealSpace="false">
+	<distribution id="reproductiveNumberPriorContemp.t:$(n)" x="@reproductiveNumberContemp.t:$(n)" spec="beast.base.inference.distribution.Prior">
+	    <distr spec='beast.base.inference.distribution.LogNormalDistributionModel' offset="0.0" meanInRealSpace="false">
 	        <parameter name="M" value="0." estimate="false"/>
 			<parameter name="S" value="1." estimate="false"/>
 	    </distr>
     </distribution>
 
     <!-- RPN calculator -->
-    <RPNcalculator spec="beast.math.statistic.RPNcalculator" id="birthContemp.t:$(n)" expression="reproductiveNumberContemp.t:$(n) becomeUninfectiousRateContemp.t:$(n) *"> <!-- s/(d+s) -->
+    <RPNcalculator spec="beast.base.inference.util.RPNcalculator" id="birthContemp.t:$(n)" expression="reproductiveNumberContemp.t:$(n) becomeUninfectiousRateContemp.t:$(n) *"> <!-- s/(d+s) -->
         <parameter idref="becomeUninfectiousRateContemp.t:$(n)"/>
         <parameter idref="reproductiveNumberContemp.t:$(n)"/>
     </RPNcalculator>
 
-    <RPNcalculator spec="beast.math.statistic.RPNcalculator" id="samplingContemp.t:$(n)" expression="becomeUninfectiousRateContemp.t:$(n) samplingProportionContemp.t:$(n) *">
+    <RPNcalculator spec="beast.base.inference.util.RPNcalculator" id="samplingContemp.t:$(n)" expression="becomeUninfectiousRateContemp.t:$(n) samplingProportionContemp.t:$(n) *">
         <parameter idref="becomeUninfectiousRateContemp.t:$(n)"/>
         <parameter idref="samplingProportionContemp.t:$(n)"/>
     </RPNcalculator>
 
-    <RPNcalculator spec="beast.math.statistic.RPNcalculator" id="deathContemp.t:$(n)" expression="becomeUninfectiousRateContemp.t:$(n) 1 samplingProportionContemp.t:$(n) - *"> <!-- b*S0/(d+s) -->
+    <RPNcalculator spec="beast.base.inference.util.RPNcalculator" id="deathContemp.t:$(n)" expression="becomeUninfectiousRateContemp.t:$(n) 1 samplingProportionContemp.t:$(n) - *"> <!-- b*S0/(d+s) -->
         <parameter idref="becomeUninfectiousRateContemp.t:$(n)"/>
         <parameter idref="samplingProportionContemp.t:$(n)"/>
     </RPNcalculator>
@@ -330,7 +330,7 @@
 	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.forceRateChange,
 	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.conditionOnSurvival,
 	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.conditionOnRhoSampling,
-	beast.math.distributions.MarkovChainDistribution.parameter,
+	beast.base.inference.distribution.MarkovChainDistribution.parameter,
 	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.reverseTimeArrays,
 	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.originIsRootEdge,
 	piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel.birthRateChangeTimes,
@@ -354,43 +354,43 @@
         <reverseTimeArrays spec='parameter.BooleanParameter' value='false false false true false'/>
 	</plugin>
 
-	<distribution  id='originPriorMultiRho.t:$(n)' x="@originMultiRho.t:$(n)" spec="beast.math.distributions.Prior">
-	    <distr spec='beast.math.distributions.Uniform' lower="0." upper="Infinity"/>
+	<distribution  id='originPriorMultiRho.t:$(n)' x="@originMultiRho.t:$(n)" spec="beast.base.inference.distribution.Prior">
+	    <distr spec='beast.base.inference.distribution.Uniform' lower="0." upper="Infinity"/>
 	</distribution>
 
-	<distribution id="rhoPriorMultiRho.t:$(n)" x="@rhoMultiRho.t:$(n)" spec="beast.math.distributions.Prior">
-		<distr spec="beast.math.distributions.Beta" offset="0.">
+	<distribution id="rhoPriorMultiRho.t:$(n)" x="@rhoMultiRho.t:$(n)" spec="beast.base.inference.distribution.Prior">
+		<distr spec="beast.base.inference.distribution.Beta" offset="0.">
 			<parameter name="alpha" value="1." estimate="false"/>
 			<parameter name="beta" value="1." estimate="false"/>
 		</distr>
 	</distribution>
 
-	<distribution id="becomeUninfectiousRatePriorMultiRho.t:$(n)" x="@becomeUninfectiousRateMultiRho.t:$(n)" spec="beast.math.distributions.Prior">
-	    <distr spec='beast.math.distributions.LogNormalDistributionModel' offset="0.0" meanInRealSpace="false">
+	<distribution id="becomeUninfectiousRatePriorMultiRho.t:$(n)" x="@becomeUninfectiousRateMultiRho.t:$(n)" spec="beast.base.inference.distribution.Prior">
+	    <distr spec='beast.base.inference.distribution.LogNormalDistributionModel' offset="0.0" meanInRealSpace="false">
 	        <parameter name="M" value="0." estimate="false"/>
 	        <parameter name="S" value="1." estimate="false"/>
 	    </distr>
 	</distribution>
 
-	<distribution id="reproductiveNumberPriorMultiRho.t:$(n)" x="@reproductiveNumberMultiRho.t:$(n)" spec="beast.math.distributions.Prior">
-	    <distr spec='beast.math.distributions.LogNormalDistributionModel' offset="0.0" meanInRealSpace="false">
+	<distribution id="reproductiveNumberPriorMultiRho.t:$(n)" x="@reproductiveNumberMultiRho.t:$(n)" spec="beast.base.inference.distribution.Prior">
+	    <distr spec='beast.base.inference.distribution.LogNormalDistributionModel' offset="0.0" meanInRealSpace="false">
 	        <parameter name="M" value="0." estimate="false"/>
 			<parameter name="S" value="1." estimate="false"/>
 	    </distr>
     </distribution>
 
    <!-- RPN calculator -->
-    <RPNcalculator spec="beast.math.statistic.RPNcalculator" id="birthMultiRho.t:$(n)" expression="reproductiveNumberMultiRho.t:$(n) becomeUninfectiousRateMultiRho.t:$(n) *"> <!-- s/(d+s) -->
+    <RPNcalculator spec="beast.base.inference.util.RPNcalculator" id="birthMultiRho.t:$(n)" expression="reproductiveNumberMultiRho.t:$(n) becomeUninfectiousRateMultiRho.t:$(n) *"> <!-- s/(d+s) -->
         <parameter idref="becomeUninfectiousRateMultiRho.t:$(n)"/>
         <parameter idref="reproductiveNumberMultiRho.t:$(n)"/>
     </RPNcalculator>
 
-    <RPNcalculator spec="beast.math.statistic.RPNcalculator" id="samplingMultiRho.t:$(n)" expression="becomeUninfectiousRateMultiRho.t:$(n) samplingProportionMultiRho.t:$(n) *">
+    <RPNcalculator spec="beast.base.inference.util.RPNcalculator" id="samplingMultiRho.t:$(n)" expression="becomeUninfectiousRateMultiRho.t:$(n) samplingProportionMultiRho.t:$(n) *">
         <parameter idref="becomeUninfectiousRateMultiRho.t:$(n)"/>
         <parameter idref="samplingProportionMultiRho.t:$(n)"/>
     </RPNcalculator>
 
-    <RPNcalculator spec="beast.math.statistic.RPNcalculator" id="deathMultiRho.t:$(n)" expression="becomeUninfectiousRateMultiRho.t:$(n) 1 samplingProportionMultiRho.t:$(n) - *"> <!-- b*S0/(d+s) -->
+    <RPNcalculator spec="beast.base.inference.util.RPNcalculator" id="deathMultiRho.t:$(n)" expression="becomeUninfectiousRateMultiRho.t:$(n) 1 samplingProportionMultiRho.t:$(n) - *"> <!-- b*S0/(d+s) -->
         <parameter idref="becomeUninfectiousRateMultiRho.t:$(n)"/>
         <parameter idref="samplingProportionMultiRho.t:$(n)"/>
     </RPNcalculator>

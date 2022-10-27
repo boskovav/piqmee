@@ -1,9 +1,12 @@
 package piqmee.tree;
 
-import beast.core.*;
-import beast.evolution.alignment.Alignment;
-import beast.evolution.alignment.FilteredAlignment;
-import beast.util.TreeParser;
+import beast.base.core.Description;
+import beast.base.core.Input;
+import beast.base.evolution.alignment.Alignment;
+import beast.base.evolution.alignment.FilteredAlignment;
+import beast.base.evolution.tree.TreeParser;
+import beast.base.inference.StateNode;
+import beast.base.inference.StateNodeInitialiser;
 
 import java.util.*;
 
