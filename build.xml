@@ -203,7 +203,9 @@
         <copy todir="${pack}/lib">
             <fileset dir="${lib}" includes="*.jar" />
         </copy>
-        <jar jarfile="${pack}/lib/${fullName}.jar" basedir="${build}" />
+        <jar jarfile="${pack}/lib/${fullName}.jar" basedir="${build}" >
+            <include name="piqmee/**/*.class" />
+        </jar>
 
         <copy file="README.md" tofile="${pack}/README" failonerror="false" quiet="true" />
         <copy file="README.md" tofile="${pack}/README" failonerror="false" quiet="true" />
