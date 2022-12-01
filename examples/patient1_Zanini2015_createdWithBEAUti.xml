@@ -154,6 +154,12 @@
                 </siteModel>
                 <branchRateModel id="StrictClock.c:haplotypes_p1_7023_7286_forBeast" spec="beast.base.evolution.branchratemodel.StrictClockModel" clock.rate="@clockRate.c:haplotypes_p1_7023_7286_forBeast"/>
             </distribution>
+<!--
+            <distribution id="treeLikelihood.haplotypes_p1_7023_7286_forBeast2" spec="piqmee.likelihood.QuasiSpeciesTreeLikelihood3" data="@haplotypes_p1_7023_7286_forBeast" tree="@Tree.t:haplotypes_p1_7023_7286_forBeast">
+                <siteModel idref="SiteModel.s:haplotypes_p1_7023_7286_forBeast"/>
+                <branchRateModel idref="StrictClock.c:haplotypes_p1_7023_7286_forBeast"/>
+            </distribution>
+-->            
         </distribution>
     </distribution>
 
@@ -245,6 +251,10 @@
         <log id="ESS.0" spec="util.ESS" arg="@posterior"/>
         <log idref="likelihood"/>
         <log idref="prior"/>
+        <log idref="treeLikelihood.haplotypes_p1_7023_7286_forBeast"/>
+        <!--
+        <log idref="treeLikelihood.haplotypes_p1_7023_7286_forBeast2"/>
+    -->
     </logger>
 
     <logger id="treelog.t:haplotypes_p1_7023_7286_forBeast" fileName="$(filebase).$(tree).trees" logEvery="1000" mode="tree">

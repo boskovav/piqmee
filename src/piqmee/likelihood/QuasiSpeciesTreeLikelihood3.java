@@ -152,6 +152,8 @@ public class QuasiSpeciesTreeLikelihood3 extends GenericTreeLikelihood {
         				// so we go back to this Java implementation if scaling is required
             	if (beagleLikelihood.getBeagle() == null) {
             		beagleLikelihood = null;
+            	} else {
+            		return;
             	}
 	        } catch (Exception e) {
 	            // No Beagle instance was found, so we use the good old java likelihood core

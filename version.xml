@@ -1,3 +1,48 @@
-<addon name='PIQMEE' version='1.0.2'>
-    <depends on='beast2' atleast='2.5.0'/>
+<addon name='PIQMEE' version='1.1.0'>
+    <depends on='BEAST.base' atleast='2.7.2'/>
+    <depends on='BEAST.app' atleast='2.7.2'/>
+
+
+    <service type="beast.base.core.BEASTInterface">
+        <provider classname="piqmee.classiclikelihood.QuasiSpeciesTreeLikelihood"/>
+        <provider classname="piqmee.distance.DifferenceCount"/>
+        <provider classname="piqmee.distributions.BirthDeathSkylineModel"/>
+        <provider classname="piqmee.distributions.QuasiSpeciesBirthDeathSkylineModel"/>
+        <provider classname="piqmee.evolution.branchratemodel.CategoriesLogger"/>
+        <provider classname="piqmee.evolution.branchratemodel.QuasiSpeciesRateStatistic"/>
+        <provider classname="piqmee.evolution.branchratemodel.QuasiSpeciesUCRelaxedClockModel"/>
+        <provider classname="piqmee.likelihood.QuasiSpeciesBeagleTreeLikelihood"/>
+        <provider classname="piqmee.likelihood.QuasiSpeciesBeagleTreeLikelihood3"/>
+        <provider classname="piqmee.likelihood.QuasiSpeciesBeagleTreeLikelihood3b"/>
+        <provider classname="piqmee.likelihood.QuasiSpeciesBeagleTreeLikelihood4"/>
+        <provider classname="piqmee.likelihood.QuasiSpeciesTreeLikelihood"/>
+        <provider classname="piqmee.likelihood.QuasiSpeciesTreeLikelihood2"/>
+        <provider classname="piqmee.likelihood.QuasiSpeciesTreeLikelihood3"/>
+        <provider classname="piqmee.operators.QuasiSpeciesHaplotypeScale"/>
+        <provider classname="piqmee.operators.QuasiSpeciesHaplotypeSwap"/>
+        <provider classname="piqmee.operators.QuasiSpeciesSequenceAttachmentRandom"/>
+        <provider classname="piqmee.operators.QuasiSpeciesSequenceAttachmentUniform"/>
+        <provider classname="piqmee.operators.QuasiSpeciesSubtreeExchange"/>
+        <provider classname="piqmee.operators.QuasiSpeciesSubtreeExchangeEasy"/>
+        <provider classname="piqmee.operators.QuasiSpeciesTreeScale"/>
+        <provider classname="piqmee.operators.QuasiSpeciesUCRelaxedClockCategoriesUniform"/>
+        <provider classname="piqmee.operators.QuasiSpeciesUniform"/>
+        <provider classname="piqmee.operators.QuasiSpeciesWilsonBalding"/>
+        <provider classname="piqmee.operators.QuasiSpeciesWilsonBaldingEasy"/>
+        <provider classname="piqmee.tree.QuasiSpeciesClusterTree"/>
+        <provider classname="piqmee.tree.QuasiSpeciesNode"/>
+        <provider classname="piqmee.tree.QuasiSpeciesRandomTree"/>
+        <provider classname="piqmee.tree.QuasiSpeciesTree"/>
+        <provider classname="piqmee.tree.QuasiSpeciesTreeFromNewick"/>
+        <provider classname="piqmee.util.AbsoluteTreeHeight"/>
+        <provider classname="piqmee.util.AttachmentTimes"/>
+        <provider classname="piqmee.util.AttachmentTimesAll"/>
+        <provider classname="piqmee.util.QuasiSpeciesNodeTreeLogger"/>
+    </service>
+
+    <service type="beastfx.app.inputeditor.InputEditor">
+        <provider classname="piqmee.app.beauti.HaplotypeCountsInputEditor"/>
+    </service>
+
+
 </addon>

@@ -1,17 +1,6 @@
 <beast version='2.0'
-       namespace='beast.app.beauti
-                 :beast.core
-                 :beast.evolution.branchratemodel
-                 :beast.evolution.speciation
-                 :beast.evolution.tree.coalescent
-                 :beast.core.util
-                 :beast.evolution.nuc
-                 :beast.evolution.operators
-                 :beast.evolution.sitemodel
-                 :beast.evolution.substitutionmodel
-                 :beast.evolution.likelihood
-                 :beast.evolution
-                 :beast.math.distributions
+       namespace='beast.pkgmgmt:beast.base.core:beast.base.inference:beast.base.evolution.branchratemodel:beast.base.evolution.speciation:beast.base.evolution.tree.coalescent:beast.pkgmgmt:beast.base.core:beast.base.inference.util:beast.evolution.nuc:beast.base.evolution.operator:beast.base.inference.operator:beast.base.evolution.sitemodel:beast.base.evolution.substitutionmodel:beast.base.evolution.likelihood:beast.evolution:beast.base.math.distributions
+                 :beastfx.app.inputeditor
                  :piqmee.operators
                  :piqmee.distributions'
        templateinfo='template for birth-death skyline model with duplicate sequences (Quasi-species model)'>
@@ -29,7 +18,7 @@
     <map name='InverseGamma'>beast.base.inference.distribution.InverseGamma</map>
     <map name='prior'>beast.base.inference.distribution.Prior</map>
 
-    <beauticonfig spec='BeautiConfig'
+    <beauticonfig spec='beastfx.app.inputeditor.BeautiConfig'
         inputLabelMap='beast.base.inference.MCMC.operator=Operators,
 	                   beast.base.inference.MCMC.logger=Loggers,
 			           beast.base.evolution.sitemodel.SiteModel.mutationRate =Substitution Rate'
@@ -363,7 +352,7 @@
 
             <!-- CONNECT: tree and likelihood -->
             <connect srcID='RandomTree.t:$(n)'      targetID='mcmc'         inputName='init'          if='isInitializing'/>
-            <connect method="beast.app.beauti.StateNodeInitialiserListInputEditor.customConnector"/>
+            <connect method="beastfx.app.beauti.StateNodeInitialiserListInputEditor.customConnector"/>
             <connect srcID='Tree.t:$(n)'            targetID='state'        inputName='stateNode'     if='inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'/>
             <connect srcID='treeLikelihood.$(n)'    targetID='likelihood'   inputName='distribution'  if="isInitializing"/>
             <connect method="beastfx.app.inputeditor.SiteModelInputEditor.customConnector"/>
